@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -29,7 +30,7 @@
 // sqlite:/tmp/ulogger.db
 $dbdsn = "";
 
-// Database user name
+// Database username
 $dbuser = "";
 
 // Database user password

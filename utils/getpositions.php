@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -78,7 +79,7 @@ if ($positionsArr === false) {
       "username" => $position->userLogin,
       "trackid" => $position->trackId,
       "trackname" => $position->trackName,
-      "meters" => round($meters),
+      "meters" => $meters,
       "seconds" => $seconds
     ];
     $prevPosition = $position;

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -48,6 +49,7 @@ try {
 $gpxFile = $fileMeta[uUpload::META_TMP_NAME];
 $gpxName = basename($fileMeta[uUpload::META_NAME]);
 libxml_use_internal_errors(true);
+/** @noinspection SimpleXmlLoadFileUsageInspection */
 $gpx = simplexml_load_file($gpxFile);
 unlink($gpxFile);
 
@@ -73,11 +75,10 @@ else if (empty($gpx->trk)) {
 $trackList = [];
 foreach ($gpx->trk as $trk) {
   $trackName = empty($trk->name) ? $gpxName : (string) $trk->name;
-  $metaName = empty($gpx->metadata->name) ? NULL : (string) $gpx->metadata->name;
+  $metaName = empty($gpx->metadata->name) ? null : (string) $gpx->metadata->name;
   $trackId = uTrack::add($auth->user->id, $trackName, $metaName);
   if ($trackId === false) {
     uUtils::exitWithError($lang["servererror"]);
-    break;
   }
   $track = new uTrack($trackId);
   $posCnt = 0;
@@ -88,12 +89,12 @@ foreach ($gpx->trk as $trk) {
         $track->delete();
         uUtils::exitWithError($lang["iparsefailure"]);
       }
-      $time = isset($point->time) ? strtotime($point->time) : 1;
-      $altitude = isset($point->ele) ? (double) $point->ele : NULL;
-      $comment = isset($point->desc) && !empty($point->desc) ? (string) $point->desc : NULL;
-      $speed = NULL;
-      $bearing = NULL;
-      $accuracy = NULL;
+      $time = isset($point->time) ? strtotime((string) $point->time) : 1;
+      $altitude = isset($point->ele) ? (double) $point->ele : null;
+      $comment = isset($point->desc) && !empty($point->desc) ? (string) $point->desc : null;
+      $speed = null;
+      $bearing = null;
+      $accuracy = null;
       $provider = "gps";
       if (!empty($point->extensions)) {
         // parse ulogger extensions
@@ -105,7 +106,7 @@ foreach ($gpx->trk as $trk) {
       }
       $ret = $track->addPosition($auth->user->id,
                     $time, (double) $point["lat"], (double) $point["lon"], $altitude,
-                    $speed, $bearing, $accuracy, $provider, $comment, NULL);
+                    $speed, $bearing, $accuracy, $provider, $comment);
       if ($ret === false) {
         $track->delete();
         uUtils::exitWithError($lang["servererror"]);

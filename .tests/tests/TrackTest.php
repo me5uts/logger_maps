@@ -1,10 +1,15 @@
 <?php
+declare(strict_types = 1);
 
 require_once(__DIR__ . "/../lib/UloggerDatabaseTestCase.php");
 require_once(__DIR__ . "/../../helpers/track.php");
+require_once(__DIR__ . "/../lib/AssertExceptionTrait.php");
 
 class TrackTest extends UloggerDatabaseTestCase {
 
+  use AssertException;
+
+  /** @noinspection PhpStrictTypeCheckingInspection */
   public function testAddTrack(): void {
     $this->addTestUser();
     $trackId = uTrack::add($this->testUserId, $this->testTrackName, $this->testTrackComment);
@@ -15,7 +20,7 @@ class TrackTest extends UloggerDatabaseTestCase {
     $actual = $this->getConnection()->createQueryTable("tracks", "SELECT id, user_id, name, comment FROM tracks");
     $this->assertTableContains($expected, $actual, "Wrong actual table data");
 
-    self::assertFalse(uTrack::add("", $this->testTrackName), "Adding track with empty user id should fail");
+    self::assertTypeError(function () { uTrack::add("", $this->testTrackName); }, "Adding track with empty user id should fail");
     self::assertFalse(uTrack::add($this->testUserId, ""), "Adding track with empty name should fail");
   }
 
@@ -72,19 +77,19 @@ class TrackTest extends UloggerDatabaseTestCase {
     );
     $this->assertTableContains($expected, $actual, "Wrong actual table data");
 
-    $posId = $track->addPosition($userId, NULL, $this->testLat, $this->testLon);
-    self::assertFalse($posId, "Adding position with null time stamp should fail");
-    $posId = $track->addPosition($userId, $this->testTimestamp, NULL, $this->testLon);
-    self::assertFalse($posId, "Adding position with null latitude should fail");
-    $posId = $track->addPosition($userId, $this->testTimestamp, $this->testLat, NULL);
-    self::assertFalse($posId, "Adding position with null longitude should fail");
+    $test = function () use ($track, $userId) { $track->addPosition($userId, null, $this->testLat, $this->testLon); };
+    self::assertTypeError($test, "Adding position with null time stamp should fail");
+    $test = function () use ($track, $userId) { $track->addPosition($userId, $this->testTimestamp, null, $this->testLon); };
+    self::assertTypeError($test, "Adding position with null latitude should fail");
+    $test = function () use ($track, $userId) { $track->addPosition($userId, $this->testTimestamp, $this->testLat, null); };
+    self::assertTypeError($test, "Adding position with null longitude should fail");
 
-    $posId = $track->addPosition($userId, "", $this->testLat, $this->testLon);
-    self::assertFalse($posId, "Adding position with empty time stamp should fail");
-    $posId = $track->addPosition($userId, $this->testTimestamp, "", $this->testLon);
-    self::assertFalse($posId, "Adding position with empty latitude should fail");
-    $posId = $track->addPosition($userId, $this->testTimestamp, $this->testLat, "");
-    self::assertFalse($posId, "Adding position with empty longitude should fail");
+    $test = function () use ($track, $userId) { $track->addPosition($userId, "", $this->testLat, $this->testLon); };
+    self::assertTypeError($test, "Adding position with empty time stamp should fail");
+    $test = function () use ($track, $userId) { $track->addPosition($userId, $this->testTimestamp, "", $this->testLon); };
+    self::assertTypeError($test, "Adding position with empty latitude should fail");
+    $test = function () use ($track, $userId) { $track->addPosition($userId, $this->testTimestamp, $this->testLat, ""); };
+    self::assertTypeError($test, "Adding position with empty longitude should fail");
   }
 
   public function testGetAll(): void {
@@ -97,6 +102,7 @@ class TrackTest extends UloggerDatabaseTestCase {
     self::assertInstanceOf(uTrack::class, $trackArr[0], "Wrong array member");
   }
 
+  /** @noinspection PhpStrictTypeCheckingInspection */
   public function testDeleteAll(): void {
     $userId = $this->addTestUser();
     $trackId = $this->addTestTrack($userId);
@@ -113,7 +119,7 @@ class TrackTest extends UloggerDatabaseTestCase {
     uTrack::deleteAll($userId);
     self::assertEquals(1, $this->getConnection()->getRowCount('tracks'), "Wrong row count");
     self::assertEquals(1, $this->getConnection()->getRowCount('positions'), "Wrong row count");
-    self::assertFalse(uTrack::deleteAll(NULL), "User id should not be empty");
+    self::assertTypeError(function () {uTrack::deleteAll(null); }, "User id should not be empty");
   }
 
   public function testUpdate(): void {

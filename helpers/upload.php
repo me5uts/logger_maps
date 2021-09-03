@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /**
  * μlogger
  *
@@ -26,11 +27,11 @@ require_once(ROOT_DIR . "/helpers/utils.php");
  */
 class uUpload {
 
-  const META_TYPE = "type";
-  const META_NAME = "name";
-  const META_TMP_NAME = "tmp_name";
-  const META_ERROR = "error";
-  const META_SIZE = "size";
+  private const META_TYPE = "type";
+  public const META_NAME = "name";
+  public const META_TMP_NAME = "tmp_name";
+  private const META_ERROR = "error";
+  private const META_SIZE = "size";
   public static $uploadDir = ROOT_DIR . "/uploads/";
   private static $filePattern = "/[a-z0-9_.]{20,}/";
   private static $mimeMap = [];
@@ -38,7 +39,7 @@ class uUpload {
   /**
    * @return string[] Mime to extension mapping
    */
-  private static function getMimeMap() {
+  private static function getMimeMap(): array {
     if (empty(self::$mimeMap)) {
       self::$mimeMap["image/jpeg"] = "jpg";
       self::$mimeMap["image/jpg"] = "jpg";
@@ -54,7 +55,7 @@ class uUpload {
    * @param string $mime Mime type
    * @return bool True if known
    */
-  private static function isKnownMime($mime) {
+  private static function isKnownMime(string $mime): bool {
     return array_key_exists($mime, self::getMimeMap());
   }
 
@@ -63,45 +64,46 @@ class uUpload {
    * @param $mime
    * @return string|null Extension or NULL if not found
    */
-  private static function getExtension($mime) {
+  private static function getExtension($mime): ?string {
     if (self::isKnownMime($mime)) {
       return self::getMimeMap()[$mime];
     }
-    return NULL;
+    return null;
   }
 
   /**
-   * Save file to uploads, basic sanitizing
+   * Save file to uploads folder, basic sanitizing
    * @param array $uploaded File meta array from $_FILES[]
    * @param int $trackId
-   * @return string|NULL Unique file name, null on error
+   * @return string|null Unique file name, null on error
    */
-  public static function add($uploaded, $trackId) {
+  public static function add(array $uploaded, int $trackId): ?string {
     try {
       $fileMeta = self::sanitizeUpload($uploaded);
     } catch (Exception $e) {
       syslog(LOG_ERR, $e->getMessage());
       // save exception to txt file as image replacement?
-      return NULL;
+      return null;
     }
 
     $extension = self::getExtension($fileMeta[self::META_TYPE]);
 
     do {
+      /** @noinspection NonSecureUniqidUsageInspection */
       $fileName = uniqid("{$trackId}_") . ".$extension";
     } while (file_exists(self::$uploadDir . $fileName));
     if (move_uploaded_file($fileMeta[self::META_TMP_NAME], self::$uploadDir . $fileName)) {
       return $fileName;
     }
-    return NULL;
+    return null;
   }
 
   /**
    * Delete upload from database and filesystem
-   * @param String $path File relative path
+   * @param string $path File relative path
    * @return bool False if file exists but can't be unlinked
    */
-  public static function delete($path) {
+  public static function delete(string $path): bool {
     $ret = true;
     if (preg_match(self::$filePattern, $path)) {
       $path = self::$uploadDir . $path;
@@ -119,10 +121,8 @@ class uUpload {
    * @throws ErrorException Internal server exception
    * @throws Exception File upload exception
    */
-  public static function sanitizeUpload($fileMeta, $checkMime = true) {
-    if (!isset($fileMeta) ||
-      !isset($fileMeta[self::META_NAME]) || !isset($fileMeta[self::META_TYPE]) ||
-      !isset($fileMeta[self::META_SIZE]) || !isset($fileMeta[self::META_TMP_NAME])) {
+  public static function sanitizeUpload(array $fileMeta, bool $checkMime = true): array {
+    if (!isset($fileMeta[self::META_NAME], $fileMeta[self::META_TYPE], $fileMeta[self::META_SIZE], $fileMeta[self::META_TMP_NAME])) {
       $message = "no uploaded file";
       $lastErr = error_get_last();
       if (!empty($lastErr)) {
@@ -140,18 +140,14 @@ class uUpload {
     $uploadErrors[UPLOAD_ERR_CANT_WRITE] = "Failed to write file to disk";
     $uploadErrors[UPLOAD_ERR_EXTENSION] = "A PHP extension stopped file upload";
 
-    $file = NULL;
-    $fileError = isset($fileMeta[self::META_ERROR]) ? $fileMeta[self::META_ERROR] : UPLOAD_ERR_OK;
-    if ($fileMeta[self::META_SIZE] > uUtils::getSystemUploadLimit() && $fileError == UPLOAD_ERR_OK) {
+    $fileError = $fileMeta[self::META_ERROR] ?? UPLOAD_ERR_OK;
+    if ($fileError === UPLOAD_ERR_OK && $fileMeta[self::META_SIZE] > uUtils::getSystemUploadLimit()) {
       $fileError = UPLOAD_ERR_FORM_SIZE;
     }
-    if ($fileError == UPLOAD_ERR_OK) {
+    if ($fileError === UPLOAD_ERR_OK) {
       $file = $fileMeta[self::META_TMP_NAME];
     } else {
-      $message = "Unknown error";
-      if (isset($uploadErrors[$fileError])) {
-        $message = $uploadErrors[$fileError];
-      }
+      $message = $uploadErrors[$fileError] ?? "Unknown error";
       $message .= " ($fileError)";
       throw new Exception($message);
     }

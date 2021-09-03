@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -33,9 +34,9 @@
    /**
     * Constructor
     *
-    * @param string $login Login
+    * @param string|null $login Login
     */
-    public function __construct($login = NULL) {
+    public function __construct(?string $login = null) {
       if (!empty($login)) {
         try {
           $query = "SELECT id, login, password, admin FROM " . self::db()->table('users') . " WHERE login = ? LIMIT 1";
@@ -60,7 +61,7 @@
      *
      * @return uDb instance
      */
-    private static function db() {
+    private static function db(): uDb {
       return uDb::getInstance();
     }
 
@@ -72,7 +73,7 @@
      * @param bool $isAdmin Is admin
      * @return int|bool New user id, false on error
      */
-    public static function add($login, $pass, $isAdmin = false) {
+    public static function add(string $login, string $pass, bool $isAdmin = false) {
       $userid = false;
       if (!empty($login) && !empty($pass)) {
         $hash = password_hash($pass, PASSWORD_DEFAULT);
@@ -96,7 +97,7 @@
     *
     * @return bool True if success, false otherwise
     */
-    public function delete() {
+    public function delete(): bool {
       $ret = false;
       if ($this->isValid) {
         // remove tracks and positions
@@ -109,9 +110,9 @@
           $stmt = self::db()->prepare($query);
           $stmt->execute([ $this->id ]);
           $ret = true;
-          $this->id = NULL;
-          $this->login = NULL;
-          $this->hash = NULL;
+          $this->id = null;
+          $this->login = null;
+          $this->hash = null;
           $this->isValid = false;
           $this->isAdmin = false;
         } catch (PDOException $e) {
@@ -128,7 +129,7 @@
     * @param bool $isAdmin True if is admin
     * @return bool True on success, false otherwise
     */
-    public function setAdmin($isAdmin) {
+    public function setAdmin(bool $isAdmin): bool {
       $ret = false;
       try {
         $query = "UPDATE " . self::db()->table('users') . " SET admin = ? WHERE login = ?";
@@ -149,7 +150,7 @@
     * @param string $pass Password
     * @return bool True on success, false otherwise
     */
-    public function setPass($pass) {
+    public function setPass(string $pass): bool {
       $ret = false;
       if (!empty($this->login) && !empty($pass)) {
         $hash = password_hash($pass, PASSWORD_DEFAULT);
@@ -170,17 +171,17 @@
    /**
     * Check if given password matches user's one
     *
-    * @param String $password Password
+    * @param string $password Password
     * @return bool True if matches, false otherwise
     */
-    public function validPassword($password) {
+    public function validPassword(string $password): bool {
       return password_verify($password, $this->hash);
     }
 
    /**
     * Store uUser object in session
     */
-    public function storeInSession() {
+    public function storeInSession(): void {
       $_SESSION['user'] = $this;
     }
 
@@ -188,7 +189,7 @@
     * Fill uUser object properties from session data
     * @return uUser
     */
-    public static function getFromSession() {
+    public static function getFromSession(): uUser {
       $user = new uUser();
       if (isset($_SESSION['user'])) {
         $sessionUser = $_SESSION['user'];
@@ -228,7 +229,7 @@
     * @param array $row Row
     * @return uUser User
     */
-    private static function rowToObject($row) {
+    private static function rowToObject(array $row): uUser {
       $user = new uUser();
       $user->id = (int) $row['id'];
       $user->login = $row['login'];

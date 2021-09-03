@@ -1,4 +1,7 @@
-<?php /** @noinspection HtmlUnknownAttribute */
+<?php
+declare(strict_types = 1);
+
+/** @noinspection HtmlUnknownAttribute */
 
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -19,7 +22,7 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx10 = '<?xml version="1.0"?>
+    $gpx10 = /** @lang XML */ '<?xml version="1.0"?>
     <gpx version="1.0" creator="test software"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.topografix.com/GPX/1/0"
@@ -56,7 +59,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(1, $json, "Wrong count of tracks");
 
@@ -128,7 +131,7 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx11 = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+    $gpx11 = /** @lang XML */ '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
     <gpx version="1.1"
         creator="test creator"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -176,7 +179,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(1, $json, "Wrong count of tracks");
@@ -232,7 +235,7 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx = '<?xml version="1.0" encoding="UTF-8"?>
+    $gpx = /** @lang XML */ '<?xml version="1.0" encoding="UTF-8"?>
     <gpx xsi:schemaLocation="http://www.topografix.com/GPX/1/1
     http://www.topografix.com/GPX/1/1/gpx.xsd
     https://github.com/bfabiszewski/ulogger-android/1
@@ -281,7 +284,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(1, $json, "Wrong count of tracks");
@@ -337,7 +340,8 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx = '<?xml version="1.0" encoding="UTF-8"?>
+    /** @noinspection CheckTagEmptyBody */
+    $gpx = /** @lang XML */ '<?xml version="1.0" encoding="UTF-8"?>
     <gpx xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.topografix.com/GPX/1/1"
@@ -366,7 +370,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(1, $json, "Wrong count of tracks");
@@ -422,7 +426,7 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx = '<?xml version="1.0" encoding="UTF-8"?>
+    $gpx = /** @lang XML */ '<?xml version="1.0" encoding="UTF-8"?>
     <gpx xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.topografix.com/GPX/1/1"
@@ -458,7 +462,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(1, $json, "Wrong count of tracks");
@@ -530,7 +534,7 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx = '<?xml version="1.0" encoding="UTF-8"?>
+    $gpx = /** @lang XML */ '<?xml version="1.0" encoding="UTF-8"?>
     <gpx xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.topografix.com/GPX/1/1"
@@ -568,7 +572,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(2, $json, "Wrong count of tracks");
@@ -651,7 +655,8 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx = '<?xml version="1.0" encoding="UTF-8"?>
+    /** @noinspection RequiredAttributes, CheckTagEmptyBody */
+    $gpx = /** @lang XML */ '<?xml version="1.0" encoding="UTF-8"?>
     <gpx xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.topografix.com/GPX/1/1"
@@ -680,7 +685,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
@@ -700,7 +705,8 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx = '<?xml version="1.0" encoding="UTF-8"?>
+    /** @noinspection RequiredAttributes, CheckTagEmptyBody */
+    $gpx = /** @lang XML */ '<?xml version="1.0" encoding="UTF-8"?>
     <gpx xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.topografix.com/GPX/1/1"
@@ -729,7 +735,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
@@ -773,7 +779,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
@@ -793,7 +799,8 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
 
-    $gpx = '<?xml version="1.0" encoding="UTF-8"?>
+    /** @noinspection RequiredAttributes, CheckTagEmptyBody */
+    $gpx = /** @lang XML */ '<?xml version="1.0" encoding="UTF-8"?>
     <gpx xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.topografix.com/GPX/1/1"
@@ -820,7 +827,7 @@ class ImportTest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/import.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
@@ -830,7 +837,11 @@ class ImportTest extends UloggerAPITestCase {
     self::assertEquals(0, $this->getConnection()->getRowCount("positions"), "Wrong row count");
   }
 
-  private function getStream($string) {
+  /**
+   * @param string $string
+   * @return false|object
+   */
+  private function getStream(string $string) {
     $stream = tmpfile();
     fwrite($stream, $string);
     fseek($stream, 0);

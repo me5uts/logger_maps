@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -34,9 +35,9 @@
    /**
     * Constructor
     *
-    * @param int $trackId Track id
+    * @param int|null $trackId Track id
     */
-    public function __construct($trackId = NULL) {
+    public function __construct(?int $trackId = null) {
 
       if (!empty($trackId)) {
         try {
@@ -63,19 +64,19 @@
      *
      * @return uDb instance
      */
-    private static function db() {
+    private static function db(): uDb {
       return uDb::getInstance();
     }
 
    /**
     * Add new track
     *
-    * @param string $userId User id
+    * @param int $userId User id
     * @param string $name Name
-    * @param string $comment Optional comment
+    * @param string|null $comment Optional comment
     * @return int|bool New track id, false on error
     */
-    public static function add($userId, $name, $comment = NULL) {
+    public static function add(int $userId, string $name, ?string $comment = null) {
       $trackId = false;
       if (!empty($userId) && !empty($name)) {
         try {
@@ -98,22 +99,26 @@
      *
      * @param int $userId
      * @param int $timestamp Unix time stamp
-     * @param double $lat
-     * @param double $lon
-     * @param double $altitude Optional
-     * @param double $speed Optional
-     * @param double $bearing Optional
-     * @param int $accuracy Optional
-     * @param string $provider Optional
-     * @param string $comment Optional
-     * @param int $imageId Optional
+     * @param float $lat
+     * @param float $lon
+     * @param float|null $altitude Optional
+     * @param float|null $speed Optional
+     * @param float|null $bearing Optional
+     * @param int|null $accuracy Optional
+     * @param string|null $provider Optional
+     * @param string|null $comment Optional
+     * @param string|null $imageId Optional
      * @return int|bool New position id in database, false on error
      */
-    public function addPosition($userId, $timestamp, $lat, $lon,
-                                $altitude = NULL, $speed = NULL, $bearing = NULL, $accuracy = NULL,
-                                $provider = NULL, $comment = NULL, $imageId = NULL) {
-      return uPosition::add($userId, $this->id, $timestamp, $lat, $lon,
-                                   $altitude, $speed, $bearing, $accuracy, $provider, $comment, $imageId);
+    public function addPosition(int $userId, int $timestamp, float $lat, float $lon,
+                                ?float $altitude = null, ?float $speed = null, ?float $bearing = null, ?int $accuracy = null,
+                                ?string $provider = null, ?string $comment = null, ?string $imageId = null) {
+      if ($this->id) {
+        return uPosition::add($userId, $this->id, $timestamp, $lat, $lon,
+          $altitude, $speed, $bearing, $accuracy, $provider, $comment, $imageId);
+      }
+
+      return false;
     }
 
    /**
@@ -121,7 +126,7 @@
     *
     * @return bool True if success, false otherwise
     */
-    public function delete() {
+    public function delete(): bool {
       $ret = false;
       if ($this->isValid) {
         // delete positions
@@ -134,10 +139,10 @@
           $stmt = self::db()->prepare($query);
           $stmt->execute([ $this->id ]);
           $ret = true;
-          $this->id = NULL;
-          $this->userId = NULL;
-          $this->name = NULL;
-          $this->comment = NULL;
+          $this->id = null;
+          $this->userId = null;
+          $this->name = null;
+          $this->comment = null;
           $this->isValid = false;
         } catch (PDOException $e) {
           // TODO: handle exception
@@ -154,11 +159,11 @@
     * @param string|null $comment New comment or NULL if not changed (to remove content use empty string: "")
     * @return bool True if success, false otherwise
     */
-    public function update($name = NULL, $comment = NULL) {
+    public function update(?string $name = null, ?string $comment = null): bool {
       $ret = false;
       if (empty($name)) { $name = $this->name; }
       if (is_null($comment)) { $comment = $this->comment; }
-      if ($comment === "") { $comment = NULL; }
+      if ($comment === "") { $comment = null; }
       if ($this->isValid) {
         try {
           $query = "UPDATE " . self::db()->table('tracks') . " SET name = ?, comment = ? WHERE id = ?";
@@ -179,10 +184,10 @@
    /**
     * Delete all user's tracks
     *
-    * @param string $userId User id
+    * @param int $userId User id
     * @return bool True if success, false otherwise
     */
-    public static function deleteAll($userId) {
+    public static function deleteAll(int $userId): bool {
       $ret = false;
       if (!empty($userId) && uPosition::deleteAll($userId) === true) {
         // remove all tracks
@@ -202,12 +207,12 @@
    /**
     * Get all tracks
     *
-    * @param int $userId Optional limit to user id
+    * @param int|null $userId Optional limit to user id
     * @return array|bool Array of uTrack tracks, false on error
     */
-    public static function getAll($userId = NULL) {
+    public static function getAll(?int $userId = null) {
       if (!empty($userId)) {
-        $where = "WHERE user_id=" . self::db()->quote($userId);
+        $where = "WHERE user_id=" . self::db()->quote((string) $userId);
       } else {
         $where = "";
       }
@@ -232,7 +237,7 @@
     * @param array $row Row
     * @return uTrack Track
     */
-    private static function rowToObject($row) {
+    private static function rowToObject(array $row): uTrack {
       $track = new uTrack();
       $track->id = (int) $row['id'];
       $track->userId = (int) $row['user_id'];

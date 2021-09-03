@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 use GuzzleHttp\Exception\GuzzleException;
 use PHPUnit\DbUnit\DataSet\IDataSet;

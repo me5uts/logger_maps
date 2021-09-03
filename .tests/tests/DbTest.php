@@ -1,4 +1,6 @@
 <?php
+declare(strict_types = 1);
+
 use PHPUnit\Framework\TestCase;
 
 if (!defined("ROOT_DIR")) { define("ROOT_DIR", __DIR__ . "/../.."); }
@@ -32,7 +34,6 @@ class DbTest extends TestCase {
       "mysql:host=db.example.com;port=3306;dbname=",
       "mysql:host=db.example.com;port=3306",
       "",
-      null,
       "unsupported:host=localhost;port=5432;dbname=;user=test;password=mypass",
       "corrupt",
       "pgsql:",

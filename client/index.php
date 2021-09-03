@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -22,7 +23,7 @@
  *
  * @param string $message Message
  */
-function exitWithError($message) {
+function exitWithError(string $message) {
   $response = [];
   $response['error'] = true;
   $response['message'] = $message;
@@ -37,7 +38,7 @@ function exitWithError($message) {
  * @param array $params Optional params
  * @return void
  */
-function exitWithSuccess($params = []) {
+function exitWithSuccess(array $params = []) {
   $response = [];
   $response['error'] = false;
   header('Content-Type: application/json');
@@ -51,8 +52,7 @@ $action = uUtils::postString('action');
 
 $auth = new uAuth();
 if ($action !== "auth" && !$auth->isAuthenticated()) {
-  $auth->sendUnauthorizedHeader();
-  exitWithError("Unauthorized");
+  $auth->exitWithUnauthorized();
 }
 
 switch ($action) {
@@ -63,8 +63,7 @@ switch ($action) {
     if ($auth->checkLogin($login, $pass)) {
       exitWithSuccess();
     } else {
-      $auth->sendUnauthorizedHeader();
-      exitWithError("Unauthorized");
+      $auth->exitWithUnauthorized();
     }
     break;
 

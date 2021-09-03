@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -24,9 +25,8 @@ $enabled = false;
 /* -------------------------------------------- */
 /* no user modifications should be needed below */
 
-/** @noinspection ConstantCanBeUsedInspection */
-if (version_compare(PHP_VERSION, "5.5.0", "<")) {
-  die("Sorry, ulogger will not work with PHP version lower than 5.5 (you have " . PHP_VERSION . ")");
+if (PHP_VERSION_ID < 70300) {
+  die("Sorry, ulogger will not work with PHP version lower than 7.3 (you have " . PHP_VERSION . ")");
 }
 
 if (!defined("ROOT_DIR")) { define("ROOT_DIR", dirname(__DIR__)); }
@@ -45,7 +45,6 @@ $configUser = "";
 $configPass = "";
 $configPrefix = "";
 if (file_exists($dbConfig)) {
-  /** @noinspection PhpIncludeInspection */
   include($dbConfig);
   $dbConfigLoaded = true;
   if (isset($dbdsn)) { $configDSN = uDb::normalizeDsn($dbdsn); }
@@ -215,7 +214,7 @@ switch ($command) {
  * @param string $dbDriver
  * @return array
  */
-function getQueries($dbDriver) {
+function getQueries(string $dbDriver): array {
   global $tPositions, $tUsers, $tTracks, $tConfig, $tLayers;
 
   $queries = [];
@@ -401,7 +400,7 @@ function getQueries($dbDriver) {
  * @return PDO
  * @throws PDOException
  */
-function getPdo() {
+function getPdo(): PDO {
   global $configDSN, $configUser, $configPass;
   $options = [ PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION ];
   return new PDO($configDSN, $configUser, $configPass, $options);

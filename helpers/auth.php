@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -44,7 +45,7 @@
     /**
      * Update user instance stored in session
      */
-    public function updateSession() {
+    public function updateSession(): void {
       if ($this->isAuthenticated()) {
         $this->user->storeInSession();
       }
@@ -55,7 +56,7 @@
      *
      * @return boolean True if authenticated, false otherwise
      */
-    public function isAuthenticated() {
+    public function isAuthenticated(): bool {
       return $this->isAuthenticated;
     }
 
@@ -64,7 +65,7 @@
      *
      * @return boolean True if admin, false otherwise
      */
-    public function isAdmin() {
+    public function isAdmin(): bool {
       return ($this->isAuthenticated && $this->user->isAdmin);
     }
 
@@ -73,7 +74,7 @@
      *
      * @return void
      */
-    private function sessionStart() {
+    private function sessionStart(): void {
       session_name("ulogger");
       session_start();
     }
@@ -83,7 +84,7 @@
      *
      * @return void
      */
-    private function sessionEnd() {
+    private function sessionEnd(): void {
       $_SESSION = [];
       if (ini_get("session.use_cookies") && isset($_COOKIE[session_name()])) {
         $params = session_get_cookie_params();
@@ -100,7 +101,7 @@
      *
      * @return void
      */
-    private function sessionCleanup() {
+    private function sessionCleanup(): void {
       $_SESSION = [];
     }
 
@@ -110,7 +111,7 @@
      * @param uUser $user
      * @return void
      */
-    private function setAuthenticated($user) {
+    private function setAuthenticated(uUser $user): void {
       $this->isAuthenticated = true;
       $this->user = $user;
     }
@@ -122,7 +123,7 @@
      * @param string $pass
      * @return boolean True if valid
      */
-    public function checkLogin($login, $pass) {
+    public function checkLogin(string $login, string $pass): bool {
       if (!empty($login) && !empty($pass)) {
         $user = new uUser($login);
         if ($user->isValid && $user->validPassword($pass)) {
@@ -141,7 +142,7 @@
      * @param string $path URL path (without leading slash)
      * @return void
      */
-    public function logOutWithRedirect($path = "") {
+    public function logOutWithRedirect(string $path = ""): void {
       $this->sessionEnd();
       $this->exitWithRedirect($path);
     }
@@ -151,7 +152,7 @@
      *
      * @return void
      */
-    public function sendUnauthorizedHeader() {
+    public function sendUnauthorizedHeader(): void {
       header('WWW-Authenticate: OAuth realm="users@ulogger"');
       header('HTTP/1.1 401 Unauthorized', true, 401);
     }
@@ -159,11 +160,12 @@
     /**
      * Send 401 headers and exit
      *
+     * @param string $message
      * @return void
      */
-    public function exitWithUnauthorized() {
+    public function exitWithUnauthorized(string $message = "Unauthorized"): void {
       $this->sendUnauthorizedHeader();
-      exit();
+      uUtils::exitWithError($message);
     }
 
     /**
@@ -172,7 +174,7 @@
      * @param string $path Redirect URL path (without leading slash)
      * @return void
      */
-    public function exitWithRedirect($path = "") {
+    public function exitWithRedirect(string $path = ""): void {
       $location = BASE_URL . $path;
       header("Location: $location");
       exit();
@@ -184,7 +186,7 @@
      * @param int $ownerId
      * @return bool True if has access
      */
-    public function hasReadWriteAccess($ownerId) {
+    public function hasReadWriteAccess(int $ownerId): bool {
       return $this->isAuthenticated() && ($this->isAdmin() || $this->user->id === $ownerId);
     }
 
@@ -194,7 +196,7 @@
      * @param int $ownerId
      * @return bool True if has access
      */
-    public function hasReadAccess($ownerId) {
+    public function hasReadAccess(int $ownerId): bool {
       return $this->hasReadWriteAccess($ownerId) || uConfig::getInstance()->publicTracks;
     }
 

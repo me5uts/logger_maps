@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -41,7 +42,7 @@ if ($admin && !$auth->isAdmin()) {
 }
 
 $aUser = new uUser($login);
-$data = NULL;
+$data = null;
 
 switch ($action) {
   case 'add':
@@ -72,7 +73,6 @@ switch ($action) {
 
   default:
     uUtils::exitWithError($lang["servererror"]);
-    break;
 }
 
 uUtils::exitWithSuccess($data);

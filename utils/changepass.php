@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -27,14 +28,13 @@ $config = uConfig::getInstance();
 $lang = (new uLang($config))->getStrings();
 
 if (!$auth->isAuthenticated()) {
-  $auth->sendUnauthorizedHeader();
-  uUtils::exitWithError($lang["notauthorized"]);
+  $auth->exitWithUnauthorized($lang["notauthorized"]);
 }
 
 $login = uUtils::postString('login');
 $oldpass = uUtils::postPass('oldpass');
 $pass = uUtils::postPass('pass');
-// FIXME: strings need to be localized
+
 if (empty($pass)) {
   uUtils::exitWithError($lang["passempty"]);
 }
@@ -47,7 +47,7 @@ if (empty($login)) {
 if ($auth->user->login === $login) {
   // current user
   $passUser = $auth->user;
-  if (!$passUser->validPassword($oldpass)) {
+  if (is_null($oldpass) || !$passUser->validPassword($oldpass)) {
     uUtils::exitWithError($lang["oldpassinvalid"]);
   }
 } else if ($auth->isAdmin()) {

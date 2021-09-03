@@ -1,9 +1,13 @@
 <?php
+declare(strict_types = 1);
 
 require_once(__DIR__ . "/../lib/UloggerDatabaseTestCase.php");
 require_once(__DIR__ . "/../../helpers/track.php");
+require_once(__DIR__ . "/../lib/AssertExceptionTrait.php");
 
 class PositionTest extends UloggerDatabaseTestCase {
+
+  use AssertException;
 
   public function testAddPosition(): void {
     $userId = $this->addTestUser();
@@ -41,19 +45,19 @@ class PositionTest extends UloggerDatabaseTestCase {
     );
     $this->assertTableContains($expected, $actual, "Wrong actual table data");
 
-    $posId = uPosition::add($userId, $trackId, NULL, $this->testLat, $this->testLon);
-    self::assertFalse($posId, "Adding position with null time stamp should fail");
-    $posId = uPosition::add($userId, $trackId, $this->testTimestamp, NULL, $this->testLon);
-    self::assertFalse($posId, "Adding position with null latitude should fail");
-    $posId = uPosition::add($userId, $trackId, $this->testTimestamp, $this->testLat, NULL);
-    self::assertFalse($posId, "Adding position with null longitude should fail");
+    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, null, $this->testLat, $this->testLon); };
+    self::assertTypeError($test, "Adding position with null time stamp should fail");
+    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, $this->testTimestamp, null, $this->testLon); };
+    self::assertTypeError($test, "Adding position with null latitude should fail");
+    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, $this->testTimestamp, $this->testLat, null); };
+    self::assertTypeError($test, "Adding position with null longitude should fail");
 
-    $posId = uPosition::add($userId, $trackId, "", $this->testLat, $this->testLon);
-    self::assertFalse($posId, "Adding position with empty time stamp should fail");
-    $posId = uPosition::add($userId, $trackId, $this->testTimestamp, "", $this->testLon);
-    self::assertFalse($posId, "Adding position with empty latitude should fail");
-    $posId = uPosition::add($userId, $trackId, $this->testTimestamp, $this->testLat, "");
-    self::assertFalse($posId, "Adding position with empty longitude should fail");
+    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, "", $this->testLat, $this->testLon); };
+    self::assertTypeError($test, "Adding position with empty time stamp should fail");
+    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, $this->testTimestamp, "", $this->testLon); };
+    self::assertTypeError($test, "Adding position with empty latitude should fail");
+    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, $this->testTimestamp, $this->testLat, ""); };
+    self::assertTypeError($test, "Adding position with empty longitude should fail");
   }
 
   public function testDeleteAll(): void {
@@ -132,7 +136,7 @@ class PositionTest extends UloggerDatabaseTestCase {
           self::assertEquals($trackId2, $position->trackId);
           break;
         default:
-          self::assertTrue(false, "Unexpected position: $position->id");
+          self::fail("Unexpected position: $position->id");
       }
     }
   }
@@ -156,7 +160,7 @@ class PositionTest extends UloggerDatabaseTestCase {
     self::assertCount(2, $posArr, "Wrong row count");
     $posArr = uPosition::getAll($userId, $trackId);
     self::assertCount(1, $posArr, "Wrong row count");
-    $posArr = uPosition::getAll(NULL, $trackId);
+    $posArr = uPosition::getAll(null, $trackId);
     self::assertCount(1, $posArr, "Wrong row count");
     $posArr = uPosition::getAll($userId3);
     self::assertCount(0, $posArr, "Wrong row count");

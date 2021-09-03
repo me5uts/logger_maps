@@ -9,7 +9,7 @@ Together with a dedicated [μlogger mobile client](https://github.com/bfabiszews
 - hosted by lima-city.de
 
 ## Minimum requirements:
-- PHP 5.5
+- PHP 7.3
 - PHP extensions: ctype, json, pdo (with respective drivers), session, simplexml, xmlwriter, xdebug (only for tests)
 - MySQL, PostgreSQL or SQLite (over PDO driver)
 - browser with javascript enabled, cookies for authentication and saving preferences

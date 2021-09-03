@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 use PHPUnit\DbUnit\Database\Connection;
 use PHPUnit\DbUnit\DataSet\IDataSet;
@@ -143,7 +144,7 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
    * @return int|null Last insert id if available, NULL otherwise
    */
   private function pdoInsert(string $table, array $rowsArr = []): ?int {
-    $ret = NULL;
+    $ret = null;
     if (!empty($rowsArr)) {
       $values = ':' . implode(', :', array_keys($rowsArr));
       $columns = implode(', ', array_keys($rowsArr));
@@ -152,7 +153,7 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
       if ($stmt !== false) {
         $stmt->execute(array_combine(explode(', ', $values), array_values($rowsArr)));
       }
-      $ret = self::$pdo->lastInsertId();
+      $ret = (int) self::$pdo->lastInsertId();
     }
     return $ret;
   }
@@ -166,7 +167,7 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
   private function pdoInsertRaw(string $query): ?int {
     $ret = null;
     if (self::$pdo->exec($query) !== false) {
-      $ret = self::$pdo->lastInsertId();
+      $ret = (int) self::$pdo->lastInsertId();
     }
     return $ret;
   }
@@ -250,6 +251,11 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
     return $this->pdoInsertRaw($query);
   }
 
+  /**
+   * Get function that converts date time column to unix timestamp for current PDO driver
+   * @param string $column Column name or timestamp value
+   * @return string
+   */
   public function unix_timestamp(string $column): string {
     switch (self::$driver) {
       default:
@@ -262,7 +268,12 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
     }
   }
 
-  public function from_unixtime(string $column): string {
+  /**
+   * Get function that converts unix timestamp to date time for current PDO driver
+   * @param string|int $column Column name or timestamp value
+   * @return string
+   */
+  public function from_unixtime($column): string {
     switch (self::$driver) {
       default:
       case "mysql":

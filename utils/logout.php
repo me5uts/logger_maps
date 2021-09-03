@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -21,7 +22,7 @@ include_once(dirname(__DIR__) . "/helpers/auth.php");
 
 $hash = uUtils::getString("hash", "");
 if (!empty($hash)) {
-  $hash = "#{$hash}";
+  $hash = "#$hash";
 }
 $auth = new uAuth();
 $auth->logOutWithRedirect($hash);

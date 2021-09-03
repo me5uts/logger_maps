@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +26,7 @@ class UtilsTest extends TestCase {
     $result = $iniGetBytes->invoke(null, "memory_limit");
     self::assertEquals(100 * 1024 * 1024, $result);
 
-    ini_set("memory_limit", 100 * 1024 * 1024);
+    ini_set("memory_limit", (string) (100 * 1024 * 1024));
     $result = $iniGetBytes->invoke(null, "memory_limit");
     self::assertEquals(100 * 1024 * 1024, $result);
 

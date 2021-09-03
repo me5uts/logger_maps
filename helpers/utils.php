@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -28,7 +29,7 @@
      *
      * @return int Number of bytes
      */
-    public static function getSystemUploadLimit() {
+    public static function getSystemUploadLimit(): int {
       $upload_max_filesize = self::iniGetBytes('upload_max_filesize');
       $post_max_size = self::iniGetBytes('post_max_size');
       // post_max_size = 0 means unlimited size
@@ -43,7 +44,7 @@
      * @param $path string Path
      * @return bool True if is absolute
      */
-    public static function isAbsolutePath($path) {
+    public static function isAbsolutePath(string $path): bool {
       return $path[0] === '/' || $path[0] === '\\' || preg_match('/^[a-zA-Z]:\\\\/', $path);
     }
 
@@ -55,7 +56,7 @@
      * @return int Bytes
      * @noinspection PhpMissingBreakStatementInspection
      */
-    private static function iniGetBytes($iniParam) {
+    private static function iniGetBytes(string $iniParam): int {
       $iniStr = ini_get($iniParam);
       $val = (float) $iniStr;
       $suffix = substr(trim($iniStr), -1);
@@ -78,7 +79,7 @@
      * @param string $errorMessage Message
      * @param array|null $extra Optional array of extra parameters
      */
-    public static function exitWithError($errorMessage, $extra = NULL) {
+    public static function exitWithError(string $errorMessage, ?array $extra = null): void {
       $extra['message'] = $errorMessage;
       self::exitWithStatus(true, $extra);
     }
@@ -88,7 +89,7 @@
      *
      * @param array|null $extra Optional array of extra parameters
      */
-    public static function exitWithSuccess($extra = NULL) {
+    public static function exitWithSuccess(?array $extra = null): void {
       self::exitWithStatus(false, $extra);
     }
 
@@ -97,7 +98,7 @@
      * @param boolean $isError Error if true
      * @param array|null $extra Optional array of extra parameters
      */
-    private static function exitWithStatus($isError, $extra = NULL) {
+    private static function exitWithStatus(bool $isError, ?array $extra = null): void {
       $output = [];
       if ($isError) {
         $output["error"] = true;
@@ -118,13 +119,13 @@
      *
      * @return string URL
      */
-    public static function getBaseUrl() {
+    public static function getBaseUrl(): string {
       $proto = (!isset($_SERVER["HTTPS"]) || $_SERVER["HTTPS"] === "" || $_SERVER["HTTPS"] === "off") ? "http://" : "https://";
-      // Check if we are behind an https proxy
+      // Check if we are behind an HTTPS proxy
       if (isset($_SERVER["HTTP_X_FORWARDED_PROTO"]) && $_SERVER["HTTP_X_FORWARDED_PROTO"] === "https") {
         $proto = "https://";
       }
-      $host = isset($_SERVER["HTTP_HOST"]) ? $_SERVER["HTTP_HOST"] : "";
+      $host = $_SERVER["HTTP_HOST"] ?? "";
       if (realpath($_SERVER["SCRIPT_FILENAME"])) {
         $scriptPath = substr(dirname(realpath($_SERVER["SCRIPT_FILENAME"])), strlen(ROOT_DIR));
       } else {
@@ -137,45 +138,86 @@
       return $proto . str_replace("//", "/", $host . $path . "/");
     }
 
-    public static function postFloat($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function postFloat(string $name, $default = null) {
       return self::requestValue($name, $default, INPUT_POST, FILTER_VALIDATE_FLOAT);
     }
 
-    public static function getFloat($name, $default = NULL) {
-      return self::requestValue($name, $default, INPUT_GET, FILTER_VALIDATE_FLOAT);
-    }
-
-    public static function postPass($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function postPass(string $name, $default = null) {
       return self::requestValue($name, $default, INPUT_POST);
     }
 
-    public static function postString($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function postString(string $name, $default = null) {
       return self::requestString($name, $default, INPUT_POST);
     }
 
-    public static function getString($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getString(string $name, $default = null) {
       return self::requestString($name, $default, INPUT_GET);
     }
 
-    public static function postBool($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function postBool(string $name, $default = null) {
       $input = filter_input(INPUT_POST, $name, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
       return $input !== null ? (bool) $input : $default;
     }
 
-    public static function getBool($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getBool(string $name, $default = null) {
       $input = filter_input(INPUT_GET, $name, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
       return $input !== null ? (bool) $input : $default;
     }
 
-    public static function postInt($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function postInt(string $name, $default = null) {
       return self::requestInt($name, $default, INPUT_POST);
     }
 
-    public static function getInt($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getInt(string $name, $default = null) {
       return self::requestInt($name, $default, INPUT_GET);
     }
 
-    public static function requestFile($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function requestFile(string $name, $default = null) {
       if (isset($_FILES[$name])) {
         $files = $_FILES[$name];
         if (isset($files["name"], $files["type"], $files["size"], $files["tmp_name"])) {
@@ -185,7 +227,12 @@
       return $default;
     }
 
-    public static function postArray($name, $default = NULL) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function postArray(string $name, $default = null) {
       return ((isset($_POST[$name]) && is_array($_POST[$name])) ? $_POST[$name] : $default);
     }
 
@@ -196,26 +243,45 @@
      * @throws Exception Upload exception
      * @throws ErrorException Internal server exception
      */
-    public static function requireFile($name, $checkMime = false) {
+    public static function requireFile(string $name, bool $checkMime = false): array {
       return uUpload::sanitizeUpload($_FILES[$name], $checkMime);
     }
 
-    private static function requestString($name, $default, $type) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @param $type
+     * @return mixed|string
+     */
+    private static function requestString(string $name, $default, $type) {
       if (is_string(($val = self::requestValue($name, $default, $type)))) {
         return trim($val);
       }
       return $val;
     }
 
-    private static function requestInt($name, $default, $type) {
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @param int $type
+     * @return mixed|int
+     */
+    private static function requestInt(string $name, $default, int $type) {
       if (is_float(($val = self::requestValue($name, $default, $type, FILTER_VALIDATE_FLOAT)))) {
         return (int) round($val);
       }
       return self::requestValue($name, $default, $type, FILTER_VALIDATE_INT);
     }
 
-    private static function requestValue($name, $default, $type, $filters = FILTER_DEFAULT, $flags = NULL) {
-      $input = filter_input($type, $name, $filters, $flags);
+    /**
+     * @param string $name
+     * @param mixed $default
+     * @param int $type
+     * @param int $filters
+     * @return mixed
+     */
+    private static function requestValue(string $name, $default, int $type, int $filters = FILTER_DEFAULT) {
+      $input = filter_input($type, $name, $filters);
       if ($input !== false && $input !== null) {
         return $input;
       }

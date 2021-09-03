@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -31,7 +32,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(2, $json, "Wrong count of positions");
 
@@ -73,7 +74,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(2, $json, "Wrong count of positions");
 
@@ -116,7 +117,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(0, $json, "Wrong count of positions");
   }
@@ -143,7 +144,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(2, $json, "Wrong count of positions");
 
@@ -190,7 +191,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(1, $json, "Wrong count of positions");
 
@@ -230,7 +231,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(2, $json, "Wrong count of positions");
 
@@ -271,7 +272,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(0, $json, "Wrong count of positions");
   }
@@ -296,7 +297,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(0, $json, "Wrong count of positions");
   }
@@ -317,7 +318,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(0, $json, "Wrong count of positions");
@@ -343,7 +344,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/getpositions.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
 
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(1, $json, "Wrong count of positions");
@@ -355,7 +356,7 @@ class InternalAPITest extends UloggerAPITestCase {
     self::assertEquals($this->testTimestamp + 1, (int) $position->timestamp,"Wrong timestamp");
     self::assertEquals($this->testAdminUser, (string) $position->username,"Wrong username");
     self::assertEquals($this->testTrackName, (string) $position->trackname,"Wrong trackname");
-    self::assertEquals(111195, (int) $position->meters,"Wrong distance delta");
+    self::assertEquals(111195, $position->meters,"Wrong distance delta");
     self::assertEquals(1, (int) $position->seconds,"Wrong timestamp delta");
   }
 
@@ -382,7 +383,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/gettracks.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(2, $json, "Wrong count of tracks");
 
@@ -415,7 +416,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/gettracks.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(2, $json, "Wrong count of tracks");
 
@@ -448,7 +449,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/gettracks.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(0, $json, "Wrong count of tracks");
   }
@@ -471,7 +472,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->get("/utils/gettracks.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(0, $json, "Wrong count of tracks");
   }
@@ -493,7 +494,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->get("/utils/gettracks.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertCount(0, $json, "Wrong count of tracks");
   }
@@ -517,7 +518,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(401, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals("User not authorized", (string) $json->message, "Wrong error message");
@@ -536,7 +537,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals("Empty password", (string) $json->message, "Wrong error message");
@@ -558,7 +559,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals("User unknown", (string) $json->message, "Wrong error message");
@@ -579,7 +580,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals("Empty login", (string) $json->message, "Wrong error message");
@@ -602,7 +603,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals("Wrong old password", (string) $json->message, "Wrong error message");
@@ -624,7 +625,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error,"Wrong error status");
     self::assertEquals("Wrong old password", (string) $json->message,"Wrong error message");
@@ -649,7 +650,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertTrue(password_verify($newPass, $this->pdoGetColumn("SELECT password FROM users")), "Wrong actual password hash");
   }
@@ -674,7 +675,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertTrue(password_verify($newPass, $this->pdoGetColumn("SELECT password FROM users WHERE id = $userId")), "Wrong actual password hash");
   }
@@ -698,7 +699,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertTrue(password_verify($newPass, $this->pdoGetColumn("SELECT password FROM users WHERE id = $userId")), "Wrong actual password hash");
   }
@@ -723,7 +724,7 @@ class InternalAPITest extends UloggerAPITestCase {
     $response = $this->http->post("/utils/changepass.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
 
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals("User not authorized", (string) $json->message, "Wrong error message");
@@ -750,7 +751,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handletrack.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals($trackId2, $this->pdoGetColumn("SELECT id FROM tracks WHERE id = $trackId2"), "Wrong actual track id");
@@ -775,7 +776,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handletrack.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     self::assertEquals($trackId2, $this->pdoGetColumn("SELECT id FROM tracks WHERE id = $trackId2"), "Wrong actual track id");
@@ -800,7 +801,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handletrack.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals($lang["notauthorized"], (string) $json->message, "Wrong error message");
@@ -826,7 +827,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handletrack.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(2, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
     $row1 = [
@@ -869,7 +870,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handletrack.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error,"Wrong error status");
     self::assertEquals($lang["servererror"], (string) $json->message,"Wrong error message");
@@ -897,7 +898,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handletrack.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error,"Wrong error status");
     self::assertEquals($lang["servererror"], (string) $json->message,"Wrong error message");
@@ -915,7 +916,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handletrack.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals($lang["servererror"], (string) $json->message,"Wrong error message");
@@ -936,7 +937,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error,"Wrong error status");
     self::assertEquals($lang["servererror"], (string) $json->message,"Wrong error message");
@@ -957,7 +958,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error,"Wrong error status");
     self::assertEquals($lang["servererror"], (string) $json->message,"Wrong error message");
@@ -979,7 +980,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error,"Wrong error status");
     self::assertEquals($lang["servererror"], (string) $json->message,"Wrong error message");
@@ -1000,7 +1001,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error,"Wrong error status");
     self::assertEquals($lang["servererror"], (string) $json->message,"Wrong error message");
@@ -1022,7 +1023,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error,"Wrong error status");
     self::assertEquals($lang["servererror"], (string) $json->message,"Wrong error message");
@@ -1042,7 +1043,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(2, $this->getConnection()->getRowCount("users"), "Wrong row count");
     $expected = [
@@ -1071,7 +1072,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, (int) $json->error, "Wrong error status");
     self::assertEquals($lang["userexists"], (string) $json->message,"Wrong error message");
@@ -1093,7 +1094,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(2, $this->getConnection()->getRowCount("users"), "Wrong row count");
     self::assertTrue(password_verify($newPass, $this->pdoGetColumn("SELECT password FROM users WHERE login = '$this->testUser'")), "Wrong actual password hash");
@@ -1132,7 +1133,7 @@ class InternalAPITest extends UloggerAPITestCase {
     ];
     $response = $this->http->post("/utils/handleuser.php", $options);
     self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
-    $json = json_decode($response->getBody());
+    $json = json_decode((string) $response->getBody());
     self::assertNotNull($json, "JSON object is null");
     self::assertEquals(1, $this->getConnection()->getRowCount("users"), "Wrong row count");
   }

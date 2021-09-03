@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 require_once(__DIR__ . "/../lib/UloggerDatabaseTestCase.php");
 require_once(__DIR__ . "/../../helpers/user.php");
@@ -75,7 +76,7 @@ class UserTest extends UloggerDatabaseTestCase {
   }
 
   public function testIsAdmin(): void {
-    $this->addTestUser($this->testUser, NULL, true);
+    $this->addTestUser($this->testUser, null, true);
     $user = new uUser($this->testUser);
     self::assertTrue($user->isAdmin, "User should be admin");
   }

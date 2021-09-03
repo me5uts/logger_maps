@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -31,38 +32,38 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     public $timestamp;
     /** @param int User id */
     public $userId;
-    /** @param String User login */
+    /** @param string User login */
     public $userLogin;
     /** @param int Track id */
     public $trackId;
-    /** @param String Track name */
+    /** @param string Track name */
     public $trackName;
-    /** @param double Latitude */
+    /** @param float Latitude */
     public $latitude;
-    /** @param double Longitude */
+    /** @param float Longitude */
     public $longitude;
-    /** @param double Altitude */
+    /** @param float Altitude */
     public $altitude;
-    /** @param double Speed */
+    /** @param float Speed */
     public $speed;
-    /** @param double Bearing */
+    /** @param float Bearing */
     public $bearing;
     /** @param int Accuracy */
     public $accuracy;
-    /** @param String Provider */
+    /** @param string Provider */
     public $provider;
-    /** @param String Comment */
+    /** @param string Comment */
     public $comment;
-    /** @param String Image path */
+    /** @param string Image path */
     public $image;
 
     public $isValid = false;
 
    /**
     * Constructor
-    * @param integer $positionId Position id
+    * @param int|null $positionId Position id
     */
-    public function __construct($positionId = NULL) {
+    public function __construct(?int $positionId = null) {
 
       if (!empty($positionId)) {
         $query = "SELECT p.id, " . self::db()->unix_timestamp('p.time') . " AS tstamp, p.user_id, p.track_id,
@@ -87,7 +88,7 @@ require_once(ROOT_DIR . "/helpers/upload.php");
      *
      * @return uDb instance
      */
-    private static function db() {
+    private static function db(): uDb {
       return uDb::getInstance();
     }
 
@@ -96,7 +97,7 @@ require_once(ROOT_DIR . "/helpers/upload.php");
      *
      * @return bool True if has image
      */
-    public function hasImage() {
+    public function hasImage(): bool {
       return !empty($this->image);
     }
 
@@ -106,22 +107,22 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     * @param int $userId
     * @param int $trackId
     * @param int $timestamp Unix time stamp
-    * @param double $lat
-    * @param double $lon
-    * @param double $altitude Optional
-    * @param double $speed Optional
-    * @param double $bearing Optional
-    * @param int $accuracy Optional
-    * @param string $provider Optional
-    * @param string $comment Optional
-    * @param int $image Optional
+    * @param float $lat
+    * @param float $lon
+    * @param float|null $altitude Optional
+    * @param float|null $speed Optional
+    * @param float|null $bearing Optional
+    * @param int|null $accuracy Optional
+    * @param string|null $provider Optional
+    * @param string|null $comment Optional
+    * @param string|null $image Optional
     * @return int|bool New position id in database, false on error
     */
-    public static function add($userId, $trackId, $timestamp, $lat, $lon,
-                               $altitude = NULL, $speed = NULL, $bearing = NULL, $accuracy = NULL,
-                               $provider = NULL, $comment = NULL, $image = NULL) {
+    public static function add(int $userId, int $trackId, int $timestamp, float $lat, float $lon,
+                               ?float $altitude = null, ?float $speed = null, ?float $bearing = null, ?int $accuracy = null,
+                               ?string $provider = null, ?string $comment = null, ?string $image = null) {
       $positionId = false;
-      if (is_numeric($lat) && is_numeric($lon) && is_numeric($timestamp) && is_numeric($userId) && is_numeric($trackId)) {
+      if ($userId && $trackId) {
         $track = new uTrack($trackId);
         if ($track->isValid && $track->userId === $userId) {
           try {
@@ -149,7 +150,7 @@ require_once(ROOT_DIR . "/helpers/upload.php");
      *
      * @return bool True if success, false otherwise
      */
-    public function update() {
+    public function update(): bool {
       $ret = false;
       if ($this->isValid) {
         try {
@@ -187,7 +188,7 @@ require_once(ROOT_DIR . "/helpers/upload.php");
      *
      * @return bool True if success, false otherwise
      */
-    public function delete() {
+    public function delete(): bool {
       $ret = false;
       if ($this->isValid) {
         try {
@@ -196,7 +197,7 @@ require_once(ROOT_DIR . "/helpers/upload.php");
           $stmt->execute([ $this->id ]);
           $this->removeImage();
           $ret = true;
-          $this->id = NULL;
+          $this->id = null;
           $this->isValid = false;
         } catch (PDOException $e) {
           // TODO: handle exception
@@ -210,10 +211,10 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     * Delete all user's positions, optionally limit to given track
     *
     * @param int $userId User id
-    * @param int $trackId Optional track id
+    * @param int|null $trackId Optional track id
     * @return bool True if success, false otherwise
     */
-    public static function deleteAll($userId, $trackId = NULL) {
+    public static function deleteAll(int $userId, ?int $trackId = null): bool {
       $ret = false;
       if (!empty($userId)) {
         $args = [];
@@ -241,16 +242,16 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     * Get last position data from database
     * (for given user if specified)
     *
-    * @param int $userId Optional user id
+    * @param int|null $userId Optional user id
     * @return uPosition Position
     */
-    public static function getLast($userId = NULL) {
+    public static function getLast(?int $userId = null): uPosition {
       if (!empty($userId)) {
         $where = "WHERE p.user_id = ?";
         $params = [ $userId ];
       } else {
         $where = "";
-        $params = NULL;
+        $params = null;
       }
       $query = "SELECT p.id, " . self::db()->unix_timestamp('p.time') . " AS tstamp, p.user_id, p.track_id,
                 p.latitude, p.longitude, p.altitude, p.speed, p.bearing, p.accuracy, p.provider,
@@ -305,21 +306,21 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     /**
      * Get array of all positions
      *
-     * @param int $userId Optional limit to given user id
-     * @param int $trackId Optional limit to given track id
-     * @param int $afterId Optional limit to positions with id greater then given id
+     * @param int|null $userId Optional limit to given user id
+     * @param int|null $trackId Optional limit to given track id
+     * @param int|null $afterId Optional limit to positions with id greater than given id
      * @param array $rules Optional rules
      * @return uPosition[]|bool Array of uPosition positions, false on error
      */
-    public static function getAll($userId = NULL, $trackId = NULL, $afterId = NULL, $rules = []) {
+    public static function getAll(?int $userId = null, ?int $trackId = null, ?int $afterId = null, array $rules = []) {
       if (!empty($userId)) {
-        $rules[] = "p.user_id = " . self::db()->quote($userId);
+        $rules[] = "p.user_id = " . self::db()->quote((string) $userId);
       }
       if (!empty($trackId)) {
-        $rules[] = "p.track_id = " . self::db()->quote($trackId);
+        $rules[] = "p.track_id = " . self::db()->quote((string) $trackId);
       }
       if (!empty($afterId)) {
-        $rules[] = "p.id > " . self::db()->quote($afterId);
+        $rules[] = "p.id > " . self::db()->quote((string) $afterId);
       }
       if (!empty($rules)) {
         $where = "WHERE " . implode(" AND ", $rules);
@@ -351,13 +352,13 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     /**
      * Get array of all positions with image
      *
-     * @param int $userId Optional limit to given user id
-     * @param int $trackId Optional limit to given track id
-     * @param int $afterId Optional limit to positions with id greater then given id
+     * @param int|null $userId Optional limit to given user id
+     * @param int|null $trackId Optional limit to given track id
+     * @param int|null $afterId Optional limit to positions with id greater than given id
      * @param array $rules Optional rules
      * @return uPosition[]|bool Array of uPosition positions, false on error
      */
-    public static function getAllWithImage($userId = NULL, $trackId = NULL, $afterId = NULL, $rules = []) {
+    public static function getAllWithImage(?int $userId = null, ?int $trackId = null, ?int $afterId = null, array $rules = []) {
       $rules[] = "p.image IS NOT NULL";
       return self::getAll($userId, $trackId, $afterId, $rules);
     }
@@ -366,10 +367,10 @@ require_once(ROOT_DIR . "/helpers/upload.php");
      * Delete all user's uploads, optionally limit to given track
      *
      * @param int $userId User id
-     * @param int $trackId Optional track id
+     * @param int|null $trackId Optional track id
      * @return bool True if success, false otherwise
      */
-    public static function removeImages($userId, $trackId = NULL) {
+    public static function removeImages(int $userId, ?int $trackId = null): bool {
       if (($positions = self::getAllWithImage($userId, $trackId)) !== false) {
         foreach ($positions as $position) {
           try {
@@ -387,8 +388,10 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     /**
      * Add uploaded image
      * @param array $imageMeta File metadata array
+     * @return bool
      */
-    public function setImage($imageMeta) {
+    public function setImage(array $imageMeta): bool {
+      $result = false;
       if (!empty($imageMeta)) {
         if ($this->hasImage()) {
           $this->removeImage();
@@ -397,23 +400,26 @@ require_once(ROOT_DIR . "/helpers/upload.php");
         $query = "UPDATE " . self::db()->table('positions') . "
               SET image = ? WHERE id = ?";
         $stmt = self::db()->prepare($query);
-        $stmt->execute([ $this->image, $this->id ]);
+        $result = $stmt->execute([ $this->image, $this->id ]);
       }
+      return $result;
     }
 
     /**
      * Delete image
      */
-    public function removeImage() {
+    public function removeImage(): bool {
+      $result = true;
       if ($this->hasImage()) {
         $query = "UPDATE " . self::db()->table('positions') . "
               SET image = NULL WHERE id = ?";
         $stmt = self::db()->prepare($query);
-        $stmt->execute([ $this->id ]);
+        $result = $stmt->execute([ $this->id ]);
         // ignore unlink errors
         uUpload::delete($this->image);
         $this->image = null;
       }
+      return $result;
     }
 
    /**
@@ -422,7 +428,7 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     * @param uPosition $target Target position
     * @return int Distance in meters
     */
-    public function distanceTo($target) {
+    public function distanceTo(uPosition $target): int {
       $lat1 = deg2rad($this->latitude);
       $lon1 = deg2rad($this->longitude);
       $lat2 = deg2rad($target->latitude);
@@ -430,7 +436,7 @@ require_once(ROOT_DIR . "/helpers/upload.php");
       $latD = $lat2 - $lat1;
       $lonD = $lon2 - $lon1;
       $bearing = 2 * asin(sqrt((sin($latD / 2) ** 2) + cos($lat1) * cos($lat2) * (sin($lonD / 2) ** 2)));
-      return $bearing * 6371000;
+      return (int) round($bearing * 6371000);
     }
 
    /**
@@ -439,7 +445,7 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     * @param uPosition $target Target position
     * @return int Number of seconds
     */
-    public function secondsTo($target) {
+    public function secondsTo(uPosition $target): int {
       return $this->timestamp - $target->timestamp;
     }
 
@@ -449,24 +455,9 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     * @param array $row Row
     * @return uPosition Position
     */
-    private static function rowToObject($row) {
+    private static function rowToObject(array $row): uPosition {
       $position = new uPosition();
-      $position->id = (int) $row['id'];
-      $position->timestamp = (int) $row['tstamp'];
-      $position->userId = (int) $row['user_id'];
-      $position->userLogin = $row['login'];
-      $position->trackId = (int) $row['track_id'];
-      $position->trackName = $row['name'];
-      $position->latitude = (double) $row['latitude'];
-      $position->longitude = (double) $row['longitude'];
-      $position->altitude = (double) $row['altitude'];
-      $position->speed = (double) $row['speed'];
-      $position->bearing = (double) $row['bearing'];
-      $position->accuracy = (int) $row['accuracy'];
-      $position->provider = $row['provider'];
-      $position->comment = $row['comment'];
-      $position->image = $row['image'];
-      $position->isValid = true;
+      $position->setFromArray($row);
       return $position;
     }
 
@@ -477,28 +468,37 @@ require_once(ROOT_DIR . "/helpers/upload.php");
     * @param array|null $params Optional array of bind parameters
     * @throws PDOException
     */
-    private function loadWithQuery($query, $params = NULL) {
+    private function loadWithQuery(string $query, ?array $params = null): void {
       $stmt = self::db()->prepare($query);
       $stmt->execute($params);
 
-      $stmt->bindColumn('id', $this->id, PDO::PARAM_INT);
-      $stmt->bindColumn('tstamp', $this->timestamp, PDO::PARAM_INT);
-      $stmt->bindColumn('user_id', $this->userId, PDO::PARAM_INT);
-      $stmt->bindColumn('track_id', $this->trackId, PDO::PARAM_INT);
-      $stmt->bindColumn('latitude', $this->latitude);
-      $stmt->bindColumn('longitude', $this->longitude);
-      $stmt->bindColumn('altitude', $this->altitude);
-      $stmt->bindColumn('speed', $this->speed);
-      $stmt->bindColumn('bearing', $this->bearing);
-      $stmt->bindColumn('accuracy', $this->accuracy, PDO::PARAM_INT);
-      $stmt->bindColumn('provider', $this->provider);
-      $stmt->bindColumn('comment', $this->comment);
-      $stmt->bindColumn('image', $this->image);
-      $stmt->bindColumn('login', $this->userLogin);
-      $stmt->bindColumn('name', $this->trackName);
-      if ($stmt->fetch(PDO::FETCH_BOUND)) {
-        $this->isValid = true;
+      $row = $stmt->fetch();
+      if ($row) {
+        $this->setFromArray($row);
       }
+    }
+
+    /**
+     * Set position from array. Array should not be empty
+     * @param array $row
+     */
+    private function setFromArray(array $row): void {
+      $this->id = (int) $row['id'];
+      $this->timestamp = (int) $row['tstamp'];
+      $this->userId = (int) $row['user_id'];
+      $this->userLogin = $row['login'];
+      $this->trackId = (int) $row['track_id'];
+      $this->trackName = $row['name'];
+      $this->latitude = (float) $row['latitude'];
+      $this->longitude = (float) $row['longitude'];
+      $this->altitude = is_null($row['longitude']) ? null : (float) $row['altitude'];
+      $this->speed = is_null($row['speed']) ? null : (float) $row['speed'];
+      $this->bearing = is_null($row['bearing']) ? null : (float) $row['bearing'];
+      $this->accuracy = is_null($row['accuracy']) ? null : (int) $row['accuracy'];
+      $this->provider = $row['provider'];
+      $this->comment = $row['comment'];
+      $this->image = $row['image'];
+      $this->isValid = true;
     }
   }
 

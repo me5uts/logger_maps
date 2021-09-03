@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 
 require_once("BaseDatabaseTestCase.php");
 require_once(__DIR__ . "/../../helpers/db.php");
@@ -8,7 +9,7 @@ class UloggerDatabaseTestCase extends BaseDatabaseTestCase {
   /**
    * @var uDb $udb
    */
-  static private $udb = null;
+  static private $udb;
 
   /**
    * @throws ReflectionException

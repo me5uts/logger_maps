@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /**
  * μlogger
  *
@@ -46,7 +47,7 @@ if (!defined("SKIP_RUN")) {
  * Check μlogger version is valid for migration
  * @return bool True if valid version
  */
-function verifyVersion() {
+function verifyVersion(): bool {
   if (!class_exists("uConfig") || !class_exists("uDb") ||
     !method_exists("uConfig", "getOfflineInstance") ||
     strpos(uConfig::getOfflineInstance()->version, '1.') !== 0) {
@@ -61,7 +62,7 @@ function verifyVersion() {
  * @param string $input Optional path to read from (for tests)
  * @return bool True if confirmed
  */
-function waitForUser($input = "php://stdin") {
+function waitForUser(string $input = "php://stdin"): bool {
   echo "This script will update database from version 0.6 to 1.x." . PHP_EOL;
   echo "Creating database backup is recommended before proceeding" . PHP_EOL;
   echo "Type 'yes' to continue, anything else to abort" . PHP_EOL;
@@ -81,7 +82,7 @@ function waitForUser($input = "php://stdin") {
  * Updates database schemas
  * @return bool True on success
  */
-function updateSchemas() {
+function updateSchemas(): bool {
   echo "Migrating database schemas..." . PHP_EOL;
   try {
     $queries = getQueries();
@@ -111,8 +112,8 @@ function updateSchemas() {
  * @param string $path Optional path of config (for tests)
  * @return bool True on success
  */
-/** @noinspection IssetArgumentExistenceInspection, PhpIncludeInspection */
-function updateConfig($path = ROOT_DIR . "/config.php") {
+/** @noinspection IssetArgumentExistenceInspection */
+function updateConfig(string $path = ROOT_DIR . "/config.php"): bool {
   echo "Migrating config to database..." . PHP_EOL;
   require_once($path);
   if (isset($admin_user) && !empty($admin_user)) {
@@ -191,7 +192,7 @@ function updateConfig($path = ROOT_DIR . "/config.php") {
  * Get queries array for current db driver
  * @return array Queries
  */
-function getQueries() {
+function getQueries(): array {
   $dbDriver = uDb::getInstance()->getAttribute(PDO::ATTR_DRIVER_NAME);
   $tConfig = uDb::getInstance()->table('config');
   $tLayers = uDb::getInstance()->table('ol_layers');

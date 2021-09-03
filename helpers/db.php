@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -68,7 +69,7 @@ require_once(ROOT_DIR . "/helpers/utils.php");
     * @param string $user
     * @param string $pass
     */
-    public function __construct($dsn, $user, $pass) {
+    public function __construct(string $dsn, string $user, string $pass) {
       try {
         $options = [
           PDO::ATTR_EMULATE_PREPARES   => false, // try to use native prepared statements
@@ -88,7 +89,7 @@ require_once(ROOT_DIR . "/helpers/utils.php");
     /**
      * Initialize table names based on config
      */
-    private function initTables() {
+    private function initTables(): void {
       self::$tables = [];
       $prefix = preg_replace('/[^a-z0-9_]/i', '', self::$dbprefix);
       self::$tables['positions'] = $prefix . "positions";
@@ -103,7 +104,7 @@ require_once(ROOT_DIR . "/helpers/utils.php");
     *
     * @return uDb Singleton instance
     */
-    public static function getInstance() {
+    public static function getInstance(): uDb {
       if (!self::$instance) {
         self::getConfig();
         self::$instance = new self(self::$dbdsn, self::$dbuser, self::$dbpass);
@@ -114,9 +115,8 @@ require_once(ROOT_DIR . "/helpers/utils.php");
     /**
      * Read database setup from config file
      * @noinspection IssetArgumentExistenceInspection
-     * @noinspection PhpIncludeInspection
      */
-    private static function getConfig() {
+    private static function getConfig(): void {
       $configFile = dirname(__DIR__) . "/config.php";
       if (!file_exists($configFile)) {
         header("HTTP/1.1 503 Service Unavailable");
@@ -143,7 +143,7 @@ require_once(ROOT_DIR . "/helpers/utils.php");
     * @param string $name Name
     * @return string Full table name
     */
-    public function table($name) {
+    public function table(string $name): string {
       return self::$tables[$name];
     }
 
@@ -152,18 +152,15 @@ require_once(ROOT_DIR . "/helpers/utils.php");
      * @param string $column
      * @return string
      */
-    public function unix_timestamp($column) {
+    public function unix_timestamp(string $column): string {
       switch (self::$driver) {
         default:
         case "mysql":
           return "UNIX_TIMESTAMP($column)";
-          break;
         case "pgsql":
           return "EXTRACT(EPOCH FROM $column::TIMESTAMP WITH TIME ZONE)";
-          break;
         case "sqlite":
           return "STRFTIME('%s', $column)";
-          break;
       }
     }
 
@@ -171,16 +168,14 @@ require_once(ROOT_DIR . "/helpers/utils.php");
      * Returns placeholder for LOB data types
      * @return string
      */
-    public function lobPlaceholder() {
+    public function lobPlaceholder(): string {
       switch (self::$driver) {
         default:
         case "mysql":
         case "sqlite":
-        return "?";
-          break;
+          return "?";
         case "pgsql":
           return "?::bytea";
-          break;
       }
     }
 
@@ -189,16 +184,14 @@ require_once(ROOT_DIR . "/helpers/utils.php");
      * @param string $column Column name
      * @return string
      */
-    public function from_lob($column) {
+    public function from_lob(string $column): string {
       switch (self::$driver) {
         default:
         case "mysql":
         case "sqlite":
           return $column;
-          break;
         case "pgsql":
           return "encode($column, 'escape') AS $column";
-          break;
       }
     }
 
@@ -207,18 +200,15 @@ require_once(ROOT_DIR . "/helpers/utils.php");
      * @param string $column
      * @return string
      */
-    public function from_unixtime($column) {
+    public function from_unixtime(string $column): string {
       switch (self::$driver) {
         default:
         case "mysql":
           return "FROM_UNIXTIME($column)";
-          break;
         case "pgsql":
           return "TO_TIMESTAMP($column)";
-          break;
         case "sqlite":
           return "DATETIME($column, 'unixepoch')";
-          break;
       }
     }
 
@@ -232,7 +222,7 @@ require_once(ROOT_DIR . "/helpers/utils.php");
      * @param string $update Updated column
      * @return string
      */
-    public function insertOrReplace($table, $columns, $values, $key, $update) {
+    public function insertOrReplace(string $table, array $columns, array $values, string $key, string $update): string {
       $cols = implode(", ", $columns);
       $rows = [];
       foreach ($values as $row) {
@@ -243,26 +233,24 @@ require_once(ROOT_DIR . "/helpers/utils.php");
         default:
         case "mysql":
           return "INSERT INTO {$this->table($table)} ($cols)
-            VALUES $vals
-            ON DUPLICATE KEY UPDATE $update = VALUES($update)";
-          break;
+                  VALUES $vals
+                  ON DUPLICATE KEY UPDATE $update = VALUES($update)";
         case "pgsql":
           return "INSERT INTO {$this->table($table)} ($cols)
-            VALUES $vals
-            ON CONFLICT ($key) DO UPDATE SET $update = EXCLUDED.$update";
-          break;
+                  VALUES $vals
+                  ON CONFLICT ($key) DO UPDATE SET $update = EXCLUDED.$update";
         case "sqlite":
           return "REPLACE INTO {$this->table($table)} ($cols)
-            VALUES $vals";
-          break;
+                  VALUES $vals";
       }
     }
 
     /**
      * Set character set
      * @param string $charset
+     * @noinspection PhpSameParameterValueInspection
      */
-    private function setCharset($charset) {
+    private function setCharset(string $charset): void {
       if (self::$driver === "pgsql" || self::$driver === "mysql") {
         $this->exec("SET NAMES '$charset'");
       }
@@ -273,10 +261,10 @@ require_once(ROOT_DIR . "/helpers/utils.php");
      * @param string $dsn
      * @return string Empty string if not found
      */
-    public static function getDbName($dsn) {
+    public static function getDbName(string $dsn): string {
       $name = "";
       if (strpos($dsn, ":") !== false) {
-        list($scheme, $dsnWithoutScheme) = explode(":", $dsn, 2);
+        [$scheme, $dsnWithoutScheme] = explode(":", $dsn, 2);
         switch ($scheme) {
           case "sqlite":
           case "sqlite2":
@@ -301,10 +289,10 @@ require_once(ROOT_DIR . "/helpers/utils.php");
     /**
      * Normalize DSN.
      * Make sure sqlite DSN file path is absolute
-     * @param $dsn string DSN
+     * @param string $dsn DSN
      * @return string Normalized DSN
      */
-    public static function normalizeDsn($dsn) {
+    public static function normalizeDsn(string $dsn): string {
       if (stripos($dsn, "sqlite") !== 0) {
         return $dsn;
       }

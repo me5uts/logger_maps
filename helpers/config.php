@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -137,7 +138,7 @@ class uConfig {
    */
   public $uploadMaxSize = 5242880;
   
-  public function __construct($useDatabase = true) {
+  public function __construct(bool $useDatabase = true) {
     if ($useDatabase) {
       $this->setFromDatabase();
     }
@@ -149,7 +150,7 @@ class uConfig {
    *
    * @return uConfig Singleton instance
    */
-  public static function getInstance() {
+  public static function getInstance(): uConfig {
     if (!self::$instance) {
       self::$instance = new self();
     }
@@ -161,7 +162,7 @@ class uConfig {
    *
    * @return uConfig Singleton instance
    */
-  public static function getOfflineInstance() {
+  public static function getOfflineInstance(): uConfig {
     if (!self::$instance) {
       self::$instance = new self(false);
     }
@@ -173,14 +174,14 @@ class uConfig {
    *
    * @return uDb instance
    */
-  private static function db() {
+  private static function db(): uDb {
     return uDb::getInstance();
   }
 
   /**
    * Read config values from database
    */
-  public function setFromDatabase() {
+  public function setFromDatabase(): void {
     try {
       $query = "SELECT name, value FROM " . self::db()->table("config");
       $result = self::db()->query($query);
@@ -199,21 +200,21 @@ class uConfig {
 
   /**
    * Unserialize data from database
-   * @param string|resource $data Resource returned by pgsql, string otherwise
+   * @param object|string $data Resource returned by pgsql, string otherwise
    * @return mixed
    */
   private function unserialize($data) {
     if (is_resource($data)) {
-      return unserialize(stream_get_contents($data));
+      $data = stream_get_contents($data);
     }
-    return unserialize($data);
+    return unserialize($data, ['allowed_classes' => false]);
   }
 
   /**
    * Save config values to database
    * @return bool True on success, false otherwise
    */
-  public function save() {
+  public function save(): bool {
     $ret = false;
     try {
       // PDO::PARAM_LOB doesn't work here with pgsql, why?
@@ -279,7 +280,7 @@ class uConfig {
    * Truncate ol_layers table
    * @throws PDOException
    */
-  private function deleteLayers() {
+  private function deleteLayers(): void {
     $query = "DELETE FROM " . self::db()->table("ol_layers");
     self::db()->exec($query);
   }
@@ -288,7 +289,7 @@ class uConfig {
    * Save layers to database
    * @throws PDOException
    */
-  private function saveLayers() {
+  private function saveLayers(): void {
     $this->deleteLayers();
     if (!empty($this->olLayers)) {
       $query = "INSERT INTO " . self::db()->table("ol_layers") . " (id, name, url, priority) VALUES (?, ?, ?, ?)";
@@ -303,7 +304,7 @@ class uConfig {
    * Read config values from database
    * @throws PDOException
    */
-  private function setLayersFromDatabase() {
+  private function setLayersFromDatabase(): void {
     $this->olLayers = [];
     $query = "SELECT id, name, url, priority FROM " . self::db()->table('ol_layers');
     $result = self::db()->query($query);
@@ -315,7 +316,7 @@ class uConfig {
   /**
    * Read config values stored in cookies
    */
-  private function setFromCookies() {
+  private function setFromCookies(): void {
     if (isset($_COOKIE["ulogger_api"])) { $this->mapApi = $_COOKIE["ulogger_api"]; }
     if (isset($_COOKIE["ulogger_lang"])) { $this->lang = $_COOKIE["ulogger_lang"]; }
     if (isset($_COOKIE["ulogger_units"])) { $this->units = $_COOKIE["ulogger_units"]; }
@@ -326,11 +327,11 @@ class uConfig {
   /**
    * Check if given password matches user's one
    *
-   * @param String $password Password
+   * @param string $password Password
    * @return bool True if matches, false otherwise
    */
-  public function validPassStrength($password) {
-    return preg_match($this->passRegex(), $password);
+  public function validPassStrength(string $password): bool {
+    return preg_match($this->passRegex(), $password) === 1;
   }
 
   /**
@@ -338,7 +339,7 @@ class uConfig {
    * Valid for both php and javascript
    * @return string
    */
-  public function passRegex() {
+  public function passRegex(): string {
     $regex = "";
     if ($this->passStrength > 0) {
       // lower and upper case
@@ -365,7 +366,7 @@ class uConfig {
    * Set config values from array
    * @param array $arr
    */
-  public function setFromArray($arr) {
+  public function setFromArray(array $arr): void {
     if (!is_array($arr)) {
       return;
     }
@@ -435,7 +436,7 @@ class uConfig {
   /**
    * Adjust uploadMaxSize to system limits
    */
-  private function setUploadLimit() {
+  private function setUploadLimit(): void {
     $limit = uUtils::getSystemUploadLimit();
     if ($this->uploadMaxSize <= 0 || $this->uploadMaxSize > $limit) {
       $this->uploadMaxSize = $limit;

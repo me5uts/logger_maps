@@ -1,5 +1,7 @@
 #!/usr/bin/env php
 <?php
+declare(strict_types = 1);
+
 /* μlogger CLI import
  *
  * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
@@ -37,7 +39,7 @@ if (PHP_SAPI !== 'cli') {
   exit('Call me on CLI only!' . PHP_EOL);
 }
 
-if (!class_exists("GetOpt\GetOpt")) {
+if (!class_exists(GetOpt::class)) {
   exit('This script needs ulrichsg/getopt-php package. Please install dependencies via Composer.' . PHP_EOL);
 }
 
@@ -82,9 +84,6 @@ if ($getopt->getOption('help')) {
 
 // get all tracks for user id
 $userId = $getopt->getOption('user-id');
-if (!$getopt->getOption('import-existing-track')) {
-  $tracksArr = uTrack::getAll($userId);
-}
 
 // lets import some GPX tracks!
 $gpxFiles = $getopt->getOperand('gpx');
@@ -97,6 +96,7 @@ foreach ($gpxFiles as $i => $gpxFile) {
   $gpxName = basename($gpxFile);
 
   if (!$getopt->getOption('import-existing-track')) {
+    $tracksArr = uTrack::getAll($userId);
     foreach ($tracksArr as $track) {
       if ($track->name === $gpxName) {
         print('WARNING: ' . $gpxName . ' already present, skipping...' . PHP_EOL);
@@ -113,6 +113,7 @@ foreach ($gpxFiles as $i => $gpxFile) {
   $gpx = false;
   libxml_use_internal_errors(true);
   if ($gpxFile && file_exists($gpxFile)) {
+    /** @noinspection SimpleXmlLoadFileUsageInspection */
     $gpx = simplexml_load_file($gpxFile);
   }
 
@@ -138,26 +139,25 @@ foreach ($gpxFiles as $i => $gpxFile) {
   $trackCnt = 0;
   foreach ($gpx->trk as $trk) {
     $trackName = empty($trk->name) ? $gpxName : (string) $trk->name;
-    $metaName = empty($gpx->metadata->name) ? NULL : (string) $gpx->metadata->name;
+    $metaName = empty($gpx->metadata->name) ? null : (string) $gpx->metadata->name;
     $trackId = uTrack::add($userId, $trackName, $metaName);
     if ($trackId === false) {
       uUtils::exitWithError($lang["servererror"]);
-      break;
     }
     $track = new uTrack($trackId);
     $posCnt = 0;
 
     foreach($trk->trkseg as $segment) {
       foreach($segment->trkpt as $point) {
-        if (!isset($point["lat"]) || !isset($point["lon"])) {
+        if (!isset($point["lat"], $point["lon"])) {
           $track->delete();
           uUtils::exitWithError($lang["iparsefailure"]);
         }
-        $time = isset($point->time) ? strtotime($point->time) : 0;
-        $altitude = isset($point->ele) ? (double) $point->ele : NULL;
-        $speed = NULL;
-        $bearing = NULL;
-        $accuracy = NULL;
+        $time = isset($point->time) ? strtotime((string) $point->time) : 0;
+        $altitude = isset($point->ele) ? (double) $point->ele : null;
+        $speed = null;
+        $bearing = null;
+        $accuracy = null;
         $provider = "gps";
         if (!empty($point->extensions)) {
           // parse ulogger extensions
@@ -169,7 +169,7 @@ foreach ($gpxFiles as $i => $gpxFile) {
         }
         $ret = $track->addPosition($userId,
           $time, (double) $point["lat"], (double) $point["lon"], $altitude,
-          $speed, $bearing, $accuracy, $provider, NULL, NULL);
+          $speed, $bearing, $accuracy, $provider);
         if ($ret === false) {
           $track->delete();
           uUtils::exitWithError($lang["servererror"]);

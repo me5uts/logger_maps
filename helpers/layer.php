@@ -1,4 +1,6 @@
 <?php
+declare(strict_types = 1);
+
 /**
  * μlogger
  *
@@ -31,7 +33,7 @@ class uLayer {
    * @param string $url
    * @param int $priority
    */
-  public function __construct($id, $name, $url, $priority) {
+  public function __construct(int $id, string $name, string $url, int $priority) {
     $this->id = $id;
     $this->name = $name;
     $this->url = $url;

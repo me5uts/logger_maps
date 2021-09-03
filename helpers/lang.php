@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 /* μlogger
  *
  * Copyright(C) 2019 Bartek Fabiszewski (www.fabiszewski.net)
@@ -64,7 +65,7 @@
      *
      * @param uConfig $config Config
      */
-    public function __construct($config) {
+    public function __construct(uConfig $config) {
       $language = $config->lang;
       $lang = [];
       $langSetup = [];
@@ -74,6 +75,7 @@
       // override with translated strings if needed
       // missing strings will be displayed in English
       if ($language !== "en" && array_key_exists($language, self::$languages)) {
+        /** @noinspection PhpIncludeInspection */
         require(ROOT_DIR . "/lang/$language.php");
       }
 
@@ -87,7 +89,7 @@
      *
      * @return array
      */
-    public static function getLanguages() {
+    public static function getLanguages(): array {
       return self::$languages;
     }
 
@@ -97,7 +99,7 @@
      *
      * @return array
      */
-    public function getStrings() {
+    public function getStrings(): array {
       return $this->strings;
     }
 
@@ -107,7 +109,7 @@
      *
      * @return array
      */
-    public function getSetupStrings() {
+    public function getSetupStrings(): array {
       return $this->setupStrings;
     }
 
