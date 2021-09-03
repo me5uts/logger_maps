@@ -2,7 +2,7 @@
     "name": "bfabiszewski/ulogger-server",
     "description": "ulogger server",
     "require": {
-        "ulrichsg/getopt-php": "^3.2",
+        "ulrichsg/getopt-php": "^3.4",
         "ext-json": "*",
         "ext-pdo": "*",
         "ext-xmlwriter": "*",
