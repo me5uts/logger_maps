@@ -18,14 +18,14 @@ declare(strict_types = 1);
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-  require_once("helpers/auth.php");
-  require_once(ROOT_DIR . "/helpers/lang.php");
-  require_once(ROOT_DIR . "/helpers/config.php");
+require_once("helpers/auth.php");
+require_once(ROOT_DIR . "/helpers/lang.php");
+require_once(ROOT_DIR . "/helpers/config.php");
 
-  $auth_error = uUtils::getBool('auth_error', false);
+$auth_error = uUtils::getBool('auth_error', false);
 
-  $config = uConfig::getInstance();
-  $lang = (new uLang($config))->getStrings();
+$config = uConfig::getInstance();
+$lang = (new uLang($config))->getStrings();
 
 ?>
 <!DOCTYPE html>
