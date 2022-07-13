@@ -32,11 +32,11 @@ class uTrack {
 
   public $isValid = false;
 
- /**
-  * Constructor
-  *
-  * @param int|null $trackId Track id
-  */
+  /**
+   * Constructor
+   *
+   * @param int|null $trackId Track id
+   */
   public function __construct(?int $trackId = null) {
 
     if (!empty($trackId)) {
@@ -68,14 +68,14 @@ class uTrack {
     return uDb::getInstance();
   }
 
- /**
-  * Add new track
-  *
-  * @param int $userId User id
-  * @param string $name Name
-  * @param string|null $comment Optional comment
-  * @return int|bool New track id, false on error
-  */
+  /**
+   * Add new track
+   *
+   * @param int $userId User id
+   * @param string $name Name
+   * @param string|null $comment Optional comment
+   * @return int|bool New track id, false on error
+   */
   public static function add(int $userId, string $name, ?string $comment = null) {
     $trackId = false;
     if (!empty($userId) && !empty($name)) {
@@ -152,13 +152,13 @@ class uTrack {
     return $ret;
   }
 
- /**
-  * Update track
-  *
-  * @param string|null $name New name (not empty string) or NULL if not changed
-  * @param string|null $comment New comment or NULL if not changed (to remove content use empty string: "")
-  * @return bool True if success, false otherwise
-  */
+  /**
+   * Update track
+   *
+   * @param string|null $name New name (not empty string) or NULL if not changed
+   * @param string|null $comment New comment or NULL if not changed (to remove content use empty string: "")
+   * @return bool True if success, false otherwise
+   */
   public function update(?string $name = null, ?string $comment = null): bool {
     $ret = false;
     if (empty($name)) { $name = $this->name; }
@@ -181,12 +181,12 @@ class uTrack {
     return $ret;
   }
 
- /**
-  * Delete all user's tracks
-  *
-  * @param int $userId User id
-  * @return bool True if success, false otherwise
-  */
+  /**
+   * Delete all user's tracks
+   *
+   * @param int $userId User id
+   * @return bool True if success, false otherwise
+   */
   public static function deleteAll(int $userId): bool {
     $ret = false;
     if (!empty($userId) && uPosition::deleteAll($userId) === true) {
@@ -204,12 +204,12 @@ class uTrack {
     return $ret;
   }
 
- /**
-  * Get all tracks
-  *
-  * @param int|null $userId Optional limit to user id
-  * @return array|bool Array of uTrack tracks, false on error
-  */
+  /**
+   * Get all tracks
+   *
+   * @param int|null $userId Optional limit to user id
+   * @return array|bool Array of uTrack tracks, false on error
+   */
   public static function getAll(?int $userId = null) {
     if (!empty($userId)) {
       $where = "WHERE user_id=" . self::db()->quote((string) $userId);
@@ -231,12 +231,12 @@ class uTrack {
     return $trackArr;
   }
 
- /**
-  * Convert database row to uTrack
-  *
-  * @param array $row Row
-  * @return uTrack Track
-  */
+  /**
+   * Convert database row to uTrack
+   *
+   * @param array $row Row
+   * @return uTrack Track
+   */
   private static function rowToObject(array $row): uTrack {
     $track = new uTrack();
     $track->id = (int) $row['id'];

@@ -45,19 +45,19 @@ class PositionTest extends UloggerDatabaseTestCase {
     );
     $this->assertTableContains($expected, $actual, "Wrong actual table data");
 
-    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, null, $this->testLat, $this->testLon); };
-    self::assertTypeError($test, "Adding position with null time stamp should fail");
-    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, $this->testTimestamp, null, $this->testLon); };
-    self::assertTypeError($test, "Adding position with null latitude should fail");
-    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, $this->testTimestamp, $this->testLat, null); };
-    self::assertTypeError($test, "Adding position with null longitude should fail");
+    $posId = uPosition::add($userId, $trackId, null, $this->testLat, $this->testLon);
+    self::assertFalse($posId, "Adding position with null time stamp should fail");
+    $posId = uPosition::add($userId, $trackId, $this->testTimestamp, null, $this->testLon);
+    self::assertFalse($posId, "Adding position with null latitude should fail");
+    $posId = uPosition::add($userId, $trackId, $this->testTimestamp, $this->testLat, null);
+    self::assertFalse($posId, "Adding position with null longitude should fail");
 
-    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, "", $this->testLat, $this->testLon); };
-    self::assertTypeError($test, "Adding position with empty time stamp should fail");
-    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, $this->testTimestamp, "", $this->testLon); };
-    self::assertTypeError($test, "Adding position with empty latitude should fail");
-    $test = function () use ($userId, $trackId) { uPosition::add($userId, $trackId, $this->testTimestamp, $this->testLat, ""); };
-    self::assertTypeError($test, "Adding position with empty longitude should fail");
+    $posId = uPosition::add($userId, $trackId, "", $this->testLat, $this->testLon);
+    self::assertFalse($posId, "Adding position with empty time stamp should fail");
+    $posId = uPosition::add($userId, $trackId, $this->testTimestamp, "", $this->testLon);
+    self::assertFalse($posId, "Adding position with empty latitude should fail");
+    $posId = uPosition::add($userId, $trackId, $this->testTimestamp, $this->testLat, "");
+    self::assertFalse($posId, "Adding position with empty longitude should fail");
   }
 
   public function testDeleteAll(): void {

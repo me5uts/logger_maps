@@ -41,6 +41,7 @@ class uLang {
     "fr" => "Français",
     "it" => "Italiano",
     "pl" => "Polski",
+    "pt-br" => "Português (Br)",
     "ru" => "Русский",
     "sk" => "Slovenčina"
   ];

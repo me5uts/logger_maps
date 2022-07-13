@@ -141,7 +141,7 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
    *
    * @param string $table Table name
    * @param array $rowsArr Array of rows
-   * @return int|null Last insert id if available, NULL otherwise
+   * @return int|null Last insert id if available, null otherwise
    */
   private function pdoInsert(string $table, array $rowsArr = []): ?int {
     $ret = null;
@@ -162,7 +162,7 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
    * Execute raw insert query on database
    *
    * @param string $query Insert query
-   * @return int|null Last insert id if available, NULL otherwise
+   * @return int|null Last insert id if available, null otherwise
    */
   private function pdoInsertRaw(string $query): ?int {
     $ret = null;

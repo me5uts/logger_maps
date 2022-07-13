@@ -59,10 +59,10 @@ class uPosition {
 
   public $isValid = false;
 
- /**
-  * Constructor
-  * @param int|null $positionId Position id
-  */
+  /**
+   * Constructor
+   * @param int|null $positionId Position id
+   */
   public function __construct(?int $positionId = null) {
 
     if (!empty($positionId)) {
@@ -207,13 +207,13 @@ class uPosition {
     return $ret;
   }
 
- /**
-  * Delete all user's positions, optionally limit to given track
-  *
-  * @param int $userId User id
-  * @param int|null $trackId Optional track id
-  * @return bool True if success, false otherwise
-  */
+  /**
+   * Delete all user's positions, optionally limit to given track
+   *
+   * @param int $userId User id
+   * @param int|null $trackId Optional track id
+   * @return bool True if success, false otherwise
+   */
   public static function deleteAll(int $userId, ?int $trackId = null): bool {
     $ret = false;
     if (!empty($userId)) {
@@ -238,13 +238,13 @@ class uPosition {
     return $ret;
   }
 
- /**
-  * Get last position data from database
-  * (for given user if specified)
-  *
-  * @param int|null $userId Optional user id
-  * @return uPosition Position
-  */
+  /**
+   * Get last position data from database
+   * (for given user if specified)
+   *
+   * @param int|null $userId Optional user id
+   * @return uPosition Position
+   */
   public static function getLast(?int $userId = null): uPosition {
     if (!empty($userId)) {
       $where = "WHERE p.user_id = ?";
@@ -271,11 +271,11 @@ class uPosition {
     return $position;
   }
 
- /**
-  * Get last positions for all users
-  *
-  * @return array|bool Array of uPosition positions, false on error
-  */
+  /**
+   * Get last positions for all users
+   *
+   * @return array|bool Array of uPosition positions, false on error
+   */
   public static function getLastAllUsers() {
     $query = "SELECT p.id, " . self::db()->unix_timestamp('p.time') . " AS tstamp, p.user_id, p.track_id,
               p.latitude, p.longitude, p.altitude, p.speed, p.bearing, p.accuracy, p.provider,

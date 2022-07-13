@@ -62,7 +62,7 @@ class uUpload {
   /**
    * Get file extension for given mime
    * @param $mime
-   * @return string|null Extension or NULL if not found
+   * @return string|null Extension or null if not found
    */
   private static function getExtension($mime): ?string {
     if (self::isKnownMime($mime)) {
@@ -140,6 +140,7 @@ class uUpload {
     $uploadErrors[UPLOAD_ERR_CANT_WRITE] = "Failed to write file to disk";
     $uploadErrors[UPLOAD_ERR_EXTENSION] = "A PHP extension stopped file upload";
 
+    $file = null;
     $fileError = $fileMeta[self::META_ERROR] ?? UPLOAD_ERR_OK;
     if ($fileError === UPLOAD_ERR_OK && $fileMeta[self::META_SIZE] > uUtils::getSystemUploadLimit()) {
       $fileError = UPLOAD_ERR_FORM_SIZE;

@@ -195,46 +195,47 @@ if ($trackId && $userId) {
       $xml->startElement("trk");
         $xml->writeElement("name", $positionsArr[0]->trackName);
         $xml->startElement("trkseg");
-        $i = 0;
-        $totalMeters = 0;
-        $totalSeconds = 0;
-        foreach ($positionsArr as $position) {
-          $distance = isset($prevPosition) ? $position->distanceTo($prevPosition) : 0;
-          $seconds = isset($prevPosition) ? $position->secondsTo($prevPosition) : 0;
-          $prevPosition = $position;
-          $totalMeters += $distance;
-          $totalSeconds += $seconds;
+      $i = 0;
+      $totalMeters = 0;
+      $totalSeconds = 0;
+      foreach ($positionsArr as $position) {
+        $distance = isset($prevPosition) ? $position->distanceTo($prevPosition) : 0;
+        $seconds = isset($prevPosition) ? $position->secondsTo($prevPosition) : 0;
+        $prevPosition = $position;
+        $totalMeters += $distance;
+        $totalSeconds += $seconds;
           $xml->startElement("trkpt");
             $xml->writeAttribute("lat", $position->latitude);
             $xml->writeAttribute("lon", $position->longitude);
-            if (!is_null($position->altitude)) { $xml->writeElement("ele", $position->altitude); }
+        if (!is_null($position->altitude)) { 
+            $xml->writeElement("ele", $position->altitude); 
+        }
             $xml->writeElement("time", gmdate("Y-m-d\TH:i:s\Z", $position->timestamp));
             $xml->writeElement("name", ++$i);
-            if (!is_null($position->comment)) {
-              $xml->startElement("desc");
+        if (!is_null($position->comment)) {
+            $xml->startElement("desc");
               $xml->writeCData($position->comment);
-              $xml->endElement();
-            }
-            if (!is_null($position->speed) || !is_null($position->bearing) || !is_null($position->accuracy) || !is_null($position->provider)) {
-              $xml->startElement("extensions");
-
-              if (!is_null($position->speed)) {
-                $xml->writeElementNS("ulogger", "speed", null, $position->speed);
-              }
-              if (!is_null($position->bearing)) {
-                $xml->writeElementNS("ulogger", "bearing", null, $position->bearing);
-              }
-              if (!is_null($position->accuracy)) {
-                $xml->writeElementNS("ulogger", "accuracy", null, $position->accuracy);
-              }
-              if (!is_null($position->provider)) {
-                $xml->writeElementNS("ulogger", "provider", null, $position->provider);
-              }
-
-              $xml->endElement();
-            }
-          $xml->endElement();
+            $xml->endElement();
         }
+        if (!is_null($position->speed) || !is_null($position->bearing) || !is_null($position->accuracy) || !is_null($position->provider)) {
+            $xml->startElement("extensions");
+
+          if (!is_null($position->speed)) {
+              $xml->writeElementNS("ulogger", "speed", null, $position->speed);
+          }
+          if (!is_null($position->bearing)) {
+              $xml->writeElementNS("ulogger", "bearing", null, $position->bearing);
+          }
+          if (!is_null($position->accuracy)) {
+              $xml->writeElementNS("ulogger", "accuracy", null, $position->accuracy);
+          }
+          if (!is_null($position->provider)) {
+              $xml->writeElementNS("ulogger", "provider", null, $position->provider);
+          }
+            $xml->endElement();
+        }
+          $xml->endElement();
+      }
         $xml->endElement();
       $xml->endElement();
       $xml->endElement();

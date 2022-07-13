@@ -91,12 +91,12 @@ class uUser {
     return $userid;
   }
 
- /**
-  * Delete user
-  * This will also delete all user's positions and tracks
-  *
-  * @return bool True if success, false otherwise
-  */
+  /**
+   * Delete user
+   * This will also delete all user's positions and tracks
+   *
+   * @return bool True if success, false otherwise
+   */
   public function delete(): bool {
     $ret = false;
     if ($this->isValid) {
@@ -168,27 +168,27 @@ class uUser {
     return $ret;
   }
 
- /**
-  * Check if given password matches user's one
-  *
-  * @param string $password Password
-  * @return bool True if matches, false otherwise
-  */
+  /**
+   * Check if given password matches user's one
+   *
+   * @param string $password Password
+   * @return bool True if matches, false otherwise
+   */
   public function validPassword(string $password): bool {
     return password_verify($password, $this->hash);
   }
 
- /**
-  * Store uUser object in session
-  */
+  /**
+   * Store uUser object in session
+   */
   public function storeInSession(): void {
     $_SESSION['user'] = $this;
   }
 
- /**
-  * Fill uUser object properties from session data
-  * @return uUser
-  */
+  /**
+   * Fill uUser object properties from session data
+   * @return uUser
+   */
   public static function getFromSession(): uUser {
     $user = new uUser();
     if (isset($_SESSION['user'])) {
@@ -202,11 +202,11 @@ class uUser {
     return $user;
   }
 
- /**
-  * Get all users
-  *
-  * @return uUser[]|bool Array of uUser users, false on error
-  */
+  /**
+   * Get all users
+   *
+   * @return uUser[]|bool Array of uUser users, false on error
+   */
   public static function getAll() {
     try {
       $query = "SELECT id, login, password, admin FROM " . self::db()->table('users') . " ORDER BY login";
@@ -223,12 +223,12 @@ class uUser {
     return $userArr;
   }
 
- /**
-  * Convert database row to uUser
-  *
-  * @param array $row Row
-  * @return uUser User
-  */
+  /**
+   * Convert database row to uUser
+   *
+   * @param array $row Row
+   * @return uUser User
+   */
   private static function rowToObject(array $row): uUser {
     $user = new uUser();
     $user->id = (int) $row['id'];

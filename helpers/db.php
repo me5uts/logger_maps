@@ -62,13 +62,13 @@ class uDb extends PDO {
    */
   private static $dbprefix = "";
 
- /**
-  * PDO constuctor
-  *
-  * @param string $dsn
-  * @param string $user
-  * @param string $pass
-  */
+    /**
+   * PDO constuctor
+   *
+   * @param string $dsn
+   * @param string $user
+   * @param string $pass
+   */
   public function __construct(string $dsn, string $user, string $pass) {
     try {
       $options = [
@@ -99,11 +99,11 @@ class uDb extends PDO {
     self::$tables['ol_layers'] = $prefix . "ol_layers";
   }
 
- /**
-  * Returns singleton instance
-  *
-  * @return uDb Singleton instance
-  */
+  /**
+   * Returns singleton instance
+   *
+   * @return uDb Singleton instance
+   */
   public static function getInstance(): uDb {
     if (!self::$instance) {
       self::getConfig();
@@ -138,11 +138,11 @@ class uDb extends PDO {
   }
 
   /**
-  * Get full table name including prefix
-  *
-  * @param string $name Name
-  * @return string Full table name
-  */
+   * Get full table name including prefix
+   *
+   * @param string $name Name
+   * @return string Full table name
+   */
   public function table(string $name): string {
     return self::$tables[$name];
   }

@@ -1,0 +1,78 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  unix-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix: 
+        db: [mysql, pgsql, sqlite]
+        php: ['7.4', '8.1']
+
+    steps:
+      - uses: actions/checkout@v2
+      - if: matrix.db == 'mysql'
+        run: |
+            echo "db-dsn=mysql:host=127.0.0.1;port=8081;dbname=ulogger;charset=utf8" >> $GITHUB_ENV
+            echo "docker-options=-p 8080:80 -p 8081:3306 --expose 3306" >> $GITHUB_ENV
+      - if: matrix.db == 'pgsql'
+        run: |
+            echo "db-dsn=pgsql:host=127.0.0.1;port=8081;dbname=ulogger" >> $GITHUB_ENV
+            echo "docker-options=-p 8080:80 -p 8081:5432 --expose 5432" >> $GITHUB_ENV
+      - if: matrix.db == 'sqlite'
+        run: |
+            echo "db-dsn=sqlite:${{ runner.temp }}/data/sqlite/ulogger.db" >> $GITHUB_ENV
+            echo "docker-options=-p 8080:80 -v ${{ runner.temp }}/data:/data" >> $GITHUB_ENV
+            rm -rf ${{ runner.temp }}/data
+            mkdir -p ${{ runner.temp }}/data/sqlite ${{ runner.temp }}/data/uploads
+            sqlite3 -init scripts/ulogger.sqlite ${{ runner.temp }}/data/sqlite/ulogger.db .exit
+            sudo chown -R runner ${{ runner.temp }}/data
+            sudo chmod -R 777 ${{ runner.temp }}/data
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ctype, json, pdo, pdo_${{ matrix.db }}, session, simplexml, xmlwriter, xdebug
+          tools: composer
+      - name: Build docker
+        run: docker build -t ulogger --build-arg DB_DRIVER=${{ matrix.db }} .
+      - name: Run docker
+        run: |
+            docker run -d --name ulogger ${{ env.docker-options }} -e ULOGGER_ENABLE_SETUP=1 ulogger
+            until netstat -atn 2>/dev/null | grep '8080.*LISTEN'; do sleep 1; done
+      - name: Setup node
+        uses: actions/setup-node@v2
+      - name: Install node dependencies
+        run: npm install
+      - name: Install PHP dependencies
+        run: composer install
+
+      - name: PHPUnit tests
+        run: ./vendor/bin/phpunit  -c .tests/phpunit.xml
+        env:
+          XDEBUG_MODE: coverage
+          DB_DSN: "${{ env.db-dsn }}"
+          DB_USER: ulogger
+          DB_PASS: secret2
+          ULOGGER_URL: "http://127.0.0.1:8080"
+
+      - name: UI tests
+        run: npm test
+      - name: JS lint
+        run: npm run lint:js
+      - name: CSS lint
+        run: npm run lint:css
+
+      - name: Show docker logs on failure
+        if: ${{ failure() }}
+        run: docker logs ulogger
