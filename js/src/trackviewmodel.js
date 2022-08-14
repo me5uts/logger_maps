@@ -357,7 +357,7 @@ export default class TrackViewModel extends ViewModel {
       const date = new Date(last.timestamp * 1000);
       const dateTime = uUtils.getTimeString(date);
       const dateString = (date.toDateString() !== today.toDateString()) ? `${dateTime.date}<br>` : '';
-      const timeString = `${dateTime.time}<span style="font-weight:normal">${dateTime.zone}</span>`;
+      const timeString = `${dateTime.time}<span style="font-weight:normal;">${dateTime.zone}</span>`;
       this.model.summary = `
         <div class="menu-title">${$._('latest')}:</div>
         ${dateString}

@@ -117,7 +117,7 @@ describe('MapViewModel tests', () => {
     // given
     spyOn(vm, 'onReady');
     spyOn(uAlert, 'error');
-    mockApi.init.and.returnValue(Promise.reject(new Error('init failed')));
+    mockApi.init.and.rejectWith(new Error('init failed'));
     // when
     vm.loadMapAPI('gmaps');
     // then

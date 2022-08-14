@@ -33,7 +33,7 @@ export default class uUser extends uListItem {
    * @param {string} login
    * @param {boolean=} isAdmin
    */
-  constructor(id, login, isAdmin = null) {
+  constructor(id, login, isAdmin = false) {
     super();
     if (!Number.isSafeInteger(id) || id <= 0) {
       throw new Error('Invalid argument for user constructor');

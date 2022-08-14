@@ -579,7 +579,6 @@ button > * {
   animation: spinner-dot 1s infinite linear alternate;
   animation-delay: 0.5s;
   transform: translateZ(0);
-  -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);
   will-change: transform, opacity;
 }

@@ -24,13 +24,13 @@ import uUtils from '../utils.js';
 
 /**
  * @typedef {Object} MarkerStyles
- * @property {Style} normal
- * @property {Style} start
- * @property {Style} stop
- * @property {Style} extra
- * @property {Style} startExtra
- * @property {Style} stopExtra
- * @property {Style} hilite
+ * @property {ol.style.Style} normal
+ * @property {ol.style.Style} start
+ * @property {ol.style.Style} stop
+ * @property {ol.style.Style} extra
+ * @property {ol.style.Style} startExtra
+ * @property {ol.style.Style} stopExtra
+ * @property {ol.style.Style} hilite
  */
 
 /**
@@ -122,7 +122,7 @@ export default class OpenLayersApi {
         /**
          * @param {Feature} _feature
          * @param {Layer} _layer
-         * @return {Feature}
+         * @return {?Feature}
          */
         (_feature, _layer) => {
           if (_layer.get('name') === 'Markers') {
@@ -298,8 +298,8 @@ export default class OpenLayersApi {
       this.setTrackDefaultStyle();
       return;
     }
-    const canvas = document.createElement('canvas', { alpha: false, desynchronized: true });
-    const ctx = canvas.getContext('2d');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
     /**
      * @param {Feature} feature
      * @return {Style[]}

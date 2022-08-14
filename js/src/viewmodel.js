@@ -42,7 +42,7 @@ export default class ViewModel {
 
   /**
    * Apply bindings for model properties
-   * @param {HTMLElement=} root Root element
+   * @param {Document|HTMLElement=} root Root element
    */
   bindAll(root = document) {
     this.root = root;

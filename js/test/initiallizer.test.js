@@ -38,7 +38,7 @@ describe('Initializer tests', () => {
     spyOn(initializer.auth, 'load');
     spyOn(initializer.config, 'load');
     spyOn(initializer.lang, 'init');
-    spyOn(uAjax, 'get').and.returnValue(Promise.resolve(data));
+    spyOn(uAjax, 'get').and.resolveTo(data);
   });
 
   it('should create instance', () => {

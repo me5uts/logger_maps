@@ -335,8 +335,8 @@ export default class uObserve {
   /**
    * Remove observer from object's property
    * @param {Object} obj Object
-   * @param {string} property Optional property
    * @param {ObserveCallback} observer Observer
+   * @param {string=} property Optional property
    */
   static removeObserver(obj, observer, property) {
     if (!obj.hasOwnProperty('_observers')) {

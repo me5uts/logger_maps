@@ -127,7 +127,7 @@ describe('Observe tests', () => {
     it('should notify observers when observed array property is modified', () => {
       // given
       const array = [ 1, 2 ];
-      object = { array: array };
+      object = { array };
       uObserve.observe(object, 'array', (value) => {
         result = true;
         resultValue = value;
@@ -161,7 +161,7 @@ describe('Observe tests', () => {
       let resultValue2;
       const array = [ 1, 2 ];
       const newArray = [ 3, 4 ];
-      object = { array: array };
+      object = { array };
       uObserve.observe(object, 'array', (value) => {
         result = true;
         resultValue = value;
@@ -286,7 +286,7 @@ describe('Observe tests', () => {
         resultValue = value;
       };
       const array = [ 1, 2 ];
-      object = { array: array };
+      object = { array };
       uObserve.observe(object, 'array', observer);
       // when
       uObserve.unobserve(object, 'array', observer);
@@ -542,7 +542,7 @@ describe('Observe tests', () => {
     it('should return true if array property is observed', () => {
       // when
       const array = [ 1, 2 ];
-      object = { array: array };
+      object = { array };
       uObserve.observe(object, 'array', (value) => {
         result = true;
         resultValue = value;

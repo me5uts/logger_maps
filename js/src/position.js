@@ -153,7 +153,7 @@ export default class uPosition {
     const data = new FormData();
     data.append('image', imageFile);
     data.append('action', 'imageadd');
-    data.append('posid', this.id);
+    data.append('posid', this.id.toString());
     return uPosition.update(data).then(
       /**
        * @param {Object} result

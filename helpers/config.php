@@ -137,7 +137,7 @@ class uConfig {
    * Will be adjusted to system maximum upload size
    */
   public $uploadMaxSize = 5242880;
-  
+
   public function __construct(bool $useDatabase = true) {
     if ($useDatabase) {
       $this->setFromDatabase();
@@ -367,9 +367,7 @@ class uConfig {
    * @param array $arr
    */
   public function setFromArray(array $arr): void {
-    if (!is_array($arr)) {
-      return;
-    }
+
     if (isset($arr['map_api']) && !empty($arr['map_api'])) {
       $this->mapApi = $arr['map_api'];
     }
@@ -379,7 +377,7 @@ class uConfig {
     if (isset($arr['longitude']) && is_numeric($arr['longitude'])) {
       $this->initLongitude = (float) $arr['longitude'];
     }
-    if (isset($arr['google_key']) && !is_null($arr['google_key'])) {
+    if (isset($arr['google_key'])) {
       $this->googleKey = $arr['google_key'];
     }
     if (isset($arr['require_auth']) && (is_numeric($arr['require_auth']) || is_bool($arr['require_auth']))) {

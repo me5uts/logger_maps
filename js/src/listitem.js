@@ -25,15 +25,16 @@ import uSelect from './select.js';
  * @property {string} listText
  */
 export default class uListItem {
-  /**
-   * @param {string|number} id
-   * @param {string|number} value
-   */
+
   constructor() {
     this.listValue = uSelect.allValue;
     this.listText = '-';
   }
 
+  /**
+   * @param {string|number} id
+   * @param {string|number} value
+   */
   listItem(id, value) {
     this.listValue = String(id);
     this.listText = String(value);

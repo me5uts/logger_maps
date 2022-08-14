@@ -89,6 +89,7 @@ export default class uAjax {
         if (method === 'POST') {
           body = data;
         } else {
+          // noinspection JSCheckFunctionSignatures
           body = new URLSearchParams(data).toString();
         }
       } else {
