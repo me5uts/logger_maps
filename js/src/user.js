@@ -25,7 +25,7 @@ import uTrack from './track.js';
  * @class uUser
  * @property {number} id
  * @property {string} login
- * @property {string} [password]
+ * @property {boolean} isAdmin
  */
 export default class uUser extends uListItem {
   /**

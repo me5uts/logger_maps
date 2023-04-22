@@ -17,8 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+import { AutoScaleAxis, LineChart } from 'chartist';
 import { lang as $ } from './initializer.js';
-import Chartist from 'chartist'
 import ViewModel from './viewmodel.js';
 import ctAxisTitle from 'chartist-plugin-axistitle';
 import uObserve from './observe.js';
@@ -50,7 +50,7 @@ export default class ChartViewModel extends ViewModel {
     this.state = state;
     /** @type {PlotData} */
     this.data = [];
-    /** @type {?Chartist.Line} */
+    /** @type {?LineChart} */
     this.chart = null;
     /** @type {?NodeListOf<SVGLineElement>} */
     this.chartPoints = null;
@@ -74,13 +74,18 @@ export default class ChartViewModel extends ViewModel {
 
   chartSetup() {
     uUtils.addCss('css/dist/chartist.css', 'chartist_css');
-    this.chart = new Chartist.Line(this.chartElement, {
-      series: [ this.data ]
+    this.chart = ChartViewModel.getChart(this.chartElement, this.data);
+    this.chart.on('created', () => this.onCreated());
+  }
+
+  static getChart(element, data) {
+    return new LineChart(element, {
+      series: [ data ]
     }, {
       lineSmooth: true,
       showArea: true,
       axisX: {
-        type: Chartist.AutoScaleAxis,
+        type: AutoScaleAxis,
         onlyInteger: true,
         showLabel: false
       },
@@ -99,8 +104,6 @@ export default class ChartViewModel extends ViewModel {
         })
       ]
     });
-
-    this.chart.on('created', () => this.onCreated());
   }
 
   onCreated() {
@@ -194,7 +197,7 @@ export default class ChartViewModel extends ViewModel {
    * @param {string} $className
    */
   pointAddClass(pointId, $className) {
-    if (this.model.chartVisible && this.chartPoints.length > pointId) {
+    if (this.model.chartVisible && this.chartPoints && this.chartPoints.length > pointId) {
       const point = this.chartPoints[pointId];
       point.classList.add($className);
     }

@@ -10,8 +10,9 @@ const cssTransform = (content, filename) => {
     filename: basename,
     sourceMap: true
   });
-  fs.writeFile(`css/dist/${basename}.map`, result.map.toString(), (err) => { if (err) { throw err; }});
-  return `${result.css}\n/*# sourceMappingURL=${basename}.map */`;
+  const output = basename === 'index.css' ? 'chartist.css' : basename;
+  fs.writeFile(`css/dist/${output}.map`, result.map.toString(), (err) => { if (err) { throw err; }});
+  return `${result.css}\n/*# sourceMappingURL=${output}.map */`;
 }
 
 module.exports = {
@@ -29,7 +30,7 @@ module.exports = {
       patterns: [
         { from: 'css/src/*.css', to: `${cssDist}/[name][ext]`, transform: cssTransform },
         { from: 'node_modules/ol/ol.css', to: `${cssDist}/[name][ext]`, transform: cssTransform },
-        { from: 'node_modules/chartist/dist/chartist.css', to: `${cssDist}/[name][ext]`, transform: cssTransform }
+        { from: 'node_modules/chartist/dist/index.css', to: `${cssDist}/chartist[ext]`, transform: cssTransform }
       ]
     })
   ],
@@ -42,5 +43,13 @@ module.exports = {
         }
       }
     }
+  },
+  module: {
+    rules: [
+      {
+        resourceQuery: /raw/,
+        type: 'asset/source'
+      }
+    ]
   }
 };
