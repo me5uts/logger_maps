@@ -1,0 +1,38 @@
+{
+    "name": "bfabiszewski/ulogger-server",
+    "description": "ulogger server",
+    "autoload": {
+        "psr-4": {"uLogger\\": "src/"}
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "uLogger\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=7.4",
+        "ulrichsg/getopt-php": "^3.2",
+        "ext-json": "*",
+        "ext-pdo": "*",
+        "ext-xmlwriter": "*",
+        "ext-simplexml": "*",
+        "ext-libxml": "*"
+    },
+    "scripts": {
+        "test": [ "@putenv XDEBUG_MODE=coverage",
+            "../vendor/bin/phpunit"
+        ]
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest",
+        "phpunit/phpunit": "^9.5",
+        "vlucas/phpdotenv": "^5.3",
+        "guzzlehttp/guzzle": "^7.3",
+        "kornrunner/dbunit": "^6.0"
+    },
+    "config": {
+      "platform": {
+        "php": "7.4"
+      }
+    }
+}

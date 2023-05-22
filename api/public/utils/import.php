@@ -1,0 +1,129 @@
+<?php
+declare(strict_types = 1);
+/* μlogger
+ *
+ * Copyright(C) 2017 Bartek Fabiszewski (www.fabiszewski.net)
+ *
+ * This is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+require_once('../../vendor/autoload.php');
+
+use uLogger\Controller\Auth;
+use uLogger\Controller\Config;
+use uLogger\Controller\Lang;
+use uLogger\Entity\Track;
+use uLogger\Helper\Upload;
+use uLogger\Helper\Utils;
+
+$auth = new Auth();
+
+$config = Config::getInstance();
+$lang = (new Lang($config))->getStrings();
+
+if (!$auth->isAuthenticated()) {
+  Utils::exitWithError($lang["private"]);
+}
+
+try {
+  $fileMeta = Utils::requireFile("gpx");
+} catch (ErrorException $ee) {
+  $message = $lang["servererror"];
+  $message .= ": {$ee->getMessage()}";
+  Utils::exitWithError($message);
+} catch (Exception $e) {
+  $message = $lang["iuploadfailure"];
+  $message .= ": {$e->getMessage()}";
+  Utils::exitWithError($message);
+}
+
+$gpxFile = $fileMeta[Upload::META_TMP_NAME];
+$gpxName = basename($fileMeta[Upload::META_NAME]);
+libxml_use_internal_errors(true);
+/** @noinspection SimpleXmlLoadFileUsageInspection */
+$gpx = simplexml_load_file($gpxFile);
+unlink($gpxFile);
+
+if ($gpx === false) {
+  $message = $lang["iparsefailure"];
+  $parserMessages = [];
+  foreach(libxml_get_errors() as $parseError) {
+    $parserMessages[] = $parseError->message;
+  }
+  $parserMessage = implode(", ", $parserMessages);
+  if (!empty($parserMessage)) {
+    $message .= ": $parserMessage";
+  }
+  Utils::exitWithError($message);
+}
+else if ($gpx->getName() !== "gpx") {
+    Utils::exitWithError($lang["iparsefailure"]);
+}
+else if (empty($gpx->trk)) {
+  Utils::exitWithError($lang["idatafailure"]);
+}
+
+$trackList = [];
+foreach ($gpx->trk as $trk) {
+  $trackName = empty($trk->name) ? $gpxName : (string) $trk->name;
+  $metaName = empty($gpx->metadata->name) ? null : (string) $gpx->metadata->name;
+  $trackId = Track::add($auth->user->id, $trackName, $metaName);
+  if ($trackId === false) {
+    Utils::exitWithError($lang["servererror"]);
+  }
+  $track = new Track($trackId);
+  $posCnt = 0;
+
+  foreach($trk->trkseg as $segment) {
+    foreach($segment->trkpt as $point) {
+      if (!isset($point["lat"], $point["lon"])) {
+        $track->delete();
+        Utils::exitWithError($lang["iparsefailure"]);
+      }
+      $time = isset($point->time) ? strtotime((string) $point->time) : 1;
+      $altitude = isset($point->ele) ? (double) $point->ele : null;
+      $comment = isset($point->desc) && !empty($point->desc) ? (string) $point->desc : null;
+      $speed = null;
+      $bearing = null;
+      $accuracy = null;
+      $provider = "gps";
+      if (!empty($point->extensions)) {
+        // parse ulogger extensions
+        $ext = $point->extensions->children('ulogger', true);
+        if (count($ext->speed)) { $speed = (double) $ext->speed; }
+        if (count($ext->bearing)) { $bearing = (double) $ext->bearing; }
+        if (count($ext->accuracy)) { $accuracy = (int) $ext->accuracy; }
+        if (count($ext->provider)) { $provider = (string) $ext->provider; }
+      }
+      $ret = $track->addPosition($auth->user->id,
+                    $time, (double) $point["lat"], (double) $point["lon"], $altitude,
+                    $speed, $bearing, $accuracy, $provider, $comment);
+      if ($ret === false) {
+        $track->delete();
+        Utils::exitWithError($lang["servererror"]);
+      }
+      $posCnt++;
+    }
+  }
+  if ($posCnt) {
+    array_unshift($trackList, [ "id" => $track->id, "name" => $track->name ]);
+  } else {
+    $track->delete();
+  }
+}
+
+header("Content-type: application/json");
+echo json_encode($trackList);
+?>
