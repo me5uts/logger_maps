@@ -17,6 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+import './assets/css/fonts.css';
+import './assets/css/main.css';
 import { lang as $, config, initializer, uInitializer } from './initializer.js';
 import ChartViewModel from './chartviewmodel.js';
 import ConfigViewModel from './configviewmodel.js';
@@ -47,6 +49,7 @@ function start(linkState) {
   const permalink = new uPermalink(state);
   const spinner = new uSpinner(state);
   const mainVM = new MainViewModel(state);
+  mainVM.setupHtml();
   const userVM = new UserViewModel(state);
   const trackVM = new TrackViewModel(state);
   const mapVM = new MapViewModel(state);

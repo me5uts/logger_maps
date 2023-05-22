@@ -46,6 +46,7 @@ import uObserve from './observe.js';
  * @property {number} strokeWeight
  * @property {string} units
  * @property {number} uploadMaxSize
+ * @property {string} version
  */
 export default class uConfig {
 
@@ -76,6 +77,7 @@ export default class uConfig {
     this.colorExtra = '#cccccc';
     this.colorHilite = '#feff6a';
     this.uploadMaxSize = 0;
+    this.version = 'dev';
     this.initUnits();
   }
 

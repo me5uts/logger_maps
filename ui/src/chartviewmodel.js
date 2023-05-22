@@ -73,7 +73,8 @@ export default class ChartViewModel extends ViewModel {
   }
 
   chartSetup() {
-    uUtils.addCss('css/dist/chartist.css', 'chartist_css');
+    import('chartist/dist/index.css');
+    // uUtils.addCss('css/dist/chartist.css', 'chartist_css');
     this.chart = ChartViewModel.getChart(this.chartElement, this.data);
     this.chart.on('created', () => this.onCreated());
   }

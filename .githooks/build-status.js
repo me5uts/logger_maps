@@ -20,7 +20,7 @@
 const exec = require('child_process').execSync;
 
 const jsSourcesModified = () => {
-  const lastBuildCommit = exec('git log -1 --pretty="format:%H" js/dist/*bundle*js*').toString();
+  const lastBuildCommit = exec('git log -1 --pretty="format:%H" ui/dist/*bundle*js*').toString();
   const output = exec(`git diff --name-only ${lastBuildCommit} HEAD js/src`).toString();
   return !!output && output.split('\n').length > 0;
 };

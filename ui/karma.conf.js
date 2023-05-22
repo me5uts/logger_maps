@@ -12,7 +12,7 @@ const path = require('path');
 
 module.exports = function(config) {
   config.set({
-    basePath: 'js/',
+    basePath: 'ui/',
     frameworks: [ 'jasmine', 'webpack' ],
     files: [
       { pattern: 'test/*.test.js', type: 'module' },
@@ -61,7 +61,7 @@ module.exports = function(config) {
         rules: [
           {
             test: /\.js$/,
-            include: path.resolve('js/src/'),
+            include: path.resolve('ui/src/'),
             use: {
               loader: '@jsdevtools/coverage-istanbul-loader',
               options: { esModules: true }

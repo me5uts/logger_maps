@@ -20,9 +20,9 @@
 import MapViewModel from '../mapviewmodel.js';
 import { config } from '../initializer.js';
 // eslint-disable-next-line import/no-unresolved
-import extentSvg from '../../../images/extent.svg?raw';
+import extentSvg from '../assets/images/extent.svg?raw';
 // eslint-disable-next-line import/no-unresolved
-import layersSvg from '../../../images/layers.svg?raw';
+import layersSvg from '../assets/images/layers.svg?raw';
 import uTrack from '../track.js';
 import uUtils from '../utils.js';
 
@@ -93,7 +93,8 @@ export default class OpenLayersApi {
    * @return {Promise<void, Error>}
    */
   init() {
-    uUtils.addCss('css/dist/ol.css', 'ol_css');
+    // uUtils.addCss('css/dist/ol.css', 'ol_css');
+    import('ol/ol.css');
     const olReady = ol ? Promise.resolve() : import(/* webpackChunkName : "ol" */'../lib/ol.js').then((m) => { ol = m; });
     return olReady.then(() => {
       this.initMap();
