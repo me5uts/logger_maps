@@ -29,11 +29,11 @@ RUN rm -rf /var/www/html
 RUN mkdir -p /var/www/html
 
 
-COPY .docker/run.sh /run.sh
+COPY docker/run.sh /run.sh
 RUN chmod +x /run.sh
-COPY .docker/init.sh /init.sh
+COPY docker/init.sh /init.sh
 RUN chmod +x /init.sh
-COPY .docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 RUN chown nginx.nginx /etc/nginx/http.d/default.conf
 
 COPY . /var/www/html

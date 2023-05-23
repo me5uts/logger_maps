@@ -34,7 +34,7 @@ class Upload {
   public const META_TMP_NAME = "tmp_name";
   private const META_ERROR = "error";
   private const META_SIZE = "size";
-  public static $uploadDir = ROOT_DIR . "/uploads/";
+  private const UPLOAD_DIR = "uploads";
   private static $filePattern = "/[a-z0-9_.]{20,}/";
   private static $mimeMap = [];
 
@@ -93,8 +93,8 @@ class Upload {
     do {
       /** @noinspection NonSecureUniqidUsageInspection */
       $fileName = uniqid("{$trackId}_") . ".$extension";
-    } while (file_exists(self::$uploadDir . $fileName));
-    if (move_uploaded_file($fileMeta[self::META_TMP_NAME], self::$uploadDir . $fileName)) {
+    } while (file_exists(Utils::getUploadDir() . "/$fileName"));
+    if (move_uploaded_file($fileMeta[self::META_TMP_NAME], Utils::getUploadDir() . "/$fileName")) {
       return $fileName;
     }
     return null;
@@ -108,7 +108,7 @@ class Upload {
   public static function delete(string $path): bool {
     $ret = true;
     if (preg_match(self::$filePattern, $path)) {
-      $path = self::$uploadDir . $path;
+      $path = Utils::getUploadDir() . "/$path";
       if (file_exists($path)) {
         $ret = unlink($path);
       }

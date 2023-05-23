@@ -20,7 +20,7 @@
     },
     "scripts": {
         "test": [ "@putenv XDEBUG_MODE=coverage",
-            "../vendor/bin/phpunit"
+            "vendor/bin/phpunit --colors=always -c tests/phpunit.xml"
         ]
     },
     "require-dev": {

@@ -305,7 +305,7 @@ class Db extends PDO {
       return $dsn;
     }
     $scheme = $arr[0];
-    $path = dirname(__DIR__) . DIRECTORY_SEPARATOR . $arr[1];
+    $path = Utils::getRootDir() . DIRECTORY_SEPARATOR . $arr[1];
     return $scheme . ":" . realpath(dirname($path)) . DIRECTORY_SEPARATOR . basename(($path));
   }
 }

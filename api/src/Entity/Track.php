@@ -211,7 +211,7 @@ class Track {
    * Get all tracks
    *
    * @param int|null $userId Optional limit to user id
-   * @return array|bool Array of uTrack tracks, false on error
+   * @return array|bool Array of Track tracks, false on error
    */
   public static function getAll(?int $userId = null) {
     if (!empty($userId)) {
@@ -235,7 +235,7 @@ class Track {
   }
 
   /**
-   * Convert database row to uTrack
+   * Convert database row to Track
    *
    * @param array $row Row
    * @return Track Track

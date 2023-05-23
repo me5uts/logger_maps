@@ -276,7 +276,7 @@ class Position {
   /**
    * Get last positions for all users
    *
-   * @return array|bool Array of uPosition positions, false on error
+   * @return array|bool Array of Position positions, false on error
    */
   public static function getLastAllUsers() {
     $query = "SELECT p.id, " . self::db()->unix_timestamp('p.time') . " AS tstamp, p.user_id, p.track_id,
@@ -312,7 +312,7 @@ class Position {
    * @param int|null $trackId Optional limit to given track id
    * @param int|null $afterId Optional limit to positions with id greater than given id
    * @param array $rules Optional rules
-   * @return Position[]|bool Array of uPosition positions, false on error
+   * @return Position[]|bool Array of Position positions, false on error
    */
   public static function getAll(?int $userId = null, ?int $trackId = null, ?int $afterId = null, array $rules = []) {
     if (!empty($userId)) {
@@ -358,7 +358,7 @@ class Position {
    * @param int|null $trackId Optional limit to given track id
    * @param int|null $afterId Optional limit to positions with id greater than given id
    * @param array $rules Optional rules
-   * @return Position[]|bool Array of uPosition positions, false on error
+   * @return Position[]|bool Array of Position positions, false on error
    */
   public static function getAllWithImage(?int $userId = null, ?int $trackId = null, ?int $afterId = null, array $rules = []) {
     $rules[] = "p.image IS NOT NULL";
@@ -452,7 +452,7 @@ class Position {
   }
 
  /**
-  * Convert database row to uPosition
+  * Convert database row to Position
   *
   * @param array $row Row
   * @return Position Position

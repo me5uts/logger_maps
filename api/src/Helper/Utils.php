@@ -41,6 +41,10 @@ class Utils {
     return self::getRootDir() . '/src';
   }
 
+  public static function getUploadDir(): string {
+    return self::getRootDir() . '/uploads';
+  }
+
   /**
    * Calculate maximum allowed size of uploaded file
    * for current PHP settings
