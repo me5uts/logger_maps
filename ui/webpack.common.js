@@ -39,13 +39,6 @@ module.exports = {
         type: 'asset/source'
       },
       {
-        test: /\.css$/i,
-        use: [ 'style-loader', 'css-loader' ],
-        generator: {
-          filename: 'styles/[hash][ext][query]'
-        }
-      },
-      {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
         resourceQuery: { not: [ /raw/ ] },

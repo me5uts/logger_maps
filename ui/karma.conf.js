@@ -12,7 +12,7 @@ const path = require('path');
 
 module.exports = function(config) {
   config.set({
-    basePath: 'ui/',
+    basePath: './',
     frameworks: [ 'jasmine', 'webpack' ],
     files: [
       { pattern: 'test/*.test.js', type: 'module' },
@@ -61,7 +61,7 @@ module.exports = function(config) {
         rules: [
           {
             test: /\.js$/,
-            include: path.resolve('ui/src/'),
+            include: path.resolve('src/'),
             use: {
               loader: '@jsdevtools/coverage-istanbul-loader',
               options: { esModules: true }
@@ -70,6 +70,28 @@ module.exports = function(config) {
           {
             resourceQuery: /raw/,
             type: 'asset/source'
+          },
+          {
+            test: /\.css$/i,
+            use: [ 'style-loader', 'css-loader' ],
+            generator: {
+              filename: 'styles/[hash][ext][query]'
+            }
+          },
+          {
+            test: /\.(png|svg|jpg|jpeg|gif)$/i,
+            type: 'asset/resource',
+            resourceQuery: { not: [ /raw/ ] },
+            generator: {
+              filename: 'images/[name][ext][query]'
+            }
+          },
+          {
+            test: /\.(woff|woff2|eot|ttf|otf)$/i,
+            type: 'asset/resource',
+            generator: {
+              filename: 'fonts/[hash][ext][query]'
+            }
           }
         ]
       }

@@ -22,7 +22,6 @@ import { lang as $ } from './initializer.js';
 import ViewModel from './viewmodel.js';
 import ctAxisTitle from 'chartist-plugin-axistitle';
 import uObserve from './observe.js';
-import uUtils from './utils.js';
 
 /**
  * @typedef {Object} PlotPoint
@@ -73,10 +72,14 @@ export default class ChartViewModel extends ViewModel {
   }
 
   chartSetup() {
-    import('chartist/dist/index.css');
+    ChartViewModel.loadCss();
     // uUtils.addCss('css/dist/chartist.css', 'chartist_css');
     this.chart = ChartViewModel.getChart(this.chartElement, this.data);
     this.chart.on('created', () => this.onCreated());
+  }
+
+  static loadCss() {
+    import('chartist/dist/index.css');
   }
 
   static getChart(element, data) {

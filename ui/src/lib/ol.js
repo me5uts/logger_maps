@@ -17,7 +17,6 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import 'ol/ol.css';
 import { Control, Rotate, ScaleLine, Zoom, ZoomToExtent } from 'ol/control';
 import { LineString, Point } from 'ol/geom';
 import { fromLonLat, toLonLat } from 'ol/proj';

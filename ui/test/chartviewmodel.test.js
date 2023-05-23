@@ -120,11 +120,14 @@ describe('ChartViewModel tests', () => {
 
   it('should set up chart', () => {
     // given
-    spyOn(uUtils, 'addCss');
+    // spyOn(uUtils, 'addCss');
+    spyOn(ChartViewModel, 'loadCss');
+
     // when
     vm.chartSetup();
     // then
-    expect(uUtils.addCss).toHaveBeenCalledWith('css/dist/chartist.css', 'chartist_css');
+    // expect(uUtils.addCss).toHaveBeenCalledWith('css/dist/chartist.css', 'chartist_css');
+    expect(ChartViewModel.loadCss).toHaveBeenCalledTimes(1);
     expect(ChartViewModel.getChart).toHaveBeenCalledWith(chartEl, []);
     expect(mockChart.on).toHaveBeenCalledWith('created', jasmine.any(Function));
   });

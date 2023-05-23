@@ -15,5 +15,16 @@ module.exports = merge(common, {
         target: 'http://ulogger.test'
       }
     ]
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/i,
+        use: [ 'style-loader', 'css-loader' ],
+        generator: {
+          filename: 'styles/[hash][ext][query]'
+        }
+      }
+    ]
   }
 });

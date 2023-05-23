@@ -47,7 +47,9 @@ describe('Openlayers map API tests', () => {
 
   it('should load and initialize api scripts', (done) => {
     // given
-    spyOn(uUtils, 'addCss');
+    // spyOn(uUtils, 'addCss');
+    spyOn(OpenLayersApi, 'loadCss');
+
     spyOn(api, 'initMap');
     spyOn(api, 'initLayers');
     spyOn(api, 'initStyles');
@@ -56,7 +58,8 @@ describe('Openlayers map API tests', () => {
     api.init()
       .then(() => {
         // then
-        expect(uUtils.addCss).toHaveBeenCalledTimes(1);
+        expect(OpenLayersApi.loadCss).toHaveBeenCalledTimes(1);
+        // expect(uUtils.addCss).toHaveBeenCalledTimes(1);
         expect(api.initMap).toHaveBeenCalledTimes(1);
         expect(api.initLayers).toHaveBeenCalledTimes(1);
         expect(api.initStyles).toHaveBeenCalledTimes(1);
