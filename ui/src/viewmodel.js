@@ -81,7 +81,7 @@ export default class ViewModel {
 
   /**
    * One way bind: view element click event to view model event handler
-   * @param {HTMLAnchorElement} element
+   * @param {HTMLAnchorElement|HTMLButtonElement} element
    * @param {string} key
    */
   onClickBind(element, key) {

@@ -130,14 +130,21 @@ select {
 }
 
 #menu input,
-#login input {
+#login input,
+#login button {
   width: 150px;
   text-align: center;
   border: 1px solid black;
 }
 
+#login button {
+  font-weight: normal;
+  border-radius: 0;
+  margin: 0;
+}
+
 #menu input[type="submit"],
-#login input[type="submit"] {
+#login button {
   color: white;
   border: 1px solid white;
   background-color: black;

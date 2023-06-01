@@ -23,8 +23,6 @@ namespace uLogger\Controller;
 use uLogger\Entity\User;
 use uLogger\Helper\Utils;
 
-if (!defined('BASE_URL')) { define('BASE_URL', Utils::getBaseUrl()); }
-
 /**
  * Authentication
  */
@@ -150,6 +148,15 @@ class Auth {
   }
 
   /**
+   * Log out
+   *
+   * @return void
+   */
+  public function logOut(): void {
+    $this->sessionEnd();
+  }
+
+  /**
    * Send 401 headers
    *
    * @return void
@@ -177,7 +184,7 @@ class Auth {
    * @return void
    */
   public function exitWithRedirect(string $path = ""): void {
-    $location = BASE_URL . $path;
+    $location = Utils::getBaseUrl() . $path;
     header("Location: $location");
     exit();
   }

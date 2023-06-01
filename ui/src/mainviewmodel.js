@@ -41,14 +41,15 @@ export default class MainViewModel extends ViewModel {
     this.model.onLogin = () => MainViewModel.login();
     this.model.onLogout = () => MainViewModel.logout();
     this.hideUserMenuCallback = (e) => this.hideUserMenu(e);
-    this.menuEl = document.querySelector('#menu');
-    this.userMenuEl = document.querySelector('#user-menu');
   }
 
   /**
    * @return {MainViewModel}
    */
   init() {
+    this.show();
+    this.menuEl = document.querySelector('#menu');
+    this.userMenuEl = document.querySelector('#user-menu');
     this.bindAll();
     return this;
   }
@@ -98,15 +99,15 @@ export default class MainViewModel extends ViewModel {
     uUtils.openUrl(url);
   }
 
-  setupHtml() {
-    const html = this.getMainHtml();
+  show() {
+    const html = this.getHtml();
     const body = document.querySelector('body');
     body.innerHTML = html;
     document.title = $._('title');
     document.documentElement.setAttribute('lang', config.lang);
   }
 
-  getMainHtml() {
+  getHtml() {
     let userMenu = '';
     let authMenu = '';
     if (auth.isAuthenticated) {
@@ -148,12 +149,12 @@ export default class MainViewModel extends ViewModel {
 
     let langOptions = '';
     for (const [ langCode, langName ] of Object.entries($.getLangList())) {
-      langOptions += `<option value="${langCode}"${this.model.lang === langCode ? ' selected' : ''}>${langName}</option>`;
+      langOptions += `<option value="${langCode}"${config.lang === langCode ? ' selected' : ''}>${langName}</option>`;
     }
 
     let unitOptions = '';
     for (const units of [ 'metric', 'imperial', 'nautical' ]) {
-      unitOptions += `<option value="${units}"${this.model.units === units ? ' selected' : ''}>${$._(units)}</option>`;
+      unitOptions += `<option value="${units}"${config.units === units ? ' selected' : ''}>${$._(units)}</option>`;
     }
 
     return `

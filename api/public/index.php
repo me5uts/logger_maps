@@ -22,75 +22,43 @@ require_once('../vendor/autoload.php');
 
 use uLogger\Controller\Auth;
 use uLogger\Controller\Config;
-use uLogger\Controller\Lang;
 use uLogger\Helper\Utils;
 
-$login = Utils::postString('user');
-$pass = Utils::postPass('pass');
-$action = Utils::postString('action');
+$route = Utils::postString('route');
+$method = Utils::postString('method');
 
 $config = Config::getInstance();
-$lang = (new Lang($config))->getStrings();
-$langsArr = Lang::getLanguages();
-
 $auth = new Auth();
-if ($action === 'auth') {
-  $auth->checkLogin($login, $pass);
+
+// check session route
+if ($route === 'session') {
+  if ($method === 'get' && $config->requireAuthentication && !$auth->isAuthenticated()) {
+    $auth->exitWithUnauthorized();
+  }
+  elseif ($method === 'post') {
+    $login = Utils::postString('user');
+    $pass = Utils::postPass('pass');
+    if ($auth->checkLogin($login, $pass) === false) {
+      $auth->exitWithUnauthorized();
+    }
+  }
+  Utils::exitWithSuccess();
 }
 
-if ($action === 'auth' && !$auth->isAuthenticated()) {
-  $auth->exitWithRedirect('login.php?auth_error=1');
-}
 if ($config->requireAuthentication && !$auth->isAuthenticated()) {
-  $auth->exitWithRedirect('login.php');
+  $auth->exitWithUnauthorized();
 }
 
-?>
-<!DOCTYPE html>
-<html lang="<?= $config->lang ?>">
-  <head>
-    <title><?= $lang['title'] ?></title>
-    <?php include('meta.php'); ?>
-    <script src="../../ui/dist/bundle.js"></script>
-  </head>
+switch ($route) {
+  case 'session':
+    if ($method === 'delete') {
+      $auth->logOut();
+    }
 
-  <body>
-    <div id="container">
-      <div id="menu">
-        <div id="menu-content">
 
-          <?php if ($auth->isAuthenticated()): ?>
-            <div>
-              <a data-bind="onShowUserMenu"><img class="icon" alt="<?= $lang['user'] ?>" src="../../images/user.svg"> <?= htmlspecialchars($auth->user->login) ?></a>
-              <div id="user-menu" class="menu-hidden">
-                <a id="user-pass" data-bind="onPasswordChange"><img class="icon" alt="<?= $lang['changepass'] ?>" src="../../images/lock.svg"> <?= $lang['changepass'] ?></a>
-                <a class="menu-link" data-bind="onLogout"><img class="icon" alt="<?= $lang['logout'] ?>" src="../../images/poweroff.svg"> <?= $lang['logout'] ?></a>
-              </div>
-            </div>
-          <?php else: ?>
-            <a class="menu-link" data-bind="onLogin"><img class="icon" alt="<?= $lang['login'] ?>" src="../../images/key.svg"> <?= $lang['login'] ?></a>
-          <?php endif; ?>
+}
 
-          <div class="section">
-            <label for="user"><?= $lang['user'] ?></label>
-            <select id="user" data-bind="currentUserId" name="user"></select>
-          </div>
-
-          <div class="section">
-            <label for="track"><?= $lang['track'] ?></label>
-            <select id="track" data-bind="currentTrackId" name="track"></select>
-            <input id="latest" type="checkbox" data-bind="showLatest"> <label for="latest"><?= $lang['latest'] ?></label><br>
-            <input id="auto-reload" type="checkbox" data-bind="autoReload"> <label for="auto-reload"><?= $lang['autoreload'] ?></label> (<a id="set-interval" data-bind="onSetInterval"><span id="interval" data-bind="interval"><?= $config->interval ?></span></a> s)<br>
-            <a id="force-reload" data-bind="onReload"> <?= $lang['reload'] ?></a><br>
-          </div>
-
-          <div id="summary" class="section" data-bind="summary"></div>
-
-          <div class="section" data-bind="trackColor">
-            <div class="menu-title"><?= $lang['trackcolor'] ?></div>
-            <input id="color-speed" type="checkbox" data-bind="speedVisible"> <label for="color-speed"><?= $lang['speed'] ?></label><br>
-            <input id="color-altitude" type="checkbox" data-bind="altitudeVisible"> <label for="color-altitude"><?= $lang['altitude'] ?></label><br>
-          </div>
+Utils::exitWithSuccess();
 
           <div id="other" class="section">
             <a id="altitudes" class="menu-link menu-hidden" data-bind="onChartToggle"><?= $lang['chart'] ?></a>
@@ -104,64 +72,4 @@ if ($config->requireAuthentication && !$auth->isAuthenticated()) {
             </select>
           </div>
 
-          <div>
-            <label for="lang"><?= $lang['language'] ?></label>
-            <select id="lang" name="lang" data-bind="lang">
-              <?php foreach ($langsArr as $langCode => $langName): ?>
-                <option value="<?= $langCode ?>"<?= ($config->lang === $langCode) ? ' selected' : '' ?>><?= $langName ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-
-          <div class="section">
-            <label for="units"><?= $lang['units'] ?></label>
-            <select id="units" name="units" data-bind="units">
-              <option value="metric"<?= ($config->units === 'metric') ? ' selected' : '' ?>><?= $lang['metric'] ?></option>
-              <option value="imperial"<?= ($config->units === 'imperial') ? ' selected' : '' ?>><?= $lang['imperial'] ?></option>
-              <option value="nautical"<?= ($config->units === 'nautical') ? ' selected' : '' ?>><?= $lang['nautical'] ?></option>
-            </select>
-          </div>
-
-          <div class="section">
-            <div class="menu-title"><?= $lang['export'] ?></div>
-            <a id="export-kml" class="menu-link" data-bind="onExportKml">kml</a>
-            <a id="export-gpx" class="menu-link" data-bind="onExportGpx">gpx</a>
-          </div>
-
-          <?php if ($auth->isAuthenticated()): ?>
-            <div class="section">
-              <div id="import" class="menu-title"><?= $lang['import'] ?></div>
-              <form id="import-form" enctype="multipart/form-data" method="post">
-                <input type="hidden" name="MAX_FILE_SIZE" value="<?= $config->uploadMaxSize ?>" />
-                <input type="file" id="input-file" name="gpx" data-bind="inputFile"/>
-              </form>
-              <a id="import-gpx" class="menu-link" data-bind="onImportGpx">gpx</a>
-            </div>
-
-            <div id="admin-menu">
-              <div class="menu-title"><?= $lang['adminmenu'] ?></div>
-              <?php if ($auth->isAdmin()): ?>
-                <a id="adduser" class="menu-link" data-bind="onConfigEdit"><?= $lang['config'] ?></a>
-                <a id="adduser" class="menu-link" data-bind="onUserAdd"><?= $lang['adduser'] ?></a>
-                <a id="edituser" class="menu-link" data-bind="onUserEdit"><?= $lang['edituser'] ?></a>
-              <?php endif; ?>
-              <a id="edittrack" class="menu-link menu-hidden" data-bind="onTrackEdit"><?= $lang['edittrack'] ?></a>
-            </div>
-          <?php endif; ?>
-
-        </div>
-        <div id="menu-button"><a data-bind="onMenuToggle"></a></div>
-        <div id="footer"><a target="_blank" href="https://github.com/bfabiszewski/ulogger-server"><span class="mi">μ</span>logger</a> <?= $config->version ?></div>
-      </div>
-
-      <div id="main">
-        <div id="map-canvas"></div>
-        <div id="bottom">
-          <div id="chart"></div>
-          <a id="chart-close" data-bind="onChartToggle"><img src="../../images/close_blue.svg" alt="<?= $lang['close'] ?>"></a>
-        </div>
-      </div>
-
-    </div>
-  </body>
-</html>
+?>

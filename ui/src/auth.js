@@ -17,6 +17,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+import uAjax from './ajax.js';
 import uUser from './user.js';
 
 export default class uAuth {
@@ -28,6 +29,20 @@ export default class uAuth {
     this._isAuthenticated = false;
     /** @type {?uUser} */
     this._user = null;
+  }
+
+  /**
+   * @param {string} user
+   * @param {string} password
+   * @return {Promise<Object, Error>}
+   */
+  login(user, password) {
+    return uAjax.post('index.php', {
+      route: 'session',
+      method: 'post',
+      user: user,
+      pass: password
+    });
   }
 
   /**

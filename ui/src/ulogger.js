@@ -19,9 +19,10 @@
 
 import './assets/css/fonts.css';
 import './assets/css/main.css';
-import { lang as $, config, initializer, uInitializer } from './initializer.js';
+import { lang as $, auth, config, initializer, uInitializer } from './initializer.js';
 import ChartViewModel from './chartviewmodel.js';
 import ConfigViewModel from './configviewmodel.js';
+import LoginViewModel from './loginviewmodel.js';
 import MainViewModel from './mainviewmodel.js';
 import MapViewModel from './mapviewmodel.js';
 import TrackViewModel from './trackviewmodel.js';
@@ -41,15 +42,11 @@ Promise.all([ domReady, initReady, initLink ])
   })
   .catch((msg) => uAlert.error(`${$._('actionfailure')}\n${msg}`));
 
-/**
- * @param {?Object} linkState
- */
-function start(linkState) {
-  const state = new uState();
-  const permalink = new uPermalink(state);
-  const spinner = new uSpinner(state);
+// FIXME: this should go to Router class
+// eslint-disable-next-line max-params
+function loadMainView(state, permalink, linkState, spinner) {
   const mainVM = new MainViewModel(state);
-  mainVM.setupHtml();
+  mainVM.init();
   const userVM = new UserViewModel(state);
   const trackVM = new TrackViewModel(state);
   const mapVM = new MapViewModel(state);
@@ -57,7 +54,6 @@ function start(linkState) {
   const configVM = new ConfigViewModel(state);
   permalink.init().onPop(linkState);
   spinner.init();
-  mainVM.init();
   userVM.init();
   trackVM.init();
   mapVM.init().loadMapAPI(config.mapApi);
@@ -83,4 +79,25 @@ function start(linkState) {
       mapVM.api.animateMarker(id);
     }
   });
+}
+
+function loadLoginView(state) {
+  const loginVM = new LoginViewModel(state);
+  loginVM.init();
+}
+
+/**
+ * @param {?Object} linkState
+ */
+function start(linkState) {
+  const state = new uState();
+  const permalink = new uPermalink(state);
+  const spinner = new uSpinner(state);
+
+  if (config.requireAuth && !auth.isAuthenticated) {
+    // show login
+    loadLoginView(state);
+  } else {
+    loadMainView(state, permalink, linkState, spinner);
+  }
 }
