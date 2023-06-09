@@ -17,8 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uLayer from '../src/layer.js';
-import uLayerCollection from '../src/layercollection.js';
+import Layer from '../src/Layer.js';
+import LayerCollection from '../src/LayerCollection.js';
 
 describe('LayerCollection tests', () => {
 
@@ -29,13 +29,13 @@ describe('LayerCollection tests', () => {
   const testPriority = 0;
 
   beforeEach(() => {
-    layers = new uLayerCollection();
+    layers = new LayerCollection();
   });
 
   it('should create instance', () => {
     // then
     expect(layers).toBeInstanceOf(Array);
-    expect(layers).toBeInstanceOf(uLayerCollection);
+    expect(layers).toBeInstanceOf(LayerCollection);
   });
 
   it('should add new layer', () => {
@@ -44,7 +44,7 @@ describe('LayerCollection tests', () => {
     layers.addNewLayer(`${testName}2`, `${testUrl}2`, testPriority + 1);
     // then
     expect(layers.length).toBe(2);
-    expect(layers[0]).toBeInstanceOf(uLayer);
+    expect(layers[0]).toBeInstanceOf(Layer);
     expect(layers[0].id).toBe(1);
     expect(layers[0].name).toBe(testName);
     expect(layers[0].url).toBe(testUrl);
@@ -57,7 +57,7 @@ describe('LayerCollection tests', () => {
     layers.addLayer(testId, testName, testUrl, testPriority);
     // then
     expect(layers.length).toBe(1);
-    expect(layers[0]).toBeInstanceOf(uLayer);
+    expect(layers[0]).toBeInstanceOf(Layer);
     expect(layers[0].id).toBe(testId);
     expect(layers[0].name).toBe(testName);
     expect(layers[0].url).toBe(testUrl);
@@ -113,7 +113,7 @@ describe('LayerCollection tests', () => {
     layers.load(arr);
     // then
     expect(layers.length).toBe(1);
-    expect(layers[0]).toBeInstanceOf(uLayer);
+    expect(layers[0]).toBeInstanceOf(Layer);
     expect(layers[0].id).toBe(testId);
     expect(layers[0].name).toBe(testName);
     expect(layers[0].url).toBe(testUrl);

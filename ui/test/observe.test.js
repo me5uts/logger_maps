@@ -17,7 +17,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uObserve from '../src/observe.js';
+import Observer from '../src/Observer.js';
 
 describe('Observe tests', () => {
   let object;
@@ -34,12 +34,12 @@ describe('Observe tests', () => {
   describe('when object is observed', () => {
 
     it('should throw error if observer is missing', () => {
-      expect(() => { uObserve.observe(object, 'observed'); }).toThrow(new Error('Invalid argument for observe'));
+      expect(() => { Observer.observe(object, 'observed'); }).toThrow(new Error('Invalid argument for observe'));
     });
 
     it('should notify observers when observed property is modified', () => {
       // given
-      uObserve.observe(object, 'observed', (value) => {
+      Observer.observe(object, 'observed', (value) => {
         result = true;
         resultValue = value;
       });
@@ -55,11 +55,11 @@ describe('Observe tests', () => {
       // given
       let result2 = false;
       let resultValue2;
-      uObserve.observe(object, 'observed', (value) => {
+      Observer.observe(object, 'observed', (value) => {
         result = true;
         resultValue = value;
       });
-      uObserve.observe(object, 'observed', (value) => {
+      Observer.observe(object, 'observed', (value) => {
         result2 = true;
         resultValue2 = value;
       });
@@ -77,7 +77,7 @@ describe('Observe tests', () => {
 
     it('should not notify observers when non-observed property is modified', () => {
       // given
-      uObserve.observe(object, 'observed', () => {
+      Observer.observe(object, 'observed', () => {
         result = true;
       });
       // when
@@ -89,7 +89,7 @@ describe('Observe tests', () => {
 
     it('should not notify observers when modified value is same', () => {
       // given
-      uObserve.observe(object, 'observed', () => {
+      Observer.observe(object, 'observed', () => {
         result = true;
       });
       // when
@@ -101,7 +101,7 @@ describe('Observe tests', () => {
 
     it('should notify observers when any property is modified', () => {
       // given
-      uObserve.observe(object, (value) => {
+      Observer.observe(object, (value) => {
         result = true;
         resultValue = value;
       });
@@ -128,7 +128,7 @@ describe('Observe tests', () => {
       // given
       const array = [ 1, 2 ];
       object = { array };
-      uObserve.observe(object, 'array', (value) => {
+      Observer.observe(object, 'array', (value) => {
         result = true;
         resultValue = value;
       });
@@ -143,7 +143,7 @@ describe('Observe tests', () => {
     it('should notify observers when observed array is modified', () => {
       // given
       const array = [ 1, 2 ];
-      uObserve.observe(array, (value) => {
+      Observer.observe(array, (value) => {
         result = true;
         resultValue = value;
       });
@@ -162,11 +162,11 @@ describe('Observe tests', () => {
       const array = [ 1, 2 ];
       const newArray = [ 3, 4 ];
       object = { array };
-      uObserve.observe(object, 'array', (value) => {
+      Observer.observe(object, 'array', (value) => {
         result = true;
         resultValue = value;
       });
-      uObserve.observe(object, 'array', (value) => {
+      Observer.observe(object, 'array', (value) => {
         result2 = true;
         resultValue2 = value;
       });
@@ -193,16 +193,16 @@ describe('Observe tests', () => {
       const array = [ 1, 2 ];
       const newArray = [ 3, 4 ];
       object = { array: [] };
-      uObserve.observe(object, 'array', (value) => {
+      Observer.observe(object, 'array', (value) => {
         result = true;
         resultValue = value;
       });
-      uObserve.observe(object, 'array', (value) => {
+      Observer.observe(object, 'array', (value) => {
         result2 = true;
         resultValue2 = value;
       });
       // when
-      uObserve.setSilently(object, 'array', array);
+      Observer.setSilently(object, 'array', array);
       object.array = newArray;
       result = false;
       result2 = false;
@@ -223,7 +223,7 @@ describe('Observe tests', () => {
 
     it('should throw error if removed observer is missing', () => {
       expect(() => {
-        uObserve.unobserve(object, 'unobserved');
+        Observer.unobserve(object, 'unobserved');
       }).toThrow(new Error('Invalid argument for unobserve'));
     });
 
@@ -233,9 +233,9 @@ describe('Observe tests', () => {
         result = true;
         resultValue = value;
       };
-      uObserve.observe(object, 'observed', observer);
+      Observer.observe(object, 'observed', observer);
       // when
-      uObserve.unobserve(object, 'observed', observer);
+      Observer.unobserve(object, 'observed', observer);
 
       expect(result).toBe(false);
       object.observed = 2;
@@ -252,9 +252,9 @@ describe('Observe tests', () => {
         result = true;
         resultValue = value;
       };
-      uObserve.observe(object, observer);
+      Observer.observe(object, observer);
       // when
-      uObserve.unobserve(object, observer);
+      Observer.unobserve(object, observer);
 
       expect(result).toBe(false);
       object.observed = 2;
@@ -287,9 +287,9 @@ describe('Observe tests', () => {
       };
       const array = [ 1, 2 ];
       object = { array };
-      uObserve.observe(object, 'array', observer);
+      Observer.observe(object, 'array', observer);
       // when
-      uObserve.unobserve(object, 'array', observer);
+      Observer.unobserve(object, 'array', observer);
 
       expect(result).toBe(false);
       array.push(3);
@@ -307,9 +307,9 @@ describe('Observe tests', () => {
         resultValue = value;
       };
       const array = [ 1, 2 ];
-      uObserve.observe(array, observer);
+      Observer.observe(array, observer);
       // when
-      uObserve.unobserve(array, observer);
+      Observer.unobserve(array, observer);
 
       expect(result).toBe(false);
       array.push(3);
@@ -332,10 +332,10 @@ describe('Observe tests', () => {
         result2 = true;
         resultValue2 = value;
       };
-      uObserve.observe(object, 'observed', observer);
-      uObserve.observe(object, 'observed', observer2);
+      Observer.observe(object, 'observed', observer);
+      Observer.observe(object, 'observed', observer2);
       // when
-      uObserve.unobserve(object, 'observed', observer2);
+      Observer.unobserve(object, 'observed', observer2);
 
       expect(result).toBe(false);
       expect(result2).toBe(false);
@@ -361,10 +361,10 @@ describe('Observe tests', () => {
         resultValue2 = value;
       };
       const array = [ 1, 2 ];
-      uObserve.observe(array, observer);
-      uObserve.observe(array, observer2);
+      Observer.observe(array, observer);
+      Observer.observe(array, observer2);
       // when
-      uObserve.unobserve(array, observer2);
+      Observer.unobserve(array, observer2);
 
       expect(result).toBe(false);
       expect(result2).toBe(false);
@@ -390,10 +390,10 @@ describe('Observe tests', () => {
         result2 = true;
         resultValue2 = value;
       };
-      uObserve.observe(object, 'observed', observer);
-      uObserve.observe(object, 'observed', observer2);
+      Observer.observe(object, 'observed', observer);
+      Observer.observe(object, 'observed', observer2);
       // when
-      uObserve.unobserveAll(object, 'observed');
+      Observer.unobserveAll(object, 'observed');
 
       expect(result).toBe(false);
       expect(result2).toBe(false);
@@ -421,10 +421,10 @@ describe('Observe tests', () => {
       };
       const array = [ 1, 2 ];
       object.arr = array;
-      uObserve.observe(object, 'arr', observer);
-      uObserve.observe(object, 'arr', observer2);
+      Observer.observe(object, 'arr', observer);
+      Observer.observe(object, 'arr', observer2);
       // when
-      uObserve.unobserveAll(object, 'arr');
+      Observer.unobserveAll(object, 'arr');
 
       expect(result).toBe(false);
       expect(result2).toBe(false);
@@ -451,10 +451,10 @@ describe('Observe tests', () => {
         resultValue2 = value;
       };
       object.observed2 = null;
-      uObserve.observe(object, 'observed', observer);
-      uObserve.observe(object, 'observed2', observer2);
+      Observer.observe(object, 'observed', observer);
+      Observer.observe(object, 'observed2', observer2);
       // when
-      uObserve.unobserveAll(object);
+      Observer.unobserveAll(object);
 
       expect(result).toBe(false);
       expect(result2).toBe(false);
@@ -476,7 +476,7 @@ describe('Observe tests', () => {
 
       expect(object.hasOwnProperty(nonExisting)).toBe(false);
       // then
-      expect(() => uObserve.observe(object, nonExisting, (value) => {
+      expect(() => Observer.observe(object, nonExisting, (value) => {
         result = true;
         resultValue = value;
       })).toThrow();
@@ -488,7 +488,7 @@ describe('Observe tests', () => {
       // given
       const nonExisting = '___non-existing___';
       // then
-      expect(() => uObserve.observe(nonExisting, (value) => {
+      expect(() => Observer.observe(nonExisting, (value) => {
         result = true;
         resultValue = value;
       })).toThrow();
@@ -498,7 +498,7 @@ describe('Observe tests', () => {
       // given
       const nullObject = null;
       // then
-      expect(() => uObserve.observe(nullObject, (value) => {
+      expect(() => Observer.observe(nullObject, (value) => {
         result = true;
         resultValue = value;
       })).toThrow();
@@ -506,13 +506,13 @@ describe('Observe tests', () => {
 
     it('should not notify observers when observed property is silently changed', () => {
       // given
-      uObserve.observe(object, 'observed', (value) => {
+      Observer.observe(object, 'observed', (value) => {
         result = true;
         resultValue = value;
       });
       // when
       expect(result).toBe(false);
-      uObserve.setSilently(object, 'observed', 2);
+      Observer.setSilently(object, 'observed', 2);
       // then
       expect(result).toBe(false);
       // eslint-disable-next-line no-undefined
@@ -521,34 +521,34 @@ describe('Observe tests', () => {
 
     it('should return true if property is observed', () => {
       // when
-      uObserve.observe(object, 'observed', (value) => {
+      Observer.observe(object, 'observed', (value) => {
         result = true;
         resultValue = value;
       });
       // then
-      expect(uObserve.isObserved(object, 'observed')).toBe(true);
+      expect(Observer.isObserved(object, 'observed')).toBe(true);
     });
 
     it('should return false if property is not observed', () => {
       // when
-      uObserve.observe(object, 'observed', (value) => {
+      Observer.observe(object, 'observed', (value) => {
         result = true;
         resultValue = value;
       });
       // then
-      expect(uObserve.isObserved(object, 'nonObserved')).toBe(false);
+      expect(Observer.isObserved(object, 'nonObserved')).toBe(false);
     });
 
     it('should return true if array property is observed', () => {
       // when
       const array = [ 1, 2 ];
       object = { array };
-      uObserve.observe(object, 'array', (value) => {
+      Observer.observe(object, 'array', (value) => {
         result = true;
         resultValue = value;
       });
       // then
-      expect(uObserve.isObserved(object, 'array')).toBe(true);
+      expect(Observer.isObserved(object, 'array')).toBe(true);
     });
 
     it('should return false if property is unobserved', () => {
@@ -557,10 +557,10 @@ describe('Observe tests', () => {
         result = true;
         resultValue = value;
       };
-      uObserve.observe(object, 'observed', observer);
-      uObserve.unobserve(object, 'observed', observer);
+      Observer.observe(object, 'observed', observer);
+      Observer.unobserve(object, 'observed', observer);
       // then
-      expect(uObserve.isObserved(object, 'observed')).toBe(false);
+      expect(Observer.isObserved(object, 'observed')).toBe(false);
     });
 
     it('should return true if property is observed by given observer', () => {
@@ -570,10 +570,10 @@ describe('Observe tests', () => {
         resultValue = value;
       };
       const observer2 = () => {/* ignored */};
-      uObserve.observe(object, 'observed', observer);
+      Observer.observe(object, 'observed', observer);
       // then
-      expect(uObserve.isObserved(object, 'observed', observer)).toBe(true);
-      expect(uObserve.isObserved(object, 'observed', observer2)).toBe(false);
+      expect(Observer.isObserved(object, 'observed', observer)).toBe(true);
+      expect(Observer.isObserved(object, 'observed', observer2)).toBe(false);
     });
   });
 
@@ -587,7 +587,7 @@ describe('Observe tests', () => {
       // when
       expect(result).toBe(false);
       expect(result2).toBe(false);
-      uObserve.notify(observers, true);
+      Observer.notify(observers, true);
       // then
       expect(result).toBe(true);
       expect(result2).toBe(true);

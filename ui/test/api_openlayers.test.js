@@ -18,12 +18,12 @@
  */
 
 import * as ol from '../src/lib/ol.js';
+import Layer from '../src/Layer.js';
+import LayerCollection from '../src/LayerCollection.js';
 import OpenLayersApi from '../src/mapapi/api_openlayers.js';
 import TrackFactory from './helpers/trackfactory.js';
-import { config } from '../src/initializer.js'
-import uLayer from '../src/layer.js';
-import uLayerCollection from '../src/layercollection.js';
-import uUtils from '../src/utils.js';
+import Utils from '../src/Utils.js';
+import { config } from '../src/Initializer.js'
 
 describe('Openlayers map API tests', () => {
   let container;
@@ -47,7 +47,7 @@ describe('Openlayers map API tests', () => {
 
   it('should load and initialize api scripts', (done) => {
     // given
-    // spyOn(uUtils, 'addCss');
+    // spyOn(Utils, 'addCss');
     spyOn(OpenLayersApi, 'loadCss');
 
     spyOn(api, 'initMap');
@@ -59,7 +59,7 @@ describe('Openlayers map API tests', () => {
       .then(() => {
         // then
         expect(OpenLayersApi.loadCss).toHaveBeenCalledTimes(1);
-        // expect(uUtils.addCss).toHaveBeenCalledTimes(1);
+        // expect(Utils.addCss).toHaveBeenCalledTimes(1);
         expect(api.initMap).toHaveBeenCalledTimes(1);
         expect(api.initLayers).toHaveBeenCalledTimes(1);
         expect(api.initStyles).toHaveBeenCalledTimes(1);
@@ -86,9 +86,9 @@ describe('Openlayers map API tests', () => {
   it('should initialize map layers with config values', () => {
     // given
     spyOn(api, 'initLayerSwitcher');
-    config.olLayers = new uLayerCollection(
-      new uLayer(1, 'layer1', 'http://layer1', 0),
-      new uLayer(1, 'layer2', 'http://layer2', 0)
+    config.olLayers = new LayerCollection(
+      new Layer(1, 'layer1', 'http://layer1', 0),
+      new Layer(1, 'layer2', 'http://layer2', 0)
     );
 
     api.map = mockMap;
@@ -663,14 +663,14 @@ describe('Openlayers map API tests', () => {
     config.strokeColor = 'test color';
     config.strokeOpacity = 0.1234;
     const color = 'rgba(1, 1, 1, 1)';
-    spyOn(uUtils, 'hexToRGBA').and.returnValue(color);
+    spyOn(Utils, 'hexToRGBA').and.returnValue(color);
     // when
     api.setTrackDefaultStyle();
     // then
     expect(api.layerTrack.getStyle()).toBeInstanceOf(ol.style.Style);
     expect(api.layerTrack.getStyle().getStroke().getWidth()).toBe(config.strokeWeight);
     expect(api.layerTrack.getStyle().getStroke().getColor()).toBe(color);
-    expect(uUtils.hexToRGBA).toHaveBeenCalledWith(config.strokeColor, config.strokeOpacity);
+    expect(Utils.hexToRGBA).toHaveBeenCalledWith(config.strokeColor, config.strokeOpacity);
   });
 
   it('should set gradient style for track', () => {
@@ -683,7 +683,7 @@ describe('Openlayers map API tests', () => {
     api.layerTrack = new ol.layer.VectorLayer({
       source: new ol.source.Vector()
     });
-    spyOn(uUtils, 'getScaleColor').and.returnValue('test color');
+    spyOn(Utils, 'getScaleColor').and.returnValue('test color');
     spyOn(api, 'getGradientStyle').and.returnValue(new ol.style.Style());
     const lineFeature = new ol.Feature({ geometry: new ol.geom.LineString([]) });
     for (let i = 0; i < track.length; i++) {
@@ -695,7 +695,7 @@ describe('Openlayers map API tests', () => {
     api.layerTrack.getStyle()(lineFeature);
     // then
     expect(api.layerTrack.getStyle()).toBeInstanceOf(Function);
-    expect(uUtils.getScaleColor).toHaveBeenCalledTimes(track.length);
+    expect(Utils.getScaleColor).toHaveBeenCalledTimes(track.length);
     expect(api.getGradientStyle).toHaveBeenCalledTimes(track.length - 1);
   });
 

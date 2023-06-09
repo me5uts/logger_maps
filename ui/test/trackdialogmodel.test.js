@@ -17,14 +17,13 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { config, lang } from '../src/initializer.js';
-import TrackDialogModel from '../src/trackdialogmodel.js';
+import { config, lang } from '../src/Initializer.js';
+import Alert from '../src/Alert.js';
+import Dialog from '../src/Dialog.js';
+import Observer from '../src/Observer.js';
+import State from '../src/State.js';
+import TrackDialogModel from '../src/models/TrackDialogModel.js';
 import TrackFactory from './helpers/trackfactory.js';
-import uAlert from '../src/alert.js';
-import uDialog from '../src/dialog.js';
-import uObserve from '../src/observe.js';
-import uState from '../src/state.js';
-
 
 describe('TrackDialogModel tests', () => {
 
@@ -36,18 +35,18 @@ describe('TrackDialogModel tests', () => {
     config.interval = 10;
     lang.init(config);
     spyOn(lang, '_').and.returnValue('{placeholder}');
-    mockVM = { state: new uState(), onTrackDeleted: {} };
+    mockVM = { state: new State(), onTrackDeleted: {} };
     dm = new TrackDialogModel(mockVM);
     dm.track = TrackFactory.getTrack();
     spyOn(dm.track, 'delete').and.resolveTo();
     spyOn(dm.track, 'saveMeta').and.resolveTo();
     spyOn(dm.track, 'setName');
-    spyOn(uAlert, 'error');
+    spyOn(Alert, 'error');
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should create instance with parent view model as parameter', () => {
@@ -64,14 +63,14 @@ describe('TrackDialogModel tests', () => {
 
   it('should show confirmation dialog on track delete button click', (done) => {
     // given
-    spyOn(uDialog, 'isConfirmed').and.returnValue(false);
+    spyOn(Dialog, 'isConfirmed').and.returnValue(false);
     dm.init();
     const button = dm.dialog.element.querySelector("[data-bind='onTrackDelete']");
     // when
     button.click();
     // then
     setTimeout(() => {
-      expect(uDialog.isConfirmed).toHaveBeenCalledTimes(1);
+      expect(Dialog.isConfirmed).toHaveBeenCalledTimes(1);
       done();
     }, 100);
   });
@@ -79,7 +78,7 @@ describe('TrackDialogModel tests', () => {
   it('should delete track and hide dialog on confirmation dialog accepted', (done) => {
     // given
     spyOn(mockVM, 'onTrackDeleted');
-    spyOn(uDialog, 'isConfirmed').and.returnValue(true);
+    spyOn(Dialog, 'isConfirmed').and.returnValue(true);
     dm.init();
     const button = dm.dialog.element.querySelector("[data-bind='onTrackDelete']");
     // when
@@ -154,7 +153,7 @@ describe('TrackDialogModel tests', () => {
     const result = dm.validate();
     // then
     expect(result).toBe(false);
-    expect(uAlert.error).not.toHaveBeenCalled();
+    expect(Alert.error).not.toHaveBeenCalled();
   });
 
   it('should return false and raise alert if track name is empty', () => {
@@ -165,7 +164,7 @@ describe('TrackDialogModel tests', () => {
     const result = dm.validate();
     // then
     expect(result).toBe(false);
-    expect(uAlert.error).toHaveBeenCalledTimes(1);
+    expect(Alert.error).toHaveBeenCalledTimes(1);
   });
 
   it('should return true on valid track name', () => {
@@ -176,6 +175,6 @@ describe('TrackDialogModel tests', () => {
     const result = dm.validate();
     // then
     expect(result).toBe(true);
-    expect(uAlert.error).not.toHaveBeenCalled();
+    expect(Alert.error).not.toHaveBeenCalled();
   });
 });

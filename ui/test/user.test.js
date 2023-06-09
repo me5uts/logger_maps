@@ -17,34 +17,34 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uTrack from '../src/track.js';
-import uUser from '../src/user.js';
+import Track from '../src/Track.js';
+import User from '../src/User.js';
 
 describe('User tests', () => {
 
   describe('simple tests', () => {
 
-    it('should create uUser instance', () => {
+    it('should create User instance', () => {
       // given
       const id = 1;
       const login = 'test';
       // when
-      const user = new uUser(id, login);
+      const user = new User(id, login);
       // then
       expect(user.id).toBe(id);
       expect(user.login).toBe(login);
     });
 
-    it('should call uTrack.fetchLatest method', () => {
+    it('should call Track.fetchLatest method', () => {
       // given
       const id = 1;
       const login = 'test';
-      const user = new uUser(id, login);
-      spyOn(uTrack, 'fetchLatest');
+      const user = new User(id, login);
+      spyOn(Track, 'fetchLatest');
       // when
       user.fetchLastPosition();
       // then
-      expect(uTrack.fetchLatest).toHaveBeenCalledWith(user);
+      expect(Track.fetchLatest).toHaveBeenCalledWith(user);
     });
 
     it('should get class string representation', () => {
@@ -52,15 +52,15 @@ describe('User tests', () => {
       const id = 1;
       const login = 'test';
       // when
-      const user = new uUser(id, login);
+      const user = new User(id, login);
       // then
       expect(user.toString()).toBe(`[${id}, ${login}]`);
     });
 
     it('should be equal to other user with same id', () => {
       // given
-      const user = new uUser(1, 'testUser');
-      const otherUser = new uUser(1, 'other');
+      const user = new User(1, 'testUser');
+      const otherUser = new User(1, 'other');
       // when
       const result = user.isEqualTo(otherUser);
       // then
@@ -69,8 +69,8 @@ describe('User tests', () => {
 
     it('should not be equal to other track with other id', () => {
       // given
-      const user = new uUser(1, 'testUser');
-      const otherUser = new uUser(2, 'other');
+      const user = new User(1, 'testUser');
+      const otherUser = new User(2, 'other');
       // when
       const result = user.isEqualTo(otherUser);
       // then
@@ -79,7 +79,7 @@ describe('User tests', () => {
 
     it('should not be equal to null track', () => {
       // given
-      const user = new uUser(1, 'testUser');
+      const user = new User(1, 'testUser');
       const otherUser = null;
       // when
       const result = user.isEqualTo(otherUser);
@@ -88,7 +88,7 @@ describe('User tests', () => {
     });
   });
 
-  describe('ajax tests', () => {
+  describe('request tests', () => {
     const validResponse = [ { 'id': 1, 'login': 'test' }, { 'id': 2, 'login': 'test2' }, { 'id': 18, 'login': 'demo' } ];
     const invalidResponse = [ { 'login': 'test' }, { 'id': 2, 'login': 'test2' }, { 'id': 18, 'login': 'demo' } ];
 
@@ -104,10 +104,10 @@ describe('User tests', () => {
       // when
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify(validResponse));
       // then
-      uUser.fetchList()
+      User.fetchList()
         .then((result) => {
           expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('GET', 'utils/getusers.php', true);
-          expect(result).toEqual(jasmine.arrayContaining([ new uUser(1, 'test') ]));
+          expect(result).toEqual(jasmine.arrayContaining([ new User(1, 'test') ]));
           expect(result.length).toBe(3);
           done();
         })
@@ -118,7 +118,7 @@ describe('User tests', () => {
       // when
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify(invalidResponse));
       // then
-      uUser.fetchList()
+      User.fetchList()
         .then(() => {
           done.fail('resolve callback called');
         })
@@ -130,7 +130,7 @@ describe('User tests', () => {
 
     it('should delete user', (done) => {
       // when
-      const user = new uUser(1, 'testUser');
+      const user = new User(1, 'testUser');
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify([]));
       // then
       user.delete()
@@ -148,10 +148,10 @@ describe('User tests', () => {
       const login = 'testUser';
       const password = 'password';
       const isAdmin = true;
-      const newUser = new uUser(id, login, isAdmin);
+      const newUser = new User(id, login, isAdmin);
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify({ id }));
       // then
-      uUser.add(login, password, isAdmin)
+      User.add(login, password, isAdmin)
         .then((user) => {
           expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('POST', 'utils/handleuser.php', true);
           expect(XMLHttpRequest.prototype.send).toHaveBeenCalledWith(`action=add&login=${login}&pass=${password}&admin=${isAdmin}`);
@@ -163,7 +163,7 @@ describe('User tests', () => {
 
     it('should change user password', (done) => {
       // when
-      const user = new uUser(1, 'testUser');
+      const user = new User(1, 'testUser');
       const password = 'password';
       const oldPassword = 'oldPassword';
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify([]));

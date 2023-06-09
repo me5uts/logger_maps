@@ -17,8 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uAjax from '../src/ajax.js';
-import uPosition from '../src/position.js';
+import Http from '../src/Http.js';
+import Position from '../src/Position.js';
 
 describe('Position tests', () => {
 
@@ -101,9 +101,9 @@ describe('Position tests', () => {
     };
   });
 
-  it('should create uPosition instance from json object', () => {
+  it('should create Position instance from json object', () => {
     // when
-    const position = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
     // then
     expect(position.id).toBe(posId);
     expect(position.latitude).toBe(latitude);
@@ -130,7 +130,7 @@ describe('Position tests', () => {
         // when
         delete posCopy[prop];
         // then
-        expect(() => { uPosition.fromJson(posCopy); }).toThrow(new Error('Invalid value'));
+        expect(() => { Position.fromJson(posCopy); }).toThrow(new Error('Invalid value'));
       });
     });
   });
@@ -143,7 +143,7 @@ describe('Position tests', () => {
         // when
         posCopy[prop] = null;
         // then
-        expect(() => { uPosition.fromJson(posCopy); }).toThrow(new Error('Invalid value'));
+        expect(() => { Position.fromJson(posCopy); }).toThrow(new Error('Invalid value'));
       });
     });
   });
@@ -157,7 +157,7 @@ describe('Position tests', () => {
         posCopy[prop] = null;
         let pos = {};
         // then
-        expect(() => { pos = uPosition.fromJson(posCopy); }).not.toThrow(new Error('Invalid value'));
+        expect(() => { pos = Position.fromJson(posCopy); }).not.toThrow(new Error('Invalid value'));
         expect(pos[prop]).toBeNull();
       });
     });
@@ -166,7 +166,7 @@ describe('Position tests', () => {
   it('should result false on null comment', () => {
     // when
     jsonPosition.comment = null;
-    const position = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
     // then
     expect(position.hasComment()).toBe(false);
   });
@@ -174,7 +174,7 @@ describe('Position tests', () => {
   it('should result false on empty comment', () => {
     // when
     jsonPosition.comment = '';
-    const position = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
     // then
     expect(position.hasComment()).toBe(false);
   });
@@ -182,7 +182,7 @@ describe('Position tests', () => {
   it('should result true on non-null comment', () => {
     // when
     jsonPosition.comment = 'comment';
-    const position = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
     // then
     expect(position.hasComment()).toBe(true);
   });
@@ -191,7 +191,7 @@ describe('Position tests', () => {
   it('should result false on null image', () => {
     // when
     jsonPosition.image = null;
-    const position = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
     // then
     expect(position.hasImage()).toBe(false);
   });
@@ -199,7 +199,7 @@ describe('Position tests', () => {
   it('should result false on empty image', () => {
     // when
     jsonPosition.image = '';
-    const position = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
     // then
     expect(position.hasImage()).toBe(false);
   });
@@ -207,14 +207,14 @@ describe('Position tests', () => {
   it('should result true on non-null image', () => {
     // when
     jsonPosition.image = 'image';
-    const position = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
     // then
     expect(position.hasImage()).toBe(true);
   });
 
   it('should calculate speed', () => {
     // when
-    const position = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
     position.totalMeters = 1000;
     position.totalSeconds = 10;
     // then
@@ -223,33 +223,33 @@ describe('Position tests', () => {
 
   it('should delete position on server', () => {
     // given
-    spyOn(uPosition, 'update');
-    const position = uPosition.fromJson(jsonPosition);
+    spyOn(Position, 'update');
+    const position = Position.fromJson(jsonPosition);
     // when
     position.delete()
     // then
-    expect(uPosition.update).toHaveBeenCalledWith({ action: 'delete', posid: posId });
+    expect(Position.update).toHaveBeenCalledWith({ action: 'delete', posid: posId });
   });
 
   it('should save position on server', () => {
     // given
-    spyOn(uPosition, 'update');
-    const position = uPosition.fromJson(jsonPosition);
+    spyOn(Position, 'update');
+    const position = Position.fromJson(jsonPosition);
     // when
     position.save()
     // then
-    expect(uPosition.update).toHaveBeenCalledWith({ action: 'update', posid: posId, comment: comment });
+    expect(Position.update).toHaveBeenCalledWith({ action: 'update', posid: posId, comment: comment });
   });
 
   it('should delete image on server', (done) => {
     // given
-    spyOn(uPosition, 'update').and.resolveTo();
-    const position = uPosition.fromJson(jsonPosition);
+    spyOn(Position, 'update').and.resolveTo();
+    const position = Position.fromJson(jsonPosition);
     // when
     position.imageDelete()
     // then
     setTimeout(() => {
-      expect(uPosition.update).toHaveBeenCalledWith({ action: 'imagedel', posid: posId });
+      expect(Position.update).toHaveBeenCalledWith({ action: 'imagedel', posid: posId });
       expect(position.image).toBeNull();
       done();
     }, 100);
@@ -259,16 +259,16 @@ describe('Position tests', () => {
     // given
     const newImage = 'new_image.jpg';
     const imageFile = 'imageFile';
-    spyOn(uPosition, 'update').and.resolveTo({ image: newImage });
-    const position = uPosition.fromJson(jsonPosition);
+    spyOn(Position, 'update').and.resolveTo({ image: newImage });
+    const position = Position.fromJson(jsonPosition);
     // when
     position.imageAdd(imageFile);
     // then
     setTimeout(() => {
-      expect(uPosition.update).toHaveBeenCalledWith(jasmine.any(FormData));
+      expect(Position.update).toHaveBeenCalledWith(jasmine.any(FormData));
 
       /** @var {FormData} */
-      const data = uPosition.update.calls.mostRecent().args[0];
+      const data = Position.update.calls.mostRecent().args[0];
 
       expect(data.get('image')).toBe(imageFile);
       expect(data.get('action')).toBe('imageadd');
@@ -281,18 +281,18 @@ describe('Position tests', () => {
   it('should call ajax post with url and params', () => {
     // given
     const url = 'utils/handleposition.php';
-    spyOn(uAjax, 'post');
+    spyOn(Http, 'post');
     const data = 'test data';
     // when
-    uPosition.update(data);
+    Position.update(data);
     // then
-    expect(uAjax.post).toHaveBeenCalledWith(url, data);
+    expect(Http.post).toHaveBeenCalledWith(url, data);
   });
 
   it('should calculate distance to another position', () => {
     // given
-    const position = uPosition.fromJson(jsonPosition);
-    const position2 = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
+    const position2 = Position.fromJson(jsonPosition);
     position2.latitude += 1;
     position2.longitude += 1;
     // then
@@ -302,8 +302,8 @@ describe('Position tests', () => {
   it('should calculate time difference to another position', () => {
     // given
     const timeDifference = 1234;
-    const position = uPosition.fromJson(jsonPosition);
-    const position2 = uPosition.fromJson(jsonPosition);
+    const position = Position.fromJson(jsonPosition);
+    const position2 = Position.fromJson(jsonPosition);
     position.timestamp += timeDifference;
     // then
     expect(position.secondsTo(position2)).toBe(timeDifference);

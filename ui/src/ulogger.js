@@ -19,28 +19,28 @@
 
 import './assets/css/fonts.css';
 import './assets/css/main.css';
-import { lang as $, auth, config, initializer, uInitializer } from './initializer.js';
-import ChartViewModel from './chartviewmodel.js';
-import ConfigViewModel from './configviewmodel.js';
-import LoginViewModel from './loginviewmodel.js';
-import MainViewModel from './mainviewmodel.js';
-import MapViewModel from './mapviewmodel.js';
-import TrackViewModel from './trackviewmodel.js';
-import UserViewModel from './userviewmodel.js';
-import uAlert from './alert.js';
-import uPermalink from './permalink.js';
-import uSpinner from './spinner.js';
-import uState from './state.js';
+import { lang as $, Initializer, auth, config, initializer } from './Initializer.js';
+import Alert from './Alert.js';
+import ChartViewModel from './models/ChartViewModel.js';
+import ConfigViewModel from './models/ConfigViewModel.js';
+import LoginViewModel from './models/LoginViewModel.js';
+import MainViewModel from './models/MainViewModel.js';
+import MapViewModel from './models/MapViewModel.js';
+import Permalink from './Permalink.js';
+import Spinner from './Spinner.js';
+import State from './State.js';
+import TrackViewModel from './models/TrackViewModel.js';
+import UserViewModel from './models/UserViewModel.js';
 
-const domReady = uInitializer.waitForDom();
+const domReady = Initializer.waitForDom();
 const initReady = initializer.initialize();
-const initLink = uPermalink.parseHash();
+const initLink = Permalink.parseHash();
 
 Promise.all([ domReady, initReady, initLink ])
   .then((result) => {
     start(result[2]);
   })
-  .catch((msg) => uAlert.error(`${$._('actionfailure')}\n${msg}`));
+  .catch((msg) => Alert.error(`${$._('actionfailure')}\n${msg}`));
 
 // FIXME: this should go to Router class
 // eslint-disable-next-line max-params
@@ -90,9 +90,9 @@ function loadLoginView(state) {
  * @param {?Object} linkState
  */
 function start(linkState) {
-  const state = new uState();
-  const permalink = new uPermalink(state);
-  const spinner = new uSpinner(state);
+  const state = new State();
+  const permalink = new Permalink(state);
+  const spinner = new Spinner(state);
 
   if (config.requireAuth && !auth.isAuthenticated) {
     // show login

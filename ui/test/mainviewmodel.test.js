@@ -17,45 +17,45 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import Fixture from './helpers/fixture.js';
-import MainViewModel from '../src/mainviewmodel.js';
-import ViewModel from '../src/viewmodel.js';
-import uState from '../src/state.js';
+import { auth, config, lang } from '../src/Initializer.js';
+import MainViewModel from '../src/models/MainViewModel.js';
+import Observer from '../src/Observer.js';
+import State from '../src/State.js';
+import User from '../src/User.js';
+import ViewModel from '../src/ViewModel.js';
 
 describe('MainViewModel tests', () => {
 
   const hiddenClass = 'menu-hidden';
   let vm;
   let state;
-  let menuEl;
-  let userMenuEl;
-  let userButtonEl;
-  let menuButtonEl;
-
-  beforeEach((done) => {
-    Fixture.load('main-authorized.html')
-      .then(() => done())
-      .catch((e) => done.fail(e));
-  });
 
   beforeEach(() => {
-    menuEl = document.querySelector('#menu');
-    userMenuEl = document.querySelector('#user-menu');
-    userButtonEl = document.querySelector('a[data-bind="onShowUserMenu"]');
-    menuButtonEl = document.querySelector('#menu-button a');
+    config.reinitialize();
+    lang.init(config);
+    spyOn(lang, '_').and.callFake((arg) => arg);
     spyOn(window, 'addEventListener');
     spyOn(window, 'removeEventListener').and.callThrough();
-    state = new uState();
+    state = new State();
     vm = new MainViewModel(state);
   });
 
   afterEach(() => {
-    Fixture.clear();
+    Observer.unobserveAll(lang);
+    document.body.innerHTML = '';
   });
 
   it('should create instance', () => {
     expect(vm).toBeInstanceOf(ViewModel);
     expect(vm.state).toBe(state);
+  });
+
+  it('should initialize html', () => {
+    // given
+    vm.init();
+    const menuEl = document.querySelector('#menu');
+    const userMenuEl = document.querySelector('#user-menu');
+    // tnen
     expect(vm.menuEl).toBe(menuEl);
     expect(vm.userMenuEl).toBe(userMenuEl);
   });
@@ -63,6 +63,8 @@ describe('MainViewModel tests', () => {
   it('should hide side menu', (done) => {
     // given
     vm.init();
+    const menuEl = document.querySelector('#menu');
+    const menuButtonEl = document.querySelector('#menu-button a');
     // when
     menuButtonEl.click();
     // then
@@ -74,8 +76,10 @@ describe('MainViewModel tests', () => {
 
   it('should show side menu', (done) => {
     // given
-    menuEl.classList.add(hiddenClass);
     vm.init();
+    const menuEl = document.querySelector('#menu');
+    const menuButtonEl = document.querySelector('#menu-button a');
+    menuEl.classList.add(hiddenClass);
     // when
     menuButtonEl.click();
     // then
@@ -87,8 +91,11 @@ describe('MainViewModel tests', () => {
 
   it('should hide user menu', (done) => {
     // given
-    userMenuEl.classList.remove(hiddenClass);
+    auth.user = new User(1, 'test', false);
     vm.init();
+    const userMenuEl = document.querySelector('#user-menu');
+    const userButtonEl = document.querySelector('a[data-bind="onShowUserMenu"]');
+    userMenuEl.classList.remove(hiddenClass);
     // when
     userButtonEl.click();
     // then
@@ -100,7 +107,10 @@ describe('MainViewModel tests', () => {
 
   it('should show user menu', (done) => {
     // given
+    auth.user = new User(1, 'test', false);
     vm.init();
+    const userMenuEl = document.querySelector('#user-menu');
+    const userButtonEl = document.querySelector('a[data-bind="onShowUserMenu"]');
     // when
     userButtonEl.click();
     // then
@@ -114,10 +124,13 @@ describe('MainViewModel tests', () => {
 
   it('should hide user menu on window click', (done) => {
     // given
-    userMenuEl.classList.remove(hiddenClass);
     window.addEventListener.and.callThrough();
     window.addEventListener('click', vm.hideUserMenuCallback, true);
+    auth.user = new User(1, 'test', false);
     vm.init();
+    const userMenuEl = document.querySelector('#user-menu');
+    userMenuEl.classList.remove(hiddenClass);
+
     // when
     document.body.click();
     // then

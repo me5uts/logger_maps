@@ -17,13 +17,13 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { auth, config, lang } from '../src/initializer.js';
-import UserDialogModel from '../src/userdialogmodel.js';
-import uAlert from '../src/alert.js';
-import uDialog from '../src/dialog.js';
-import uObserve from '../src/observe.js';
-import uState from '../src/state.js';
-import uUser from '../src/user.js';
+import { auth, config, lang } from '../src/Initializer.js';
+import Alert from '../src/Alert.js';
+import Dialog from '../src/Dialog.js';
+import Observer from '../src/Observer.js';
+import State from '../src/State.js';
+import User from '../src/User.js';
+import UserDialogModel from '../src/models/UserDialogModel.js';
 
 describe('UserDialogModel tests', () => {
 
@@ -37,27 +37,27 @@ describe('UserDialogModel tests', () => {
     config.reinitialize();
     config.interval = 10;
     lang.init(config);
-    authUser = new uUser(3, 'authUser');
-    newUser = new uUser(2, 'newUser');
+    authUser = new User(3, 'authUser');
+    newUser = new User(2, 'newUser');
     auth.user = authUser;
     spyOn(lang, '_').and.returnValue('{placeholder}');
-    mockVM = { state: new uState(), onUserDeleted: {}, onUserAdded: {} };
+    mockVM = { state: new State(), onUserDeleted: {}, onUserAdded: {} };
     dialogType = 'add';
     dm = new UserDialogModel(mockVM, dialogType);
-    dm.user = new uUser(1, 'testUser');
+    dm.user = new User(1, 'testUser');
     spyOn(dm.user, 'delete').and.resolveTo();
     spyOn(dm.user, 'setPassword').and.resolveTo();
     spyOn(dm.user, 'modify').and.callThrough();
-    spyOn(uUser, 'update').and.resolveTo();
+    spyOn(User, 'update').and.resolveTo();
     spyOn(auth.user, 'setPassword').and.resolveTo();
-    spyOn(uUser, 'add').and.resolveTo(newUser);
+    spyOn(User, 'add').and.resolveTo(newUser);
     spyOn(config, 'validPassStrength').and.returnValue(true);
-    spyOn(uAlert, 'error');
+    spyOn(Alert, 'error');
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
     auth.user = null;
   });
 
@@ -101,7 +101,7 @@ describe('UserDialogModel tests', () => {
 
   it('should show confirmation dialog on user delete button click', (done) => {
     // given
-    spyOn(uDialog, 'isConfirmed').and.returnValue(false);
+    spyOn(Dialog, 'isConfirmed').and.returnValue(false);
     dm.type = 'edit';
     dm.init();
     const button = dm.dialog.element.querySelector("[data-bind='onUserDelete']");
@@ -109,14 +109,14 @@ describe('UserDialogModel tests', () => {
     button.click();
     // then
     setTimeout(() => {
-      expect(uDialog.isConfirmed).toHaveBeenCalledTimes(1);
+      expect(Dialog.isConfirmed).toHaveBeenCalledTimes(1);
       done();
     }, 100);
   });
 
   it('should delete user and hide dialog on confirmation dialog accepted', (done) => {
     // given
-    spyOn(uDialog, 'isConfirmed').and.returnValue(true);
+    spyOn(Dialog, 'isConfirmed').and.returnValue(true);
     spyOn(mockVM, 'onUserDeleted');
     dm.type = 'edit';
     dm.init();
@@ -246,8 +246,8 @@ describe('UserDialogModel tests', () => {
     button.click();
     // then
     setTimeout(() => {
-      expect(uUser.add).toHaveBeenCalledTimes(1);
-      expect(uUser.add).toHaveBeenCalledWith(newUser.login, newPassword, false);
+      expect(User.add).toHaveBeenCalledTimes(1);
+      expect(User.add).toHaveBeenCalledWith(newUser.login, newPassword, false);
       expect(mockVM.onUserAdded).toHaveBeenCalledWith(newUser);
       expect(document.querySelector('#modal')).toBe(null);
       done();
@@ -277,7 +277,7 @@ describe('UserDialogModel tests', () => {
     const result = dm.validate();
     // then
     expect(result).toBe(true);
-    expect(uAlert.error).not.toHaveBeenCalled();
+    expect(Alert.error).not.toHaveBeenCalled();
   });
 
   it('should return false on add user dialog empty login', () => {
@@ -290,7 +290,7 @@ describe('UserDialogModel tests', () => {
     const result = dm.validate();
     // then
     expect(result).toBe(false);
-    expect(uAlert.error).toHaveBeenCalledTimes(1);
+    expect(Alert.error).toHaveBeenCalledTimes(1);
   });
 
   it('should return false on password change dialog empty old password', () => {
@@ -304,7 +304,7 @@ describe('UserDialogModel tests', () => {
     const result = dm.validate();
     // then
     expect(result).toBe(false);
-    expect(uAlert.error).toHaveBeenCalledTimes(1);
+    expect(Alert.error).toHaveBeenCalledTimes(1);
   });
 
   it('should return false on add user dialog passwords not match', () => {
@@ -317,7 +317,7 @@ describe('UserDialogModel tests', () => {
     const result = dm.validate();
     // then
     expect(result).toBe(false);
-    expect(uAlert.error).toHaveBeenCalledTimes(1);
+    expect(Alert.error).toHaveBeenCalledTimes(1);
   });
 
   it('should return true and ignore passwords on add user dialog passwords hidden', () => {
@@ -330,7 +330,7 @@ describe('UserDialogModel tests', () => {
     const result = dm.validate();
     // then
     expect(result).toBe(true);
-    expect(uAlert.error).toHaveBeenCalledTimes(0);
+    expect(Alert.error).toHaveBeenCalledTimes(0);
   });
 
   it('should test password regex on dialog validate', () => {

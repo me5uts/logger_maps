@@ -17,7 +17,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uAjax from '../src/ajax.js';
+import Http from '../src/Http.js';
 
 describe('Ajax tests', () => {
 
@@ -41,7 +41,7 @@ describe('Ajax tests', () => {
 
   it('should make POST request', () => {
     // when
-    uAjax.post(url).catch(() => { /* ignore */ });
+    Http.post(url).catch(() => { /* ignore */ });
     // then
     expect(XMLHttpRequest.prototype.setRequestHeader).toHaveBeenCalledWith('Content-type', 'application/x-www-form-urlencoded');
     expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('POST', url, true);
@@ -49,7 +49,7 @@ describe('Ajax tests', () => {
 
   it('should make GET request', () => {
     // when
-    uAjax.get(url).catch(() => { /* ignore */ });
+    Http.get(url).catch(() => { /* ignore */ });
     // then
     expect(XMLHttpRequest.prototype.setRequestHeader).not.toHaveBeenCalled();
     expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('GET', url, true);
@@ -57,7 +57,7 @@ describe('Ajax tests', () => {
 
   it('should make GET request with parameters', () => {
     // when
-    uAjax.get(url, { p1: 1, p2: 'test' }).catch(() => { /* ignore */ });
+    Http.get(url, { p1: 1, p2: 'test' }).catch(() => { /* ignore */ });
     // then
     expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('GET', `${url}?p1=1&p2=test`, true);
     expect(XMLHttpRequest.prototype.send).toHaveBeenCalledWith(null);
@@ -65,7 +65,7 @@ describe('Ajax tests', () => {
 
   it('should make POST request with parameters', () => {
     // when
-    uAjax.post(url, { p1: 1, p2: 'test' }).catch(() => { /* ignore */ });
+    Http.post(url, { p1: 1, p2: 'test' }).catch(() => { /* ignore */ });
     // then
     expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('POST', url, true);
     expect(XMLHttpRequest.prototype.send).toHaveBeenCalledWith('p1=1&p2=test');
@@ -73,7 +73,7 @@ describe('Ajax tests', () => {
 
   it('should make POST request with form data', () => {
     // when
-    uAjax.post(url, form).catch(() => { /* ignore */ });
+    Http.post(url, form).catch(() => { /* ignore */ });
     // then
     expect(XMLHttpRequest.prototype.setRequestHeader).not.toHaveBeenCalled();
     expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('POST', url, true);
@@ -82,7 +82,7 @@ describe('Ajax tests', () => {
 
   it('should make GET request with form data', () => {
     // when
-    uAjax.get(url, form).catch(() => { /* ignore */ });
+    Http.get(url, form).catch(() => { /* ignore */ });
     // then
     expect(XMLHttpRequest.prototype.setRequestHeader).not.toHaveBeenCalled();
     expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('GET', `${url}?p1=test`, true);
@@ -94,7 +94,7 @@ describe('Ajax tests', () => {
     spyOnProperty(XMLHttpRequest.prototype, 'status').and.returnValue(200);
     spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify(validResponse));
     // then
-    uAjax.get(url)
+    Http.get(url)
       .then((result) => {
       expect(result).toEqual(validResponse);
       done();
@@ -107,7 +107,7 @@ describe('Ajax tests', () => {
     spyOnProperty(XMLHttpRequest.prototype, 'status').and.returnValue(200);
     spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify(errorResponse));
     // then
-    uAjax.get(url)
+    Http.get(url)
       .then(() => done.fail('resolve callback called'))
       .catch((e) => {
         expect(e.message).toBe(errorResponse.message);
@@ -120,7 +120,7 @@ describe('Ajax tests', () => {
     spyOnProperty(XMLHttpRequest.prototype, 'status').and.returnValue(200);
     spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify({ error: true }));
     // then
-    uAjax.get(url)
+    Http.get(url)
       .then(() => done.fail('resolve callback called'))
       .catch((e) => {
         expect(e.message).toBe('');
@@ -133,7 +133,7 @@ describe('Ajax tests', () => {
     const status = 401;
     spyOnProperty(XMLHttpRequest.prototype, 'status').and.returnValue(status);
     // then
-    uAjax.get(url)
+    Http.get(url)
       .then(() => done.fail('resolve callback called'))
       .catch((e) => {
         expect(e.message).toBe(`HTTP error ${status}`);
@@ -146,7 +146,7 @@ describe('Ajax tests', () => {
     spyOnProperty(XMLHttpRequest.prototype, 'status').and.returnValue(200);
     spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(invalidResponse);
     // then
-    uAjax.get(url)
+    Http.get(url)
       .then(() => done.fail('resolve callback called'))
       .catch((e) => {
         expect(e.message).toContain('JSON');

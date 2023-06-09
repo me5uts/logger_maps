@@ -17,11 +17,11 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { config, lang } from '../src/initializer.js';
-import ConfigDialogModel from '../src/configdialogmodel.js';
-import uLayer from '../src/layer.js';
-import uLayerCollection from '../src/layercollection.js';
-import uObserve from '../src/observe.js';
+import { config, lang } from '../src/Initializer.js';
+import ConfigDialogModel from '../src/models/ConfigDialogModel.js';
+import Layer from '../src/Layer.js';
+import LayerCollection from '../src/LayerCollection.js';
+import Observer from '../src/Observer.js';
 
 describe('ConfigDialogModel tests', () => {
 
@@ -33,13 +33,13 @@ describe('ConfigDialogModel tests', () => {
     lang.init(config);
     spyOn(lang, '_').and.callFake((arg) => arg);
     cm = new ConfigDialogModel();
-    layers = new uLayerCollection(new uLayer(0, 'layer0', '', 0), new uLayer(1, 'layer1', '', 0));
+    layers = new LayerCollection(new Layer(0, 'layer0', '', 0), new Layer(1, 'layer1', '', 0));
     cm.model.layers = layers;
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should show config dialog', () => {
@@ -180,7 +180,7 @@ describe('ConfigDialogModel tests', () => {
 
   it('should show edit on non-default layer select', (done) => {
     // given
-    cm.model.layers = new uLayerCollection(new uLayer(0, 'layer0', '', 0), new uLayer(1, 'layer1', '', 0));
+    cm.model.layers = new LayerCollection(new Layer(0, 'layer0', '', 0), new Layer(1, 'layer1', '', 0));
     cm.init();
     const element = cm.getBoundElement('layerId');
     // when

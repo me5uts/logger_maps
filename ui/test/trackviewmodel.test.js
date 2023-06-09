@@ -17,17 +17,17 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { auth, config, lang } from '../src/initializer.js';
+import { auth, config, lang } from '../src/Initializer.js';
+import Alert from '../src/Alert.js';
 import Fixture from './helpers/fixture.js';
+import Observer from '../src/Observer.js';
+import PositionSet from '../src/PositionSet.js';
+import State from '../src/State.js';
+import Track from '../src/Track.js';
 import TrackFactory from './helpers/trackfactory.js';
-import TrackViewModel from '../src/trackviewmodel.js';
-import ViewModel from '../src/viewmodel.js';
-import uAlert from '../src/alert.js';
-import uObserve from '../src/observe.js';
-import uPositionSet from '../src/positionset.js';
-import uState from '../src/state.js';
-import uTrack from '../src/track.js';
-import uUser from '../src/user.js';
+import TrackViewModel from '../src/models/TrackViewModel.js';
+import User from '../src/User.js';
+import ViewModel from '../src/ViewModel.js';
 
 describe('TrackViewModel tests', () => {
 
@@ -83,7 +83,7 @@ describe('TrackViewModel tests', () => {
     trackEditEl = document.querySelector('#edittrack');
     const maxEl = document.querySelector('input[name="MAX_FILE_SIZE"]');
     maxEl.value = MAX_FILE_SIZE;
-    state = new uState();
+    state = new State();
     vm = new TrackViewModel(state);
     track1 = TrackFactory.getTrack(0, { id: 1, name: 'track1' });
     track2 = TrackFactory.getTrack(0, { id: 2, name: 'track2' });
@@ -92,12 +92,12 @@ describe('TrackViewModel tests', () => {
       track2
     ];
     positions = [ TrackFactory.getPosition() ];
-    user = new uUser(1, 'testUser');
+    user = new User(1, 'testUser');
   });
 
   afterEach(() => {
     Fixture.clear();
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
     auth.user = null;
   });
 
@@ -110,16 +110,16 @@ describe('TrackViewModel tests', () => {
 
   it('should load track list and fetch first track on current user change', (done) => {
     // given
-    spyOn(uTrack, 'fetchList').and.returnValue(Promise.resolve(tracks));
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(Track, 'fetchList').and.resolveTo(tracks);
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     vm.init();
     // when
     state.currentUser = user;
     // then
-    expect(uObserve.isObserved(vm.model, 'trackList')).toBe(true);
+    expect(Observer.isObserved(vm.model, 'trackList')).toBe(true);
     setTimeout(() => {
-      expect(uTrack.fetchList).toHaveBeenCalledWith(state.currentUser);
-      expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, trackid: track1.id });
+      expect(Track.fetchList).toHaveBeenCalledWith(state.currentUser);
+      expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, trackid: track1.id });
       expect(trackEl.options.length).toBe(tracks.length);
       expect(trackEl.options[0].selected).toBe(true);
       expect(trackEl.options[0].value).toBe(track1.listValue);
@@ -133,15 +133,15 @@ describe('TrackViewModel tests', () => {
 
   it('should clear current track on empty track list loaded on current user change', (done) => {
     // given
-    spyOn(uTrack, 'fetchList').and.returnValue(Promise.resolve([]));
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(Track, 'fetchList').and.resolveTo([]);
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     vm.init();
     // when
     state.currentUser = user;
     // then
     setTimeout(() => {
-      expect(uTrack.fetchList).toHaveBeenCalledWith(state.currentUser);
-      expect(uPositionSet.fetch).not.toHaveBeenCalled();
+      expect(Track.fetchList).toHaveBeenCalledWith(state.currentUser);
+      expect(PositionSet.fetch).not.toHaveBeenCalled();
       expect(trackEl.options.length).toBe(0);
       expect(state.currentTrack).toBe(null);
       expect(vm.model.currentTrackId).toBe('');
@@ -154,8 +154,8 @@ describe('TrackViewModel tests', () => {
     // given
     positions[0].trackid = track2.id;
     positions[0].trackname = track2.name;
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
-    spyOn(uTrack, 'fetchList').and.returnValue(Promise.resolve(tracks));
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
+    spyOn(Track, 'fetchList').and.resolveTo(tracks);
     vm.model.showLatest = true;
     state.showLatest = true;
     vm.init();
@@ -163,8 +163,8 @@ describe('TrackViewModel tests', () => {
     state.currentUser = user;
     // then
     setTimeout(() => {
-      expect(uTrack.fetchList).toHaveBeenCalledWith(state.currentUser);
-      expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
+      expect(Track.fetchList).toHaveBeenCalledWith(state.currentUser);
+      expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
       expect(trackEl.options.length).toBe(tracks.length);
       expect(trackEl.options[1].selected).toBe(true);
       expect(trackEl.options[1].value).toBe(track2.listValue);
@@ -200,7 +200,7 @@ describe('TrackViewModel tests', () => {
 
   it('should load track when selected in form select options', (done) => {
     // given
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     vm.model.trackList = tracks;
@@ -213,7 +213,7 @@ describe('TrackViewModel tests', () => {
     trackEl.dispatchEvent(new Event('change'));
     // then
     setTimeout(() => {
-      expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, trackid: track2.id });
+      expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, trackid: track2.id });
       expect(trackEl.options.length).toBe(tracks.length);
       expect(trackEl.options[0].value).toBe(track1.listValue);
       expect(trackEl.options[1].value).toBe(track2.listValue);
@@ -230,7 +230,7 @@ describe('TrackViewModel tests', () => {
     // given
     positions[0].trackid = 100;
     positions[0].trackname = 'new track';
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     const optLength = trackEl.options.length;
@@ -244,7 +244,7 @@ describe('TrackViewModel tests', () => {
     latestEl.dispatchEvent(new Event('change'));
     // then
     setTimeout(() => {
-      expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
+      expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
       expect(state.currentTrack.id).toBe(positions[0].trackid);
       expect(state.currentTrack.name).toBe(positions[0].trackname);
       expect(state.currentTrack.length).toBe(positions.length);
@@ -264,7 +264,7 @@ describe('TrackViewModel tests', () => {
     // given
     positions[0].trackid = track2.id;
     positions[0].trackname = track2.name;
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     const optLength = trackEl.options.length;
@@ -278,7 +278,7 @@ describe('TrackViewModel tests', () => {
     latestEl.dispatchEvent(new Event('change'));
     // then
     setTimeout(() => {
-      expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
+      expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
       expect(state.currentTrack.id).toBe(track2.id);
       expect(state.currentTrack.name).toBe(track2.name);
       expect(state.currentTrack.length).toBe(positions.length);
@@ -298,7 +298,7 @@ describe('TrackViewModel tests', () => {
     // given
     positions[0].trackid = track1.id;
     positions[0].trackname = track1.name;
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     const optLength = trackEl.options.length;
@@ -315,7 +315,7 @@ describe('TrackViewModel tests', () => {
     latestEl.dispatchEvent(new Event('change'));
     // then
     setTimeout(() => {
-      expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, trackid: track1.id });
+      expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, trackid: track1.id });
       expect(state.currentTrack.id).toBe(track1.id);
       expect(state.currentTrack.name).toBe(track1.name);
       expect(state.currentTrack.length).toBe(positions.length);
@@ -333,7 +333,7 @@ describe('TrackViewModel tests', () => {
 
   it('should clear track list and fetch all users positions on "all users" option selected', (done) => {
     // given
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     vm.model.trackList = tracks;
@@ -347,11 +347,11 @@ describe('TrackViewModel tests', () => {
     state.showAllUsers = true;
     // then
     setTimeout(() => {
-      expect(uPositionSet.fetch).toHaveBeenCalledWith({ last: true });
+      expect(PositionSet.fetch).toHaveBeenCalledWith({ last: true });
       expect(trackEl.options.length).toBe(0);
       // noinspection JSUnresolvedFunction
-      expect(state.currentTrack).not.toBeInstanceOf(uTrack);
-      expect(state.currentTrack).toBeInstanceOf(uPositionSet);
+      expect(state.currentTrack).not.toBeInstanceOf(Track);
+      expect(state.currentTrack).toBeInstanceOf(PositionSet);
       expect(state.currentTrack.positions.length).toBe(positions.length);
       expect(state.currentTrack.positions[0].id).toBe(positions[0].id);
       expect(state.currentTrack.length).toBe(positions.length);
@@ -363,7 +363,7 @@ describe('TrackViewModel tests', () => {
 
   it('should clear current track if "show latest" is unchecked when "all users" is set', (done) => {
     // given
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     vm.model.trackList = [];
     vm.model.currentTrackId = '';
     vm.model.showLatest = true;
@@ -378,7 +378,7 @@ describe('TrackViewModel tests', () => {
     latestEl.dispatchEvent(new Event('change'));
     // then
     setTimeout(() => {
-      expect(uPositionSet.fetch).not.toHaveBeenCalled();
+      expect(PositionSet.fetch).not.toHaveBeenCalled();
       expect(state.currentTrack).toBe(null);
       expect(vm.model.currentTrackId).toBe('');
       expect(trackEl.options.length).toBe(0);
@@ -390,7 +390,7 @@ describe('TrackViewModel tests', () => {
 
   it('should uncheck "show latest" when selected track in form select options', (done) => {
     // given
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     vm.model.trackList = tracks;
@@ -448,12 +448,12 @@ describe('TrackViewModel tests', () => {
       TrackFactory.getTrack(0, { id: 4, name: 'track4', user: user })
     ];
     const file = new File([ 'blob' ], '/path/filepath.gpx');
-    spyOn(uTrack, 'import').and.callFake((form) => {
+    spyOn(Track, 'import').and.callFake((form) => {
       expect(form.elements['gpx'].files[0]).toEqual(file);
       return Promise.resolve(imported);
     });
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
-    spyOn(uAlert, 'toast');
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
+    spyOn(Alert, 'toast');
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     const optLength = trackEl.options.length;
@@ -473,12 +473,12 @@ describe('TrackViewModel tests', () => {
     importGpxEl.click();
     // then
     setTimeout(() => {
-      expect(uTrack.import).toHaveBeenCalledTimes(1);
-      expect(uTrack.import).toHaveBeenCalledWith(jasmine.any(HTMLFormElement), user);
+      expect(Track.import).toHaveBeenCalledTimes(1);
+      expect(Track.import).toHaveBeenCalledWith(jasmine.any(HTMLFormElement), user);
       expect(state.currentTrack).toBe(imported[0]);
       expect(vm.model.currentTrackId).toBe(imported[0].listValue);
       expect(state.currentTrack.length).toBe(positions.length);
-      expect(uAlert.toast).toHaveBeenCalledTimes(1);
+      expect(Alert.toast).toHaveBeenCalledTimes(1);
       expect(trackEl.options.length).toBe(optLength + imported.length);
       expect(vm.model.trackList.length).toBe(optLength + imported.length);
       expect(vm.model.inputFile).toBe('');
@@ -493,9 +493,9 @@ describe('TrackViewModel tests', () => {
       TrackFactory.getTrack(0, { id: 3, name: 'track3', user: user }),
       TrackFactory.getTrack(0, { id: 4, name: 'track4', user: user })
     ];
-    spyOn(uTrack, 'import').and.returnValue(Promise.resolve(imported));
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
-    spyOn(uAlert, 'error');
+    spyOn(Track, 'import').and.resolveTo(imported);
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
+    spyOn(Alert, 'error');
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     const optLength = trackEl.options.length;
@@ -515,7 +515,7 @@ describe('TrackViewModel tests', () => {
     importGpxEl.click();
     // then
     setTimeout(() => {
-      expect(uTrack.import).not.toHaveBeenCalled();
+      expect(Track.import).not.toHaveBeenCalled();
       expect(state.currentTrack).toBe(track1);
       expect(vm.model.currentTrackId).toBe(track1.listValue);
       expect(lang._.calls.mostRecent().args[1]).toBe(MAX_FILE_SIZE.toString());
@@ -532,9 +532,9 @@ describe('TrackViewModel tests', () => {
       TrackFactory.getTrack(0, { id: 4, name: 'track4', user: user })
     ];
     const file = new File([ 'blob' ], '/path/filepath.gpx');
-    spyOn(uTrack, 'import').and.returnValue(Promise.resolve(imported));
-    spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
-    spyOn(uAlert, 'error');
+    spyOn(Track, 'import').and.resolveTo(imported);
+    spyOn(PositionSet, 'fetch').and.resolveTo(positions);
+    spyOn(Alert, 'error');
     const options = '<option selected value="1">track1</option><option value="2">track2</option>';
     trackEl.insertAdjacentHTML('afterbegin', options);
     const optLength = trackEl.options.length;
@@ -553,10 +553,10 @@ describe('TrackViewModel tests', () => {
     importGpxEl.click();
     // then
     setTimeout(() => {
-      expect(uTrack.import).not.toHaveBeenCalled();
+      expect(Track.import).not.toHaveBeenCalled();
       expect(state.currentTrack).toBe(track1);
       expect(vm.model.currentTrackId).toBe(track1.listValue);
-      expect(uAlert.error).toHaveBeenCalledTimes(1);
+      expect(Alert.error).toHaveBeenCalledTimes(1);
       expect(lang._).toHaveBeenCalledWith('notauthorized');
       expect(trackEl.options.length).toBe(optLength);
       expect(vm.model.trackList.length).toBe(optLength);
@@ -682,7 +682,7 @@ describe('TrackViewModel tests', () => {
     it('should reload selected track', (done) => {
       // given
       track1 = TrackFactory.getTrack(2, { id: 1, name: 'track1' });
-      spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+      spyOn(PositionSet, 'fetch').and.resolveTo(positions);
       const options = '<option selected value="1">track1</option><option value="2">track2</option>';
       trackEl.insertAdjacentHTML('afterbegin', options);
       const optLength = trackEl.options.length;
@@ -696,7 +696,7 @@ describe('TrackViewModel tests', () => {
       forceReloadEl.click();
       // then
       setTimeout(() => {
-        expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, trackid: track1.id, afterid: track1.maxId });
+        expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, trackid: track1.id, afterid: track1.maxId });
         expect(state.currentTrack.length).toBe(posLength + positions.length);
         expect(trackEl.options.length).toBe(optLength);
         expect(trackEl.value).toBe(track1.listValue);
@@ -709,7 +709,7 @@ describe('TrackViewModel tests', () => {
       track1 = TrackFactory.getTrack(1, { id: 1, name: 'track1' });
       positions[0].trackid = track1.id;
       positions[0].trackname = track1.name;
-      spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+      spyOn(PositionSet, 'fetch').and.resolveTo(positions);
       const options = '<option selected value="1">track1</option><option value="2">track2</option>';
       trackEl.insertAdjacentHTML('afterbegin', options);
       const optLength = trackEl.options.length;
@@ -725,7 +725,7 @@ describe('TrackViewModel tests', () => {
       forceReloadEl.click();
       // then
       setTimeout(() => {
-        expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
+        expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
         expect(state.currentTrack.id).toEqual(track1.id);
         expect(state.currentTrack.name).toEqual(track1.name);
         expect(state.currentTrack.length).toBe(1);
@@ -740,7 +740,7 @@ describe('TrackViewModel tests', () => {
       track1 = TrackFactory.getTrack(1, { id: 1, name: 'track1' });
       positions[0].trackid = 100;
       positions[0].trackname = 'track100';
-      spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(positions));
+      spyOn(PositionSet, 'fetch').and.resolveTo(positions);
       const options = '<option selected value="1">track1</option><option value="2">track2</option>';
       trackEl.insertAdjacentHTML('afterbegin', options);
       const optLength = trackEl.options.length;
@@ -756,7 +756,7 @@ describe('TrackViewModel tests', () => {
       forceReloadEl.click();
       // then
       setTimeout(() => {
-        expect(uPositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
+        expect(PositionSet.fetch).toHaveBeenCalledWith({ userid: user.id, last: true });
         expect(state.currentTrack.id).toEqual(positions[0].trackid);
         expect(state.currentTrack.name).toEqual(positions[0].trackname);
         expect(state.currentTrack.length).toBe(1);
@@ -773,7 +773,7 @@ describe('TrackViewModel tests', () => {
       set.positions[0].trackname = track1.name;
       set.positions[1].trackid = track2.id;
       set.positions[1].trackname = track2.name;
-      spyOn(uPositionSet, 'fetch').and.returnValue(Promise.resolve(set.positions));
+      spyOn(PositionSet, 'fetch').and.resolveTo(set.positions);
       vm.model.trackList = [];
       vm.model.currentTrackId = '';
       vm.model.showLatest = true;
@@ -787,7 +787,7 @@ describe('TrackViewModel tests', () => {
       forceReloadEl.click();
       // then
       setTimeout(() => {
-        expect(uPositionSet.fetch).toHaveBeenCalledWith({ last: true });
+        expect(PositionSet.fetch).toHaveBeenCalledWith({ last: true });
         expect(state.currentTrack.length).toEqual(set.length);
         expect(state.currentTrack.positions[0]).toEqual(set.positions[0]);
         expect(state.currentTrack.positions[1]).toEqual(set.positions[1]);
@@ -799,7 +799,7 @@ describe('TrackViewModel tests', () => {
 
     it('should fetch track list if user is selected and no track is selected', (done) => {
       // given
-      spyOn(uTrack, 'fetchList').and.returnValue(Promise.resolve([]));
+      spyOn(Track, 'fetchList').and.resolveTo([]);
       vm.model.trackList = [];
       vm.model.currentTrackId = '';
       state.currentTrack = null;
@@ -809,7 +809,7 @@ describe('TrackViewModel tests', () => {
       forceReloadEl.click();
       // then
       setTimeout(() => {
-        expect(uTrack.fetchList).toHaveBeenCalledWith(user);
+        expect(Track.fetchList).toHaveBeenCalledWith(user);
         expect(state.currentTrack).toBe(null);
         expect(trackEl.options.length).toBe(0);
         expect(trackEl.value).toBe('');
@@ -819,8 +819,8 @@ describe('TrackViewModel tests', () => {
 
     it('should do nothing if no user is selected and no track is selected', (done) => {
       // given
-      spyOn(uTrack, 'fetchList');
-      spyOn(uPositionSet, 'fetch');
+      spyOn(Track, 'fetchList');
+      spyOn(PositionSet, 'fetch');
       vm.model.trackList = [];
       vm.model.currentTrackId = '';
       state.currentTrack = null;
@@ -830,8 +830,8 @@ describe('TrackViewModel tests', () => {
       forceReloadEl.click();
       // then
       setTimeout(() => {
-        expect(uTrack.fetchList).not.toHaveBeenCalled();
-        expect(uPositionSet.fetch).not.toHaveBeenCalled();
+        expect(Track.fetchList).not.toHaveBeenCalled();
+        expect(PositionSet.fetch).not.toHaveBeenCalled();
         expect(state.currentTrack).toBe(null);
         expect(trackEl.options.length).toBe(0);
         expect(trackEl.value).toBe('');

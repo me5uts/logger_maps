@@ -17,9 +17,9 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import ViewModel from '../src/viewmodel.js';
-import uObserve from '../src/observe.js';
-import uUtils from '../src/utils.js';
+import Observer from '../src/Observer.js';
+import Utils from '../src/Utils.js';
+import ViewModel from '../src/ViewModel.js';
 
 describe('ViewModel tests', () => {
 
@@ -71,13 +71,13 @@ describe('ViewModel tests', () => {
   it('should set up binding between model property and DOM input element', () => {
     // given
     /** @type {HTMLInputElement} */
-    const inputElement = uUtils.nodeFromHtml(`<input type="text" value="${propertyStringVal}" data-bind="${propertyString}">`);
+    const inputElement = Utils.nodeFromHtml(`<input type="text" value="${propertyStringVal}" data-bind="${propertyString}">`);
     document.body.appendChild(inputElement);
     // when
     vm.bind(propertyString);
     // then
-    expect(uObserve.isObserved(vm.model, propertyString)).toBe(true);
-    expect(uObserve.isObserved(vm.model, propertyBool)).toBe(false);
+    expect(Observer.isObserved(vm.model, propertyString)).toBe(true);
+    expect(Observer.isObserved(vm.model, propertyBool)).toBe(false);
     expect(vm.model[propertyString]).toBe(propertyStringVal);
     expect(inputElement.value).toBe(propertyStringVal);
     // when
@@ -98,13 +98,13 @@ describe('ViewModel tests', () => {
       <option selected value="${propertyStringVal}"></option>
       </select>`;
     /** @type {HTMLInputElement} */
-    const selectElement = uUtils.nodeFromHtml(html);
+    const selectElement = Utils.nodeFromHtml(html);
     document.body.appendChild(selectElement);
     // when
     vm.bind(propertyString);
     // then
-    expect(uObserve.isObserved(vm.model, propertyString)).toBe(true);
-    expect(uObserve.isObserved(vm.model, propertyBool)).toBe(false);
+    expect(Observer.isObserved(vm.model, propertyString)).toBe(true);
+    expect(Observer.isObserved(vm.model, propertyBool)).toBe(false);
     expect(vm.model[propertyString]).toBe(propertyStringVal);
     expect(selectElement.value).toBe(propertyStringVal);
     // when
@@ -121,14 +121,14 @@ describe('ViewModel tests', () => {
   it('should set up binding between model property and DOM checkbox element', () => {
     // given
     /** @type {HTMLInputElement} */
-    const checkboxElement = uUtils.nodeFromHtml(`<input type="checkbox" data-bind="${propertyBool}">`);
+    const checkboxElement = Utils.nodeFromHtml(`<input type="checkbox" data-bind="${propertyBool}">`);
     document.body.appendChild(checkboxElement);
     checkboxElement.checked = false;
     // when
     vm.bind(propertyBool);
     // then
-    expect(uObserve.isObserved(vm.model, propertyBool)).toBe(true);
-    expect(uObserve.isObserved(vm.model, propertyString)).toBe(false);
+    expect(Observer.isObserved(vm.model, propertyBool)).toBe(true);
+    expect(Observer.isObserved(vm.model, propertyString)).toBe(false);
     expect(vm.model[propertyBool]).toBe(propertyBoolVal);
     expect(checkboxElement.checked).toBe(propertyBoolVal);
     // when
@@ -146,13 +146,13 @@ describe('ViewModel tests', () => {
   it('should bind DOM anchor element click event to model property', () => {
     // given
     /** @type {HTMLAnchorElement} */
-    const anchorElement = uUtils.nodeFromHtml(`<a data-bind="${propertyFunction}">`);
+    const anchorElement = Utils.nodeFromHtml(`<a data-bind="${propertyFunction}">`);
     document.body.appendChild(anchorElement);
     spyOn(model, propertyFunction);
     // when
     vm.bind(propertyFunction);
     // then
-    expect(uObserve.isObserved(vm.model, propertyFunction)).toBe(false);
+    expect(Observer.isObserved(vm.model, propertyFunction)).toBe(false);
     expect(vm.model[propertyFunction]).toBeInstanceOf(Function);
     // when
     anchorElement.dispatchEvent(new Event('click'));
@@ -165,13 +165,13 @@ describe('ViewModel tests', () => {
   it('should bind DOM div element to model property', () => {
     // given
     /** @type {HTMLDivElement} */
-    const divElement = uUtils.nodeFromHtml(`<div data-bind="${propertyString}"></div>`);
+    const divElement = Utils.nodeFromHtml(`<div data-bind="${propertyString}"></div>`);
     document.body.appendChild(divElement);
     const newContent = '<span>new value</span>';
     // when
     vm.bind(propertyString);
     // then
-    expect(uObserve.isObserved(vm.model, propertyString)).toBe(true);
+    expect(Observer.isObserved(vm.model, propertyString)).toBe(true);
     // when
     model[propertyString] = newContent;
     // then
@@ -182,24 +182,24 @@ describe('ViewModel tests', () => {
     // given
     // eslint-disable-next-line no-empty-function
     const callback = () => {};
-    spyOn(uObserve, 'observe');
+    spyOn(Observer, 'observe');
     // when
     vm.onChanged(propertyString, callback);
     // then
-    expect(uObserve.observe).toHaveBeenCalledTimes(1);
-    expect(uObserve.observe).toHaveBeenCalledWith(vm.model, propertyString, callback);
+    expect(Observer.observe).toHaveBeenCalledTimes(1);
+    expect(Observer.observe).toHaveBeenCalledWith(vm.model, propertyString, callback);
   });
 
   it('should stop observing model property', () => {
     // given
     // eslint-disable-next-line no-empty-function
     const callback = () => {};
-    spyOn(uObserve, 'unobserve');
+    spyOn(Observer, 'unobserve');
     // when
     vm.unsubscribe(propertyString, callback);
     // then
-    expect(uObserve.unobserve).toHaveBeenCalledTimes(1);
-    expect(uObserve.unobserve).toHaveBeenCalledWith(vm.model, propertyString, callback);
+    expect(Observer.unobserve).toHaveBeenCalledTimes(1);
+    expect(Observer.unobserve).toHaveBeenCalledWith(vm.model, propertyString, callback);
   });
 
   it('should get bound element by property name', () => {

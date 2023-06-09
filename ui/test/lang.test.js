@@ -17,8 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+import Locale from '../src/Locale.js';
 import TrackFactory from './helpers/trackfactory.js';
-import uLang from '../src/lang.js';
 
 describe('Lang tests', () => {
 
@@ -28,7 +28,7 @@ describe('Lang tests', () => {
   const value = 1000;
 
   beforeEach(() => {
-    lang = new uLang();
+    lang = new Locale();
     mockConfig = {
       lang: 'en',
       factorSpeed: 0.33,

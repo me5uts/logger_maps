@@ -17,13 +17,13 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { auth, config, lang } from '../src/initializer.js';
+import { auth, config, lang } from '../src/Initializer.js';
 import Fixture from './helpers/fixture.js';
-import UserViewModel from '../src/userviewmodel.js';
-import ViewModel from '../src/viewmodel.js';
-import uSelect from '../src/select.js';
-import uState from '../src/state.js';
-import uUser from '../src/user.js';
+import Select from '../src/Select.js';
+import State from '../src/State.js';
+import User from '../src/User.js';
+import UserViewModel from '../src/models/UserViewModel.js';
+import ViewModel from '../src/ViewModel.js';
 
 describe('UserViewModel tests', () => {
 
@@ -53,9 +53,9 @@ describe('UserViewModel tests', () => {
     lang.init(config);
     lang.strings['suser'] = 'select user';
     lang.strings['allusers'] = 'all users';
-    state = new uState();
-    user1 = new uUser(1, 'user1');
-    user2 = new uUser(2, 'user2');
+    state = new State();
+    user1 = new User(1, 'user1');
+    user2 = new User(2, 'user2');
     users = [ user1, user2 ];
     vm = new UserViewModel(state);
   });
@@ -77,7 +77,7 @@ describe('UserViewModel tests', () => {
 
   it('should load user list and select first user on list', (done) => {
     // given
-    spyOn(uUser, 'fetchList').and.returnValue(Promise.resolve(users));
+    spyOn(User, 'fetchList').and.resolveTo(users);
     // when
     vm.init();
     // then
@@ -93,7 +93,7 @@ describe('UserViewModel tests', () => {
 
   it('should load user list and select authorized user on list', (done) => {
     // given
-    spyOn(uUser, 'fetchList').and.returnValue(Promise.resolve(users));
+    spyOn(User, 'fetchList').and.resolveTo(users);
     // when
     auth.user = user2;
     vm.init();
@@ -138,22 +138,22 @@ describe('UserViewModel tests', () => {
     state.showAllUsers = false;
     vm.model.userList = users;
     vm.model.currentUserId = user1.listValue;
-    const options = `<option value="${uSelect.allValue}">all users</option><option selected value="1">user1</option><option value="2">user2</option>`;
+    const options = `<option value="${Select.allValue}">all users</option><option selected value="1">user1</option><option value="2">user2</option>`;
     userEl.insertAdjacentHTML('beforeend', options);
     const optLength = userEl.options.length;
     vm.setObservers(state);
     vm.bindAll();
     // when
-    userEl.value = uSelect.allValue;
+    userEl.value = Select.allValue;
     userEl.dispatchEvent(new Event('change'));
     // then
     setTimeout(() => {
       expect(state.showAllUsers).toBe(true);
       expect(state.currentUser).toBe(null);
-      expect(userEl.value).toBe(uSelect.allValue);
+      expect(userEl.value).toBe(Select.allValue);
       expect(userEl.options.length).toBe(optLength);
       expect(userEl.options[1].selected).toBe(true);
-      expect(userEl.options[1].value).toBe(uSelect.allValue);
+      expect(userEl.options[1].value).toBe(Select.allValue);
       done();
     }, 100);
   });
@@ -181,7 +181,7 @@ describe('UserViewModel tests', () => {
       expect(userEl.options.length).toBe(optLength + 1);
       expect(vm.model.userList.length).toBe(listLength);
       expect(userEl.options[1].selected).toBe(false);
-      expect(userEl.options[1].value).toBe(uSelect.allValue);
+      expect(userEl.options[1].value).toBe(Select.allValue);
       expect(userEl.options[2].selected).toBe(true);
       expect(userEl.options[2].value).toBe(user1.listValue);
       done();
@@ -195,7 +195,7 @@ describe('UserViewModel tests', () => {
     state.showLatest = true;
     vm.model.userList = users;
     vm.model.currentUserId = user1.listValue;
-    const options = `<option value="${uSelect.allValue}">all users</option><option selected value="1">user1</option><option value="2">user2</option>`;
+    const options = `<option value="${Select.allValue}">all users</option><option selected value="1">user1</option><option value="2">user2</option>`;
     userEl.insertAdjacentHTML('beforeend', options);
     const optLength = userEl.options.length;
     const listLength = vm.model.userList.length;
@@ -258,8 +258,8 @@ describe('UserViewModel tests', () => {
 
   it('should add new user to user list in alphabetic order', () => {
     // given
-    user1 = new uUser(1, 'b');
-    user2 = new uUser(2, 'a');
+    user1 = new User(1, 'b');
+    user2 = new User(2, 'a');
     vm.model.userList = [ user1 ];
     // when
     vm.onUserAdded(user2);

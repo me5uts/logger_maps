@@ -17,14 +17,14 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uConfig from '../src/config.js';
-import uObserve from '../src/observe.js';
+import Config from '../src/Config.js';
+import Observer from '../src/Observer.js';
 
 describe('Config tests', () => {
 
   let config;
   beforeEach(() => {
-    config = new uConfig();
+    config = new Config();
   });
 
   it('should create instance', () => {
@@ -146,12 +146,12 @@ describe('Config tests', () => {
       interval: 10000
     };
     config.load(data);
-    uObserve.observe(config, 'interval', () => {/* ignored */});
+    Observer.observe(config, 'interval', () => {/* ignored */});
     // when
     config.reinitialize();
     // then
     expect(config.interval).not.toBe(data.interval);
-    expect(uObserve.isObserved(config, 'interval')).toBe(false);
+    expect(Observer.isObserved(config, 'interval')).toBe(false);
   });
 
   it('should notify observer on changed config value', (done) => {

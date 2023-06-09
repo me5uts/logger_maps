@@ -17,11 +17,11 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { lang as $, config } from '../initializer.js';
-import MapViewModel from '../mapviewmodel.js';
-import uAlert from '../alert.js';
-import uTrack from '../track.js';
-import uUtils from '../utils.js';
+import { lang as $, config } from '../Initializer.js';
+import Alert from '../Alert.js';
+import MapViewModel from '../models/MapViewModel.js';
+import Track from '../Track.js';
+import Utils from '../Utils.js';
 
 // google maps
 /**
@@ -57,7 +57,7 @@ export default class GoogleMapsApi {
     const params = `?${(config.googleKey) ? `key=${config.googleKey}&` : ''}callback=gm_loaded`;
     const gmReady = Promise.all([
       GoogleMapsApi.onScriptLoaded(),
-      uUtils.loadScript(`https://maps.googleapis.com/maps/api/js${params}`, 'mapapi_gmaps', GoogleMapsApi.loadTimeoutMs)
+      Utils.loadScript(`https://maps.googleapis.com/maps/api/js${params}`, 'mapapi_gmaps', GoogleMapsApi.loadTimeoutMs)
     ]);
     return gmReady.then(() => this.initMap());
   }
@@ -67,7 +67,7 @@ export default class GoogleMapsApi {
    * @return {Promise<void, Error>}
    */
   static onScriptLoaded() {
-    const timeout = uUtils.timeoutPromise(GoogleMapsApi.loadTimeoutMs);
+    const timeout = Utils.timeoutPromise(GoogleMapsApi.loadTimeoutMs);
     const gmInitialize = new Promise((resolve, reject) => {
       window.gm_loaded = () => {
         GoogleMapsApi.gmInitialized = true;
@@ -79,7 +79,7 @@ export default class GoogleMapsApi {
         message += '<br><br>' + $._('gmauthfailure');
         message += '<br><br>' + $._('gmapilink');
         if (GoogleMapsApi.gmInitialized) {
-          uAlert.error(message);
+          Alert.error(message);
         }
         reject(new Error(message));
       };
@@ -130,7 +130,7 @@ export default class GoogleMapsApi {
 
   /**
    * Display track
-   * @param {uPositionSet} track
+   * @param {PositionSet} track
    * @param {boolean} update Should fit bounds if true
    * @return {Promise.<void>}
    */
@@ -179,7 +179,7 @@ export default class GoogleMapsApi {
       // update polyline
       const position = track.positions[i];
       const coordinates = new google.maps.LatLng(position.latitude, position.longitude);
-      if (track instanceof uTrack) {
+      if (track instanceof Track) {
         path.push(coordinates);
       }
       latlngbounds.extend(coordinates);
@@ -240,7 +240,7 @@ export default class GoogleMapsApi {
 
   /**
    * Set marker
-   * @param {uPositionSet} track
+   * @param {PositionSet} track
    * @param {number} id
    */
   setMarker(id, track) {
@@ -404,7 +404,7 @@ export default class GoogleMapsApi {
 
   /**
    * Set gradient style for given track property and scale
-   * @param {uTrack} track
+   * @param {Track} track
    * @param {string} property
    * @param {{ minValue: number, maxValue: number, minColor: number[], maxColor: number[] }} scale
    */

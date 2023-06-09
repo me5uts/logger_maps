@@ -17,16 +17,16 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { config, lang } from '../src/initializer.js';
+import { config, lang } from '../src/Initializer.js';
 import Fixture from './helpers/fixture.js';
-import MapViewModel from '../src/mapviewmodel.js';
-import TrackViewModel from '../src/trackviewmodel.js';
-import UserViewModel from '../src/userviewmodel.js';
-import uObserve from '../src/observe.js';
-import uPermalink from '../src/permalink.js';
-import uState from '../src/state.js';
-import uTrack from '../src/track.js';
-import uUser from '../src/user.js';
+import MapViewModel from '../src/models/MapViewModel.js';
+import Observer from '../src/Observer.js';
+import Permalink from '../src/Permalink.js';
+import State from '../src/State.js';
+import Track from '../src/Track.js';
+import TrackViewModel from '../src/models/TrackViewModel.js';
+import User from '../src/User.js';
+import UserViewModel from '../src/models/UserViewModel.js';
 
 describe('Permalink tests', () => {
 
@@ -70,15 +70,15 @@ describe('Permalink tests', () => {
       'updateSize': { /* ignored */ },
       'updateState': { /* ignored */ }
     });
-    state = new uState();
+    state = new State();
     tm = new TrackViewModel(state);
     um = new UserViewModel(state);
     mm = new MapViewModel(state);
     mm.api = mockApi;
     spyOn(tm, 'onTrackSelect');
     spyOn(tm, 'loadTrackList');
-    permalink = new uPermalink(state);
-    spy = spyOn(uTrack, 'getMeta').and.callFake((_trackId) => Promise.resolve({
+    permalink = new Permalink(state);
+    spy = spyOn(Track, 'getMeta').and.callFake((_trackId) => Promise.resolve({
       id: _trackId,
       name: trackName,
       userId: userId,
@@ -88,11 +88,11 @@ describe('Permalink tests', () => {
 
   afterEach(() => {
     Fixture.clear();
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should create instance', () => {
-    expect(permalink).toBeInstanceOf(uPermalink);
+    expect(permalink).toBeInstanceOf(Permalink);
     expect(permalink.state).toBe(state);
     expect(permalink.skipPush).toBeFalse();
   });
@@ -117,7 +117,7 @@ describe('Permalink tests', () => {
   ];
   testHashes.forEach((test) => {
     it(`should parse link hash "${test.hash}"`, (done) => {
-      uPermalink.parse(test.hash).then((result) => {
+      Permalink.parse(test.hash).then((result) => {
         expect(result).toEqual(test.state);
         done();
       }).catch((e) => done.fail(e));
@@ -126,7 +126,7 @@ describe('Permalink tests', () => {
   testHashes = [ '#', '', '#hash' ];
   testHashes.forEach((test) => {
     it(`should parse link and return null for corrupt hash "${test}"`, (done) => {
-      uPermalink.parse(test).then((result) => {
+      Permalink.parse(test).then((result) => {
         expect(result).toBeNull();
         done();
       }).catch((e) => done.fail(e));
@@ -134,8 +134,8 @@ describe('Permalink tests', () => {
   });
 
   it('should parse link and return null for unknown track id', (done) => {
-    spy.and.returnValue(Promise.reject(new Error('error')));
-    uPermalink.parse('#21').then((result) => {
+    spy.and.rejectWith(new Error('error'));
+    Permalink.parse('#21').then((result) => {
       expect(result).toBeNull();
       done();
     }).catch((e) => done.fail(e));
@@ -150,7 +150,7 @@ describe('Permalink tests', () => {
       mapParams: null
     };
     // when
-    const hash = uPermalink.getHash(permalinkState);
+    const hash = Permalink.getHash(permalinkState);
     // then
     expect(hash).toBe(`#${trackId}/${mapApi.charAt(0)}`);
   });
@@ -159,15 +159,15 @@ describe('Permalink tests', () => {
     // given
     const permalinkState = { userId, trackId, mapApi, mapParams };
     // when
-    const hash = uPermalink.getHash(permalinkState);
+    const hash = Permalink.getHash(permalinkState);
     // then
     expect(hash).toBe(`#${trackId}/${mapApi.charAt(0)}/${mapParams.center[0]}/${mapParams.center[1]}/${mapParams.zoom}/${mapParams.rotation}`);
   });
 
   it('should return permalink state from application state', () => {
     // given
-    state.currentUser = new uUser(userId, 'test');
-    state.currentTrack = new uTrack(trackId, trackName, state.currentUser);
+    state.currentUser = new User(userId, 'test');
+    state.currentTrack = new Track(trackId, trackName, state.currentUser);
     state.mapParams = mapParams;
     config.mapApi = mapApi;
     const title = trackName;
@@ -180,11 +180,11 @@ describe('Permalink tests', () => {
   it('should restore state and switch user', (done) => {
     // given
     const newUserId = userId + 1;
-    const newUser = new uUser(newUserId, 'new');
+    const newUser = new User(newUserId, 'new');
     const newTrackId = trackId + 1;
-    spyOn(uUser, 'fetchList').and.returnValue(Promise.resolve([ newUser ]));
-    state.currentUser = new uUser(userId, 'test');
-    state.currentTrack = new uTrack(trackId, trackName, state.currentUser);
+    spyOn(User, 'fetchList').and.resolveTo([ newUser ]);
+    state.currentUser = new User(userId, 'test');
+    state.currentTrack = new Track(trackId, trackName, state.currentUser);
     tm.init();
     um.init();
     mm.init();
@@ -214,12 +214,12 @@ describe('Permalink tests', () => {
 
   it('should restore state and load track for same user', (done) => {
     // given
-    const user = new uUser(userId, 'test');
+    const user = new User(userId, 'test');
     const newTrackId = trackId + 1;
-    const track = new uTrack(trackId, trackName, user);
+    const track = new Track(trackId, trackName, user);
     state.currentUser = user;
     state.currentTrack = track;
-    spyOn(uUser, 'fetchList').and.returnValue(Promise.resolve([ user ]));
+    spyOn(User, 'fetchList').and.resolveTo([ user ]);
     tm.init();
     um.init();
     mm.init();
@@ -250,11 +250,11 @@ describe('Permalink tests', () => {
   it('should restore state without user and track update, with map api change', (done) => {
     // given
     config.mapApi = 'oldApi';
-    const user = new uUser(userId, 'test');
-    const track = new uTrack(trackId, trackName, user);
+    const user = new User(userId, 'test');
+    const track = new Track(trackId, trackName, user);
     state.currentUser = user;
     state.currentTrack = track;
-    spyOn(uUser, 'fetchList').and.returnValue(Promise.resolve([ user ]));
+    spyOn(User, 'fetchList').and.resolveTo([ user ]);
     tm.model.currentTrackId = trackId.toString();
     tm.init();
     um.init();
@@ -287,11 +287,11 @@ describe('Permalink tests', () => {
   it('should restore state without user, track and map api update', (done) => {
     // given
     config.mapApi = mapApi;
-    const user = new uUser(userId, 'test');
-    const track = new uTrack(trackId, trackName, user);
+    const user = new User(userId, 'test');
+    const track = new Track(trackId, trackName, user);
     state.currentUser = user;
     state.currentTrack = track;
-    spyOn(uUser, 'fetchList').and.returnValue(Promise.resolve([ user ]));
+    spyOn(User, 'fetchList').and.resolveTo([ user ]);
     tm.model.currentTrackId = trackId.toString();
     tm.init();
     um.init();

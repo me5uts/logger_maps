@@ -18,12 +18,12 @@
  */
 
 import * as gmStub from './helpers/googlemaps.stub.js';
-import { config, lang } from '../src/initializer.js'
+import { config, lang } from '../src/Initializer.js'
+import Alert from '../src/Alert.js';
 import GoogleMapsApi from '../src/mapapi/api_gmaps.js';
+import Observer from '../src/Observer.js';
 import TrackFactory from './helpers/trackfactory.js';
-import uAlert from '../src/alert.js';
-import uObserve from '../src/observe.js';
-import uUtils from '../src/utils.js';
+import Utils from '../src/Utils.js';
 
 describe('Google Maps map API tests', () => {
   let container;
@@ -41,18 +41,18 @@ describe('Google Maps map API tests', () => {
     mockViewModel = { mapElement: container, model: {} };
     api = new GoogleMapsApi(mockViewModel);
     spyOnProperty(GoogleMapsApi, 'loadTimeoutMs', 'get').and.returnValue(loadTimeout);
-    spyOn(uAlert, 'error');
+    spyOn(Alert, 'error');
     spyOn(lang, '_').and.returnValue('{placeholder}');
   });
 
   afterEach(() => {
     gmStub.clear();
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should timeout initialization of map engine', (done) => {
     // given
-    spyOn(uUtils, 'loadScript').and.resolveTo();
+    spyOn(Utils, 'loadScript').and.resolveTo();
     // when
     api.init()
       .then(() => done.fail('resolve callback called'))
@@ -64,7 +64,7 @@ describe('Google Maps map API tests', () => {
 
   it('should fail loading script', (done) => {
     // given
-    spyOn(uUtils, 'loadScript').and.rejectWith(Error('script loading error'));
+    spyOn(Utils, 'loadScript').and.rejectWith(Error('script loading error'));
     // when
     api.init()
       .then(() => done.fail('resolve callback called'))
@@ -76,14 +76,14 @@ describe('Google Maps map API tests', () => {
 
   it('should load and initialize api scripts', (done) => {
     // given
-    spyOn(uUtils, 'loadScript').and.resolveTo();
+    spyOn(Utils, 'loadScript').and.resolveTo();
     spyOn(api, 'initMap');
     config.googleKey = 'key1234567890';
     // when
     api.init()
       .then(() => {
         // then
-        expect(uUtils.loadScript).toHaveBeenCalledWith(`https://maps.googleapis.com/maps/api/js?key=${config.googleKey}&callback=gm_loaded`, 'mapapi_gmaps', loadTimeout);
+        expect(Utils.loadScript).toHaveBeenCalledWith(`https://maps.googleapis.com/maps/api/js?key=${config.googleKey}&callback=gm_loaded`, 'mapapi_gmaps', loadTimeout);
         expect(api.initMap).toHaveBeenCalledTimes(1);
         done();
       })
@@ -109,7 +109,7 @@ describe('Google Maps map API tests', () => {
   it('should initialize map engine without Google API key', (done) => {
     // given
     spyOn(google.maps, 'Map').and.callThrough();
-    spyOn(uUtils, 'loadScript').and.resolveTo();
+    spyOn(Utils, 'loadScript').and.resolveTo();
     // when
     api.init()
       .then(() => {
@@ -119,12 +119,12 @@ describe('Google Maps map API tests', () => {
       .catch((e) => done.fail(e));
     window.gm_loaded();
     // then
-    expect(uUtils.loadScript).toHaveBeenCalledWith('https://maps.googleapis.com/maps/api/js?callback=gm_loaded', 'mapapi_gmaps', loadTimeout);
+    expect(Utils.loadScript).toHaveBeenCalledWith('https://maps.googleapis.com/maps/api/js?callback=gm_loaded', 'mapapi_gmaps', loadTimeout);
   });
 
   it('should fail with authorization error', (done) => {
     // given
-    spyOn(uUtils, 'loadScript').and.resolveTo();
+    spyOn(Utils, 'loadScript').and.resolveTo();
     lang._.and.returnValue('authfailure');
     // when
     api.init()
@@ -140,7 +140,7 @@ describe('Google Maps map API tests', () => {
   it('should show alert if authorization error occurs after initialization', (done) => {
     // given
     spyOn(google.maps, 'Map').and.callThrough();
-    spyOn(uUtils, 'loadScript').and.resolveTo();
+    spyOn(Utils, 'loadScript').and.resolveTo();
     lang._.and.returnValue('authfailure');
     // when
     api.init()
@@ -152,8 +152,8 @@ describe('Google Maps map API tests', () => {
     window.gm_loaded();
     window.gm_authFailure();
 
-    expect(uAlert.error).toHaveBeenCalledTimes(1);
-    expect(uAlert.error.calls.mostRecent().args[0]).toContain('authfailure');
+    expect(Alert.error).toHaveBeenCalledTimes(1);
+    expect(Alert.error.calls.mostRecent().args[0]).toContain('authfailure');
   });
 
   it('should clean up class fields', () => {

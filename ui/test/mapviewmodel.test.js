@@ -17,15 +17,15 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { config, lang } from '../src/initializer.js';
+import { config, lang } from '../src/Initializer.js';
+import Alert from '../src/Alert.js';
 import Fixture from './helpers/fixture.js';
-import MapViewModel from '../src/mapviewmodel.js';
+import MapViewModel from '../src/models/MapViewModel.js';
+import Observer from '../src/Observer.js';
+import State from '../src/State.js';
 import TrackFactory from './helpers/trackfactory.js';
-import ViewModel from '../src/viewmodel.js';
-import uAlert from '../src/alert.js';
-import uObserve from '../src/observe.js';
-import uState from '../src/state.js';
-import uUtils from '../src/utils.js';
+import Utils from '../src/Utils.js';
+import ViewModel from '../src/ViewModel.js';
 
 describe('MapViewModel tests', () => {
 
@@ -64,7 +64,7 @@ describe('MapViewModel tests', () => {
       'isPositionVisible': { /* ignored */ },
       'centerToPosition': { /* ignored */ }
     });
-    state = new uState();
+    state = new State();
     vm = new MapViewModel(state);
     spyOn(vm, 'getApi').and.returnValue(mockApi);
     spyOn(lang, 'getLocaleSpeed');
@@ -77,7 +77,7 @@ describe('MapViewModel tests', () => {
 
   afterEach(() => {
     Fixture.clear();
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should create instance', () => {
@@ -116,7 +116,7 @@ describe('MapViewModel tests', () => {
   it('should load gmaps api and fail with error, config map api should be set to another api', (done) => {
     // given
     spyOn(vm, 'onReady');
-    spyOn(uAlert, 'error');
+    spyOn(Alert, 'error');
     mockApi.init.and.rejectWith(new Error('init failed'));
     // when
     vm.loadMapAPI('gmaps');
@@ -125,7 +125,7 @@ describe('MapViewModel tests', () => {
       expect(vm.getApi).toHaveBeenCalledWith('gmaps');
       expect(vm.onReady).not.toHaveBeenCalled();
       expect(config.mapApi).toBe('openlayers');
-      expect(uAlert.error).toHaveBeenCalledWith(jasmine.stringMatching('init failed'), jasmine.any(Error));
+      expect(Alert.error).toHaveBeenCalledWith(jasmine.stringMatching('init failed'), jasmine.any(Error));
       done();
     }, 100);
   });
@@ -225,7 +225,7 @@ describe('MapViewModel tests', () => {
     vm.api = mockApi;
     state.currentTrack = null;
     vm.setObservers();
-    uObserve.setSilently(state, 'currentTrack', track);
+    Observer.setSilently(state, 'currentTrack', track);
     // when
     state.currentTrack = null;
     // then
@@ -276,7 +276,7 @@ describe('MapViewModel tests', () => {
   it('should get popup with stats when track does not contain only latest positions', () => {
     // given
     const id = 0;
-    spyOn(uUtils, 'sprintf');
+    spyOn(Utils, 'sprintf');
     state.currentTrack = TrackFactory.getTrack(2);
     state.showLatest = false;
     // when
@@ -288,7 +288,7 @@ describe('MapViewModel tests', () => {
   it('should get popup without stats when track contains only latest positions', () => {
     // given
     const id = 0;
-    spyOn(uUtils, 'sprintf');
+    spyOn(Utils, 'sprintf');
     state.currentTrack = TrackFactory.getTrack(2);
     state.showLatest = true;
     // when
@@ -307,7 +307,7 @@ describe('MapViewModel tests', () => {
     // when
     const dataUri = MapViewModel.getSvgSrc(fill, isLarge, isExtra);
     const svgSrc = decodeURIComponent(dataUri.replace(/data:image\/svg\+xml,/, ''));
-    const element = uUtils.nodeFromHtml(svgSrc);
+    const element = Utils.nodeFromHtml(svgSrc);
     // then
     expect(element).toBeInstanceOf(SVGElement);
     expect(svgSrc).toContain(`fill="${fill}"`);
@@ -325,7 +325,7 @@ describe('MapViewModel tests', () => {
     // when
     const dataUri = MapViewModel.getSvgSrc(fill, isLarge, isExtra);
     const svgSrc = decodeURIComponent(dataUri.replace(/data:image\/svg\+xml,/, ''));
-    const element = uUtils.nodeFromHtml(svgSrc);
+    const element = Utils.nodeFromHtml(svgSrc);
     // then
     expect(element).toBeInstanceOf(SVGElement);
     expect(svgSrc).toContain(`fill="${fill}"`);

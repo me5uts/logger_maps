@@ -17,8 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uListItem from '../src/listitem.js';
-import uSelect from '../src/select.js';
+import ListItem from '../src/ListItem.js';
+import Select from '../src/Select.js';
 
 describe('Select tests', () => {
 
@@ -27,7 +27,7 @@ describe('Select tests', () => {
   let element;
   let options;
 
-  class TestItem extends uListItem {
+  class TestItem extends ListItem {
     constructor(id, name) {
       super(id, name);
       this.id = id;
@@ -46,7 +46,7 @@ describe('Select tests', () => {
 
   it('should construct class instance with default values', () => {
     // when
-    const select = new uSelect(element);
+    const select = new Select(element);
     // then
     expect(select.element).toBe(element);
     expect(select.element.options.length).toBe(0);
@@ -60,12 +60,12 @@ describe('Select tests', () => {
   it('should should throw error on wrong obligatory parameter type', () => {
     // when
     // then
-    expect(() => new uSelect(null)).toThrowError(/Invalid argument/);
+    expect(() => new Select(null)).toThrowError(/Invalid argument/);
   });
 
   it('should construct class instance with header', () => {
     // when
-    const select = new uSelect(element, head);
+    const select = new Select(element, head);
     // then
     expect(select.element).toBe(element);
     expect(select.element.options.length).toBe(1);
@@ -73,12 +73,12 @@ describe('Select tests', () => {
     expect(select.element.options[0].defaultSelected).toBe(true);
     expect(select.element.options[0].selected).toBe(true);
     expect(select.element.options[0].text).toBe(head);
-    expect(select.element.options[0].value).toBe(uSelect.headValue);
+    expect(select.element.options[0].value).toBe(Select.headValue);
   });
 
   it('should construct class instance and set options', () => {
     // when
-    const select = new uSelect(element);
+    const select = new Select(element);
     select.setOptions(options);
     // then
     expect(select.element).toBe(element);
@@ -97,7 +97,7 @@ describe('Select tests', () => {
 
   it('should construct class instance and set options and default value', () => {
     // when
-    const select = new uSelect(element);
+    const select = new Select(element);
     select.setOptions(options, options[1].listValue);
     // then
     expect(select.element).toBe(element);
@@ -116,7 +116,7 @@ describe('Select tests', () => {
 
   it('should construct class instance with options and head', () => {
     // when
-    const select = new uSelect(element, head);
+    const select = new Select(element, head);
     select.setOptions(options);
     // then
     expect(select.element).toBe(element);
@@ -125,7 +125,7 @@ describe('Select tests', () => {
     expect(select.element.options[0].defaultSelected).toBe(true);
     expect(select.element.options[0].selected).toBe(true);
     expect(select.element.options[0].text).toBe(head);
-    expect(select.element.options[0].value).toBe(uSelect.headValue);
+    expect(select.element.options[0].value).toBe(Select.headValue);
     expect(select.element.options[1].disabled).toBe(false);
     expect(select.element.options[1].defaultSelected).toBe(false);
     expect(select.element.options[1].selected).toBe(false);
@@ -140,7 +140,7 @@ describe('Select tests', () => {
 
   it('should construct class instance with options, default value and head', () => {
     // when
-    const select = new uSelect(element, head);
+    const select = new Select(element, head);
     select.setOptions(options, options[1].listValue);
     // then
     expect(select.element).toBe(element);
@@ -149,7 +149,7 @@ describe('Select tests', () => {
     expect(select.element.options[0].defaultSelected).toBe(true);
     expect(select.element.options[0].selected).toBe(false);
     expect(select.element.options[0].text).toBe(head);
-    expect(select.element.options[0].value).toBe(uSelect.headValue);
+    expect(select.element.options[0].value).toBe(Select.headValue);
     expect(select.element.options[1].disabled).toBe(false);
     expect(select.element.options[1].defaultSelected).toBe(false);
     expect(select.element.options[1].selected).toBe(false);
@@ -164,7 +164,7 @@ describe('Select tests', () => {
 
   it('should bind DOM option text with model property', (done) => {
     // given
-    const select = new uSelect(element);
+    const select = new Select(element);
     select.setOptions(options);
     const newValue = 'new';
     // when
@@ -178,7 +178,7 @@ describe('Select tests', () => {
 
   it('should set selected option', () => {
     // given
-    const select = new uSelect(element);
+    const select = new Select(element);
     select.setOptions(options, options[1].listValue);
 
     expect(select.element.options[1].selected).toBe(true);
@@ -191,7 +191,7 @@ describe('Select tests', () => {
 
   it('should set "all" option and render when setting options', () => {
     // given
-    const select = new uSelect(element);
+    const select = new Select(element);
     select.showAllOption(allText);
 
     expect(select.element.options.length).toBe(1);
@@ -199,14 +199,14 @@ describe('Select tests', () => {
     select.setOptions(options, options[1].listValue);
     // then
     expect(select.element.options.length).toBe(3);
-    expect(select.element.options[0].value).toBe(uSelect.allValue);
+    expect(select.element.options[0].value).toBe(Select.allValue);
     expect(select.element.options[0].text).toBe(allText);
     expect(select.element.options[2].selected).toBe(true);
   });
 
   it('should add/remove "all" option', () => {
     // given
-    const select = new uSelect(element);
+    const select = new Select(element);
     select.setOptions(options, options[1].listValue);
 
     expect(select.element.options.length).toBe(2);
@@ -215,7 +215,7 @@ describe('Select tests', () => {
     select.showAllOption(allText);
     // then
     expect(select.element.options.length).toBe(3);
-    expect(select.element.options[0].value).toBe(uSelect.allValue);
+    expect(select.element.options[0].value).toBe(Select.allValue);
     expect(select.element.options[0].text).toBe(allText);
     expect(select.element.options[2].selected).toBe(true);
     // when
@@ -231,7 +231,7 @@ describe('Select tests', () => {
 
   it('should set "all" option and render when setting options with header', () => {
     // given
-    const select = new uSelect(element, head);
+    const select = new Select(element, head);
     select.showAllOption(allText);
 
     expect(select.element.options.length).toBe(2);
@@ -239,16 +239,16 @@ describe('Select tests', () => {
     select.setOptions(options, options[1].listValue);
     // then
     expect(select.element.options.length).toBe(4);
-    expect(select.element.options[0].value).toBe(uSelect.headValue);
+    expect(select.element.options[0].value).toBe(Select.headValue);
     expect(select.element.options[0].text).toBe(head);
-    expect(select.element.options[1].value).toBe(uSelect.allValue);
+    expect(select.element.options[1].value).toBe(Select.allValue);
     expect(select.element.options[1].text).toBe(allText);
     expect(select.element.options[3].selected).toBe(true);
   });
 
   it('should add/remove "all" option with head set', () => {
     // given
-    const select = new uSelect(element, head);
+    const select = new Select(element, head);
     select.setOptions(options, options[1].listValue);
 
     expect(select.element.options.length).toBe(3);
@@ -257,7 +257,7 @@ describe('Select tests', () => {
     select.showAllOption(allText);
     // then
     expect(select.element.options.length).toBe(4);
-    expect(select.element.options[1].value).toBe(uSelect.allValue);
+    expect(select.element.options[1].value).toBe(Select.allValue);
     expect(select.element.options[1].text).toBe(allText);
     expect(select.element.options[3].selected).toBe(true);
     // when
@@ -273,7 +273,7 @@ describe('Select tests', () => {
 
   it('should remove option from select elements', () => {
     // given
-    const select = new uSelect(element);
+    const select = new Select(element);
     select.setOptions(options, options[1].listValue);
 
     expect(select.element.options.length).toBe(options.length);

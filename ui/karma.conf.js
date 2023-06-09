@@ -56,6 +56,11 @@ module.exports = function(config) {
     webpack: {
       mode: 'development',
       devtool: 'inline-source-map',
+      optimization: {
+        // needed for broken source path mapping
+        // https://github.com/ryanclark/karma-webpack/issues/493
+        splitChunks: false
+      },
       watch: true,
       module: {
         rules: [

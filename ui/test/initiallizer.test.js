@@ -17,11 +17,11 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uAjax from '../src/ajax.js';
-import uAuth from '../src/auth.js';
-import uConfig from '../src/config.js';
-import { uInitializer } from '../src/initializer.js';
-import uLang from '../src/lang.js';
+import Config from '../src/Config.js';
+import Http from '../src/Http.js';
+import { Initializer } from '../src/Initializer.js';
+import Locale from '../src/Locale.js';
+import Session from '../src/Session.js';
 
 describe('Initializer tests', () => {
 
@@ -34,24 +34,24 @@ describe('Initializer tests', () => {
       config: {},
       lang: {}
     };
-    initializer = new uInitializer();
+    initializer = new Initializer();
     spyOn(initializer.auth, 'load');
     spyOn(initializer.config, 'load');
     spyOn(initializer.lang, 'init');
-    spyOn(uAjax, 'get').and.resolveTo(data);
+    spyOn(Http, 'get').and.resolveTo(data);
   });
 
   it('should create instance', () => {
-    expect(initializer.auth).toBeInstanceOf(uAuth);
-    expect(initializer.config).toBeInstanceOf(uConfig);
-    expect(initializer.lang).toBeInstanceOf(uLang);
+    expect(initializer.auth).toBeInstanceOf(Session);
+    expect(initializer.config).toBeInstanceOf(Config);
+    expect(initializer.lang).toBeInstanceOf(Locale);
   });
 
   it('should load data from server', (done) => {
     // when
     initializer.initialize().then(() => {
       // then
-      expect(uAjax.get).toHaveBeenCalledWith('utils/getinit.php');
+      expect(Http.get).toHaveBeenCalledWith('utils/getinit.php');
       expect(initializer.auth.load).toHaveBeenCalledWith(data.auth);
       expect(initializer.config.load).toHaveBeenCalledWith(data.config);
       expect(initializer.lang.init).toHaveBeenCalledWith(initializer.config, data.lang);
@@ -102,7 +102,7 @@ describe('Initializer tests', () => {
     // given
     spyOnProperty(document, 'readyState').and.returnValue('loading');
     // when
-    uInitializer.waitForDom().then(() => {
+    Initializer.waitForDom().then(() => {
       // then
       console.log(document.readyState);
       done();
@@ -115,7 +115,7 @@ describe('Initializer tests', () => {
     // given
     spyOnProperty(document, 'readyState').and.returnValue('complete');
     // when
-    uInitializer.waitForDom().then(() => {
+    Initializer.waitForDom().then(() => {
       // then
       done();
     }).catch((e) => done.fail(`reject callback called (${e})`));

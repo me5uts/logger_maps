@@ -17,13 +17,13 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { config, lang } from '../src/initializer.js';
-import ConfigViewModel from '../src/configviewmodel.js';
+import { config, lang } from '../src/Initializer.js';
+import ConfigViewModel from '../src/models/ConfigViewModel.js';
 import Fixture from './helpers/fixture.js';
-import ViewModel from '../src/viewmodel.js';
-import uObserve from '../src/observe.js';
-import uState from '../src/state.js';
-import uUtils from '../src/utils.js';
+import Observer from '../src/Observer.js';
+import State from '../src/State.js';
+import Utils from '../src/Utils.js';
+import ViewModel from '../src/ViewModel.js';
 
 describe('ConfigViewModel tests', () => {
 
@@ -62,17 +62,17 @@ describe('ConfigViewModel tests', () => {
     langEl = document.querySelector('#lang');
     unitsEl = document.querySelector('#units');
     setIntervalEl = document.querySelector('#set-interval');
-    state = new uState();
+    state = new State();
     vm = new ConfigViewModel(state);
     vm.init();
-    spyOn(uUtils, 'setCookie').and.returnValue(newInterval);
+    spyOn(Utils, 'setCookie').and.returnValue(newInterval);
     spyOn(ConfigViewModel, 'reload');
     spyOn(lang, '_').and.returnValue('{placeholder}');
   });
 
   afterEach(() => {
     Fixture.clear();
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should create instance with state as parameter', () => {
@@ -100,7 +100,7 @@ describe('ConfigViewModel tests', () => {
     // then
     setTimeout(() => {
       expect(intervalEl.innerHTML).toBe(newInterval.toString());
-      expect(uUtils.setCookie).toHaveBeenCalledWith('interval', newInterval);
+      expect(Utils.setCookie).toHaveBeenCalledWith('interval', newInterval);
       done();
     }, 100);
   });
@@ -111,7 +111,7 @@ describe('ConfigViewModel tests', () => {
     // then
     setTimeout(() => {
       expect(apiEl.value).toBe(newMapApi);
-      expect(uUtils.setCookie).toHaveBeenCalledWith('api', newMapApi);
+      expect(Utils.setCookie).toHaveBeenCalledWith('api', newMapApi);
       done();
     }, 100);
   });
@@ -123,7 +123,7 @@ describe('ConfigViewModel tests', () => {
     // then
     setTimeout(() => {
       expect(config.mapApi).toBe(newMapApi);
-      expect(uUtils.setCookie).toHaveBeenCalledWith('api', newMapApi);
+      expect(Utils.setCookie).toHaveBeenCalledWith('api', newMapApi);
       done();
     }, 100);
   });
@@ -134,7 +134,7 @@ describe('ConfigViewModel tests', () => {
     // then
     setTimeout(() => {
       expect(langEl.value).toBe(newLang);
-      expect(uUtils.setCookie).toHaveBeenCalledWith('lang', newLang);
+      expect(Utils.setCookie).toHaveBeenCalledWith('lang', newLang);
       expect(ConfigViewModel.reload).toHaveBeenCalledTimes(1);
       done();
     }, 100);
@@ -147,7 +147,7 @@ describe('ConfigViewModel tests', () => {
     // then
     setTimeout(() => {
       expect(config.lang).toBe(newLang);
-      expect(uUtils.setCookie).toHaveBeenCalledWith('lang', newLang);
+      expect(Utils.setCookie).toHaveBeenCalledWith('lang', newLang);
       expect(ConfigViewModel.reload).toHaveBeenCalledTimes(1);
       done();
     }, 100);
@@ -159,7 +159,7 @@ describe('ConfigViewModel tests', () => {
     // then
     setTimeout(() => {
       expect(unitsEl.value).toBe(newUnits);
-      expect(uUtils.setCookie).toHaveBeenCalledWith('units', newUnits);
+      expect(Utils.setCookie).toHaveBeenCalledWith('units', newUnits);
       expect(ConfigViewModel.reload).toHaveBeenCalledTimes(1);
       done();
     }, 100);
@@ -172,7 +172,7 @@ describe('ConfigViewModel tests', () => {
     // then
     setTimeout(() => {
       expect(config.units).toBe(newUnits);
-      expect(uUtils.setCookie).toHaveBeenCalledWith('units', newUnits);
+      expect(Utils.setCookie).toHaveBeenCalledWith('units', newUnits);
       expect(ConfigViewModel.reload).toHaveBeenCalledTimes(1);
       done();
     }, 100);

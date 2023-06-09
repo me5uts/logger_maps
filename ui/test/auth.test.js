@@ -17,8 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uAuth from '../src/auth.js';
-import uUser from '../src/user.js';
+import Session from '../src/Session.js';
+import User from '../src/User.js';
 
 describe('Auth tests', () => {
 
@@ -26,8 +26,8 @@ describe('Auth tests', () => {
   let user;
 
   beforeEach(() => {
-    auth = new uAuth();
-    user = new uUser(1, 'testUser');
+    auth = new Session();
+    user = new User(1, 'testUser');
   });
 
   it('should create instance', () => {
@@ -91,7 +91,7 @@ describe('Auth tests', () => {
     // when
     auth.load(data);
     // then
-    expect(auth.user).toEqual(new uUser(data.userId, data.userLogin));
+    expect(auth.user).toEqual(new User(data.userId, data.userLogin));
     expect(auth.isAuthenticated).toBe(true);
     expect(auth.isAdmin).toBe(false);
   });
@@ -108,7 +108,7 @@ describe('Auth tests', () => {
     // when
     auth.load(data);
     // then
-    expect(auth.user).toEqual(new uUser(data.userId, data.userLogin));
+    expect(auth.user).toEqual(new User(data.userId, data.userLogin));
     expect(auth.isAuthenticated).toBe(true);
     expect(auth.isAdmin).toBe(true);
   });

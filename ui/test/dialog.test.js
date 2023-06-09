@@ -17,9 +17,9 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { config, lang } from '../src/initializer.js';
-import uDialog from '../src/dialog.js';
-import uObserve from '../src/observe.js';
+import { config, lang } from '../src/Initializer.js';
+import Dialog from '../src/Dialog.js';
+import Observer from '../src/Observer.js';
 
 describe('Dialog tests', () => {
 
@@ -31,12 +31,12 @@ describe('Dialog tests', () => {
     lang.init(config);
     spyOn(lang, '_').and.returnValue('{placeholder}');
     content = 'Test content';
-    dialog = new uDialog(content);
+    dialog = new Dialog(content);
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should create dialog with string content', () => {
@@ -51,7 +51,7 @@ describe('Dialog tests', () => {
   it('should create dialog with node content', () => {
     // given
     content = document.createElement('div');
-    dialog = new uDialog(content);
+    dialog = new Dialog(content);
     // when
     const body = dialog.element.querySelector('#modal-body');
     body.firstChild.remove();
@@ -65,7 +65,7 @@ describe('Dialog tests', () => {
       document.createElement('div'),
       document.createElement('div')
     ];
-    dialog = new uDialog(content);
+    dialog = new Dialog(content);
     // when
     const body = dialog.element.querySelector('#modal-body');
     body.firstChild.remove();
@@ -81,7 +81,7 @@ describe('Dialog tests', () => {
     const el = document.createElement('div');
     el.append(div1, div2);
     content = el.childNodes;
-    dialog = new uDialog(content);
+    dialog = new Dialog(content);
     // when
     const body = dialog.element.querySelector('#modal-body');
     body.firstChild.remove();
@@ -112,7 +112,7 @@ describe('Dialog tests', () => {
     const message = 'confirm message';
     spyOn(window, 'confirm');
     // when
-    uDialog.isConfirmed(message);
+    Dialog.isConfirmed(message);
     // then
     expect(window.confirm).toHaveBeenCalledWith(message);
   });

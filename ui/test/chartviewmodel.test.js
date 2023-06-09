@@ -17,14 +17,14 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import ChartViewModel from '../src/chartviewmodel.js';
+import ChartViewModel from '../src/models/ChartViewModel.js';
 import Fixture from './helpers/fixture.js';
+import Observer from '../src/Observer.js';
+import State from '../src/State.js';
 import TrackFactory from './helpers/trackfactory.js';
-import ViewModel from '../src/viewmodel.js';
-import { lang } from '../src/initializer.js';
-import uObserve from '../src/observe.js';
-import uState from '../src/state.js';
-import uUtils from '../src/utils.js';
+import Utils from '../src/Utils.js';
+import ViewModel from '../src/ViewModel.js';
+import { lang } from '../src/Initializer.js';
 
 describe('ChartViewModel tests', () => {
 
@@ -77,9 +77,9 @@ describe('ChartViewModel tests', () => {
     chartContainerEl = document.querySelector('#bottom');
     buttonEl = document.querySelector('#altitudes');
     closeEl = document.querySelector('#chart-close');
-    const chartRendered = uUtils.nodeFromHtml(chartFixture);
+    const chartRendered = Utils.nodeFromHtml(chartFixture);
     chartPointNodes = chartRendered.querySelectorAll('.ct-series .ct-point');
-    state = new uState();
+    state = new State();
     vm = new ChartViewModel(state);
     spyOn(lang, 'unit');
     spyOn(lang, '_').and.returnValue('{placeholder}');
@@ -92,7 +92,7 @@ describe('ChartViewModel tests', () => {
 
   afterEach(() => {
     Fixture.clear();
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should create instance', () => {
@@ -120,13 +120,13 @@ describe('ChartViewModel tests', () => {
 
   it('should set up chart', () => {
     // given
-    // spyOn(uUtils, 'addCss');
+    // spyOn(Utils, 'addCss');
     spyOn(ChartViewModel, 'loadCss');
 
     // when
     vm.chartSetup();
     // then
-    // expect(uUtils.addCss).toHaveBeenCalledWith('css/dist/chartist.css', 'chartist_css');
+    // expect(Utils.addCss).toHaveBeenCalledWith('css/dist/chartist.css', 'chartist_css');
     expect(ChartViewModel.loadCss).toHaveBeenCalledTimes(1);
     expect(ChartViewModel.getChart).toHaveBeenCalledWith(chartEl, []);
     expect(mockChart.on).toHaveBeenCalledWith('created', jasmine.any(Function));

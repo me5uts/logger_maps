@@ -17,10 +17,10 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uPosition from '../src/position.js';
-import uTrack from '../src/track.js';
-import uUser from '../src/user.js';
-import uUtils from '../src/utils.js';
+import Position from '../src/Position.js';
+import Track from '../src/Track.js';
+import User from '../src/User.js';
+import Utils from '../src/Utils.js';
 
 
 describe('Track tests', () => {
@@ -47,8 +47,8 @@ describe('Track tests', () => {
   beforeEach(() => {
     const id = 1;
     const name = 'test';
-    const user = new uUser(1, 'user');
-    track = new uTrack(id, name, user);
+    const user = new User(1, 'user');
+    track = new Track(id, name, user);
 
     posId = 110286;
     latitude = 11.221871666666999;
@@ -89,22 +89,22 @@ describe('Track tests', () => {
 
   describe('simple tests', () => {
 
-    it('should throw error when creating uTrack instance without user parameter', () => {
+    it('should throw error when creating Track instance without user parameter', () => {
       // given
       const id = 1;
       const name = 'test';
       // when
       // then
-      expect(() => new uTrack(id, name)).toThrow(new Error('Invalid argument for track constructor'));
+      expect(() => new Track(id, name)).toThrow(new Error('Invalid argument for track constructor'));
     });
 
-    it('should create uTrack instance with user parameter', () => {
+    it('should create Track instance with user parameter', () => {
       // given
       const id = 1;
       const name = 'test';
-      const user = new uUser(1, 'user');
+      const user = new User(1, 'user');
       // when
-      track = new uTrack(id, name, user);
+      track = new Track(id, name, user);
       // then
       expect(track.id).toBe(id);
       expect(track.name).toBe(name);
@@ -128,7 +128,7 @@ describe('Track tests', () => {
 
     it('should clear positions data', () => {
       // given
-      track.positions.push(new uPosition());
+      track.positions.push(new Position());
       track.plotData.push({ x: 1, y: 2 });
       track.maxId = 1;
       // when
@@ -141,7 +141,7 @@ describe('Track tests', () => {
 
     it('should return positions length', () => {
       // given
-      track.positions.push(new uPosition());
+      track.positions.push(new Position());
       // when
       const length = track.length;
       // then
@@ -150,7 +150,7 @@ describe('Track tests', () => {
 
     it('should return true when has positions', () => {
       // given
-      track.positions.push(new uPosition());
+      track.positions.push(new Position());
       // when
       const result = track.hasPositions;
       // then
@@ -187,7 +187,7 @@ describe('Track tests', () => {
     it('should be equal to other track with same id', () => {
       // given
       track.id = 1;
-      const otherTrack = new uTrack(1, 'other', new uUser(2, 'user2'));
+      const otherTrack = new Track(1, 'other', new User(2, 'user2'));
       // when
       const result = track.isEqualTo(otherTrack);
       // then
@@ -197,7 +197,7 @@ describe('Track tests', () => {
     it('should not be equal to other track with other id', () => {
       // given
       track.id = 1;
-      const otherTrack = new uTrack(2, 'other', new uUser(2, 'user2'));
+      const otherTrack = new Track(2, 'other', new User(2, 'user2'));
       // when
       const result = track.isEqualTo(otherTrack);
       // then
@@ -274,7 +274,7 @@ describe('Track tests', () => {
     });
   });
 
-  describe('ajax tests', () => {
+  describe('request tests', () => {
     const validListResponse = [ { 'id': 145, 'name': 'Track 1' }, { 'id': 144, 'name': 'Track 2' } ];
     const invalidListResponse = [ { 'name': 'Track 1' }, { 'id': 144, 'name': 'Track 2' } ];
 
@@ -288,13 +288,13 @@ describe('Track tests', () => {
 
     it('should make successful request and return track array', (done) => {
       // given
-      const user = new uUser(1, 'testLogin');
+      const user = new User(1, 'testLogin');
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify(validListResponse));
       // when
-      uTrack.fetchList(user)
+      Track.fetchList(user)
         .then((result) => {
           expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('GET', 'utils/gettracks.php?userid=1', true);
-          expect(result).toEqual(jasmine.arrayContaining([ new uTrack(validListResponse[0].id, validListResponse[0].name, user) ]));
+          expect(result).toEqual(jasmine.arrayContaining([ new Track(validListResponse[0].id, validListResponse[0].name, user) ]));
           expect(result.length).toBe(2);
           done();
         })
@@ -303,10 +303,10 @@ describe('Track tests', () => {
 
     it('should throw error on invalid JSON', (done) => {
       // given
-      const user = new uUser(1, 'testLogin');
+      const user = new User(1, 'testLogin');
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify(invalidListResponse));
       // when
-      uTrack.fetchList(user)
+      Track.fetchList(user)
         .then(() => {
           done.fail('resolve callback called');
         })
@@ -318,13 +318,13 @@ describe('Track tests', () => {
 
     it('should make successful request and return latest track position for given user', (done) => {
       // given
-      const user = new uUser(1, 'testLogin');
+      const user = new User(1, 'testLogin');
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify([ jsonPosition ]));
       // when
-      uTrack.fetchLatest(user)
+      Track.fetchLatest(user)
         .then((result) => {
           expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('GET', 'utils/getpositions.php?last=true&userid=1', true);
-          expect(result).toBeInstanceOf(uTrack);
+          expect(result).toBeInstanceOf(Track);
           expect(result.id).toEqual(jsonPosition.trackid);
           expect(result.length).toBe(1);
           done();
@@ -334,10 +334,10 @@ describe('Track tests', () => {
 
     it('should make successful request and return null when there are no positions for the user', (done) => {
       // given
-      const user = new uUser(1, 'testLogin');
+      const user = new User(1, 'testLogin');
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify([]));
       // when
-      uTrack.fetchLatest(user)
+      Track.fetchLatest(user)
         .then((result) => {
           expect(result).toBe(null);
           done();
@@ -383,11 +383,11 @@ describe('Track tests', () => {
 
     it('should make successful track import request', (done) => {
       // given
-      const authUser = new uUser(1, 'admin');
+      const authUser = new User(1, 'admin');
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify(validListResponse));
       const form = document.createElement('form');
       // when
-      uTrack.import(form, authUser)
+      Track.import(form, authUser)
         .then((tracks) => {
           expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('POST', 'utils/import.php', true);
           expect(XMLHttpRequest.prototype.send).toHaveBeenCalledWith(new FormData(form));
@@ -399,23 +399,23 @@ describe('Track tests', () => {
 
     it('should not open export url when track has no positions', () => {
       // given
-      spyOn(uUtils, 'openUrl');
+      spyOn(Utils, 'openUrl');
       const type = 'ext';
       // when
       track.export(type);
       // then
-      expect(uUtils.openUrl).not.toHaveBeenCalled();
+      expect(Utils.openUrl).not.toHaveBeenCalled();
     });
 
     it('should open export url', () => {
       // given
-      track.positions.push(new uPosition());
-      spyOn(uUtils, 'openUrl');
+      track.positions.push(new Position());
+      spyOn(Utils, 'openUrl');
       const type = 'ext';
       // when
       track.export(type);
       // then
-      expect(uUtils.openUrl).toHaveBeenCalledWith(`utils/export.php?type=${type}&userid=${track.user.id}&trackid=${track.id}`);
+      expect(Utils.openUrl).toHaveBeenCalledWith(`utils/export.php?type=${type}&userid=${track.user.id}&trackid=${track.id}`);
     });
 
     it('should delete track', (done) => {

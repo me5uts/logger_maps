@@ -17,14 +17,14 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import MapViewModel from '../mapviewmodel.js';
-import { config } from '../initializer.js';
+import MapViewModel from '../models/MapViewModel.js';
+import Track from '../Track.js';
+import Utils from '../Utils.js';
+import { config } from '../Initializer.js';
 // eslint-disable-next-line import/no-unresolved
 import extentSvg from '../assets/images/extent.svg?raw';
 // eslint-disable-next-line import/no-unresolved
 import layersSvg from '../assets/images/layers.svg?raw';
-import uTrack from '../track.js';
-import uUtils from '../utils.js';
 
 /**
  * @typedef {Object} MarkerStyles
@@ -94,7 +94,7 @@ export default class OpenLayersApi {
    */
   init() {
     OpenLayersApi.loadCss();
-    // uUtils.addCss('css/dist/ol.css', 'ol_css');
+    // Utils.addCss('css/dist/ol.css', 'ol_css');
     const olReady = ol ? Promise.resolve() : import(/* webpackChunkName : "ol" */'../lib/ol.js')
       .then((m) => { ol = m; });
     return olReady.then(() => {
@@ -106,7 +106,9 @@ export default class OpenLayersApi {
   }
 
   static loadCss() {
-    import('ol/ol.css');
+    import('ol/ol.css').catch((e) => {
+      console.error('css loading failed', e)
+    });
   }
 
   initMap() {
@@ -260,7 +262,7 @@ export default class OpenLayersApi {
   setTrackDefaultStyle() {
     const lineStyle = new ol.style.Style({
       stroke: new ol.style.Stroke({
-        color: uUtils.hexToRGBA(config.strokeColor, config.strokeOpacity),
+        color: Utils.hexToRGBA(config.strokeColor, config.strokeOpacity),
         width: config.strokeWeight
       })
     })
@@ -295,7 +297,7 @@ export default class OpenLayersApi {
 
   /**
    * Set gradient style for given track property and scale
-   * @param {uTrack} track
+   * @param {Track} track
    * @param {string} property
    * @param {{ minValue: number, maxValue: number, minColor: number[], maxColor: number[] }} scale
    */
@@ -328,7 +330,7 @@ export default class OpenLayersApi {
         styles.push(new ol.style.Style({
           geometry: geometry,
           stroke: new ol.style.Stroke({
-            color: uUtils.getScaleColor(minColor, maxColor, 0.5),
+            color: Utils.getScaleColor(minColor, maxColor, 0.5),
             width: config.strokeWeight * 2
           })
         }));
@@ -336,13 +338,13 @@ export default class OpenLayersApi {
       }
       let position = track.positions[0];
       const value = position[property] !== null ? position[property] : 0;
-      let colorStart = uUtils.getScaleColor(minColor, maxColor, (value - minValue) / (maxValue - minValue));
+      let colorStart = Utils.getScaleColor(minColor, maxColor, (value - minValue) / (maxValue - minValue));
       let index = 1;
       geometry.forEachSegment((start, end) => {
         position = track.positions[index];
         let colorStop;
         if (position[property] !== null) {
-          colorStop = uUtils.getScaleColor(minColor, maxColor, (position[property] - minValue) / (maxValue - minValue));
+          colorStop = Utils.getScaleColor(minColor, maxColor, (position[property] - minValue) / (maxValue - minValue));
         } else {
           colorStop = colorStart;
         }
@@ -488,7 +490,7 @@ export default class OpenLayersApi {
     });
 
     const switcherButton = document.createElement('button');
-    const layerImg = uUtils.nodeFromHtml(layersSvg);
+    const layerImg = Utils.nodeFromHtml(layersSvg);
     layerImg.style.width = '60%';
     switcherButton.appendChild(layerImg);
 
@@ -520,7 +522,7 @@ export default class OpenLayersApi {
     this.layerMarkers = null;
     this.selectedLayer = null;
     this.markerStyles = null;
-    uUtils.removeElementById('switcher');
+    Utils.removeElementById('switcher');
     if (this.map && this.map.getTargetElement()) {
       this.map.getTargetElement().innerHTML = '';
     }
@@ -529,7 +531,7 @@ export default class OpenLayersApi {
 
   /**
    * Display track
-   * @param {uPositionSet} track Track
+   * @param {PositionSet} track Track
    * @param {boolean} update Should fit bounds if true
    * @return {Promise.<void>}
    */
@@ -555,7 +557,7 @@ export default class OpenLayersApi {
     for (let i = start; i < track.length; i++) {
       this.setMarker(i, track);
     }
-    if (track instanceof uTrack) {
+    if (track instanceof Track) {
       let lineString;
       if (this.layerTrack && this.layerTrack.getSource().getFeatures().length) {
         lineString = this.layerTrack.getSource().getFeatures()[0].getGeometry();
@@ -644,7 +646,7 @@ export default class OpenLayersApi {
   /**
    * Get marker style
    * @param {number} id
-   * @param {uPositionSet} track
+   * @param {PositionSet} track
    * @return {Style}
    */
   getMarkerStyle(id, track) {
@@ -669,7 +671,7 @@ export default class OpenLayersApi {
   /**
    * Set marker
    * @param {number} id
-   * @param {uPositionSet} track
+   * @param {PositionSet} track
    */
   setMarker(id, track) {
     // marker
@@ -755,7 +757,7 @@ export default class OpenLayersApi {
    * @returns {Node|NodeList}
    */
   static getExtentImg() {
-    const extentImg = uUtils.nodeFromHtml(extentSvg);
+    const extentImg = Utils.nodeFromHtml(extentSvg);
     extentImg.style.width = '60%';
     return extentImg;
   }

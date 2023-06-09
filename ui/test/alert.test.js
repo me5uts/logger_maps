@@ -17,7 +17,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uAlert from '../src/alert.js';
+import Alert from '../src/Alert.js';
 
 describe('Alert tests', () => {
 
@@ -37,7 +37,7 @@ describe('Alert tests', () => {
 
   it('should create alert box with message', () => {
     // when
-    alert = new uAlert(message);
+    alert = new Alert(message);
     const textEl = alert.box.firstChild;
     // then
     expect(textEl.innerText).toBe(message);
@@ -48,7 +48,7 @@ describe('Alert tests', () => {
     const autoClose = 1;
     const options = { autoClose }
     // when
-    alert = new uAlert(message, options);
+    alert = new Alert(message, options);
     const textEl = alert.box.firstChild;
     // then
     expect(textEl.innerText).toBe(message);
@@ -60,7 +60,7 @@ describe('Alert tests', () => {
     const id = 'testId';
     const options = { id }
     // when
-    alert = new uAlert(message, options);
+    alert = new Alert(message, options);
     const boxEl = alert.box;
     const textEl = alert.box.firstChild;
     // then
@@ -73,7 +73,7 @@ describe('Alert tests', () => {
     const className = 'test_class';
     const options = { class: className }
     // when
-    alert = new uAlert(message, options);
+    alert = new Alert(message, options);
     const boxEl = alert.box;
     const textEl = alert.box.firstChild;
     // then
@@ -86,7 +86,7 @@ describe('Alert tests', () => {
     spyOn(window, 'setTimeout').and.callFake((callback) => callback());
     const id = 'testId';
     const options = { id }
-    alert = new uAlert(message, options);
+    alert = new Alert(message, options);
 
     // when
     alert.render();
@@ -106,7 +106,7 @@ describe('Alert tests', () => {
     const options = { id: id, autoClose: 50 }
 
     // when
-    alert = uAlert.show(message, options);
+    alert = Alert.show(message, options);
     // then
     expect(document.querySelector(`#${id}`)).not.toBeNull();
     jasmine.clock().tick(5000);
@@ -122,7 +122,7 @@ describe('Alert tests', () => {
     jasmine.clock().install();
     const id = 'testId';
     const options = { id }
-    alert = uAlert.show(message, options);
+    alert = Alert.show(message, options);
     const closeButton = alert.box.querySelector('button');
     // when
     closeButton.click();
@@ -137,14 +137,14 @@ describe('Alert tests', () => {
 
   it('should show error alert box', () => {
     // when
-    alert = uAlert.error(message);
+    alert = Alert.error(message);
     // then
     expect(document.querySelector('.alert.error')).not.toBeNull();
   });
 
   it('should show toast alert box', () => {
     // when
-    alert = uAlert.toast(message);
+    alert = Alert.toast(message);
     // then
     expect(document.querySelector('.alert.toast')).not.toBeNull();
     expect(alert.autoClose).toBeGreaterThan(0);

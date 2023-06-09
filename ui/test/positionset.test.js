@@ -17,8 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import uPosition from '../src/position.js';
-import uPositionSet from '../src/positionset.js';
+import Position from '../src/Position.js';
+import PositionSet from '../src/PositionSet.js';
 
 describe('PositionSet tests', () => {
 
@@ -45,7 +45,7 @@ describe('PositionSet tests', () => {
 
   beforeEach(() => {
 
-    set = new uPositionSet();
+    set = new PositionSet();
 
     posId = 110286;
     latitude = 11.221871666666999;
@@ -86,16 +86,16 @@ describe('PositionSet tests', () => {
 
   describe('simple tests', () => {
 
-    it('should create uPositionSet instance', () => {
+    it('should create PositionSet instance', () => {
       // when
-      set = new uPositionSet();
+      set = new PositionSet();
       // then
       expect(set.positions).toEqual([]);
     });
 
     it('should clear positions data', () => {
       // given
-      set.positions.push(new uPosition());
+      set.positions.push(new Position());
       // when
       set.clear();
       // then
@@ -104,7 +104,7 @@ describe('PositionSet tests', () => {
 
     it('should return positions length', () => {
       // given
-      set.positions.push(new uPosition());
+      set.positions.push(new Position());
       // when
       const length = set.length;
       // then
@@ -113,7 +113,7 @@ describe('PositionSet tests', () => {
 
     it('should return true when has positions', () => {
       // given
-      set.positions.push(new uPosition());
+      set.positions.push(new Position());
       // when
       const result = set.hasPositions;
       // then
@@ -180,7 +180,7 @@ describe('PositionSet tests', () => {
 
   });
 
-  describe('ajax tests', () => {
+  describe('request tests', () => {
 
     beforeEach(() => {
       spyOn(XMLHttpRequest.prototype, 'open').and.callThrough();
@@ -194,10 +194,10 @@ describe('PositionSet tests', () => {
       // given
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify([ jsonPosition ]));
       // when
-      uPositionSet.fetchLatest()
+      PositionSet.fetchLatest()
         .then((result) => {
           expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('GET', 'utils/getpositions.php?last=true', true);
-          expect(result).toBeInstanceOf(uPositionSet);
+          expect(result).toBeInstanceOf(PositionSet);
           expect(result.length).toBe(1);
           done();
         })
@@ -210,7 +210,7 @@ describe('PositionSet tests', () => {
       const params = { param: 'test' };
       spyOnProperty(XMLHttpRequest.prototype, 'responseText').and.returnValue(JSON.stringify([ jsonPosition ]));
       // when
-      uPositionSet.fetch(params)
+      PositionSet.fetch(params)
         .then(() => {
           expect(XMLHttpRequest.prototype.open).toHaveBeenCalledWith('GET', 'utils/getpositions.php?param=test', true);
           done();

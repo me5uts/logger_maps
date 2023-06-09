@@ -17,12 +17,12 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { config, lang } from '../src/initializer.js';
-import PositionDialogModel from '../src/positiondialogmodel.js';
+import { config, lang } from '../src/Initializer.js';
+import Dialog from '../src/Dialog.js';
+import Observer from '../src/Observer.js';
+import PositionDialogModel from '../src/models/PositionDialogModel.js';
+import State from '../src/State.js';
 import TrackFactory from './helpers/trackfactory.js';
-import uDialog from '../src/dialog.js';
-import uObserve from '../src/observe.js';
-import uState from '../src/state.js';
 
 describe('PositionDialogModel tests', () => {
 
@@ -36,19 +36,19 @@ describe('PositionDialogModel tests', () => {
     lang.init(config);
     spyOn(lang, '_').and.returnValue('{placeholder}');
     positionIndex = 0;
-    const state = new uState();
+    const state = new State();
     track = TrackFactory.getTrack();
     track.positions[positionIndex].comment = comment;
     state.currentTrack = track;
     dm = new PositionDialogModel(state, positionIndex);
     spyOn(track.positions[positionIndex], 'save').and.resolveTo();
     spyOn(track.positions[positionIndex], 'delete').and.resolveTo();
-    spyOn(uObserve, 'forceUpdate');
+    spyOn(Observer, 'forceUpdate');
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
-    uObserve.unobserveAll(lang);
+    Observer.unobserveAll(lang);
   });
 
   it('should create instance', () => {
@@ -94,28 +94,28 @@ describe('PositionDialogModel tests', () => {
       expect(track.positions[positionIndex].save).toHaveBeenCalledTimes(1);
       expect(track.positions[positionIndex].comment).toBe(newComment);
       expect(document.querySelector('#modal')).toBe(null);
-      expect(uObserve.forceUpdate).toHaveBeenCalledWith(dm.state, 'currentTrack');
+      expect(Observer.forceUpdate).toHaveBeenCalledWith(dm.state, 'currentTrack');
       done();
     }, 100);
   });
 
   it('should show confirmation dialog on position delete button click', (done) => {
     // given
-    spyOn(uDialog, 'isConfirmed').and.returnValue(false);
+    spyOn(Dialog, 'isConfirmed').and.returnValue(false);
     dm.init();
     const button = dm.dialog.element.querySelector("[data-bind='onPositionDelete']");
     // when
     button.click();
     // then
     setTimeout(() => {
-      expect(uDialog.isConfirmed).toHaveBeenCalledTimes(1);
+      expect(Dialog.isConfirmed).toHaveBeenCalledTimes(1);
       done();
     }, 100);
   });
 
   it('should delete user and hide dialog on confirmation dialog accepted', (done) => {
     // given
-    spyOn(uDialog, 'isConfirmed').and.returnValue(true);
+    spyOn(Dialog, 'isConfirmed').and.returnValue(true);
     dm.init();
     const button = dm.dialog.element.querySelector("[data-bind='onPositionDelete']");
     // when
