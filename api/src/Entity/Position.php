@@ -137,7 +137,7 @@ class Position {
           $params = [ $userId, $trackId,
                   $timestamp, $lat, $lon, $altitude, $speed, $bearing, $accuracy, $provider, $comment, $image ];
           $stmt->execute($params);
-          $positionId = (int) self::db()->lastInsertId("${table}_id_seq");
+          $positionId = (int) self::db()->lastInsertId("{$table}_id_seq");
         } catch (PDOException $e) {
           // TODO: handle error
           syslog(LOG_ERR, $e->getMessage());

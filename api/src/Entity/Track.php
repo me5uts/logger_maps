@@ -88,7 +88,7 @@ class Track {
         $stmt = self::db()->prepare($query);
         $params = [ $userId, $name, $comment ];
         $stmt->execute($params);
-        $trackId = (int) self::db()->lastInsertId("${table}_id_seq");
+        $trackId = (int) self::db()->lastInsertId("{$table}_id_seq");
       } catch (PDOException $e) {
         // TODO: handle exception
         syslog(LOG_ERR, $e->getMessage());

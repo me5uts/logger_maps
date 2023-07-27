@@ -85,7 +85,7 @@ class User {
         $query = "INSERT INTO $table (login, password, admin) VALUES (?, ?, ?)";
         $stmt = self::db()->prepare($query);
         $stmt->execute([ $login, $hash, (int) $isAdmin ]);
-        $userid = (int) self::db()->lastInsertId("${table}_id_seq");
+        $userid = (int) self::db()->lastInsertId("{$table}_id_seq");
       } catch (PDOException $e) {
         // TODO: handle exception
         syslog(LOG_ERR, $e->getMessage());
