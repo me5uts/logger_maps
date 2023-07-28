@@ -23,6 +23,10 @@ import User from './User.js';
 export default class Session {
 
   constructor() {
+    this.init();
+  }
+
+  init() {
     /** @type {boolean} */
     this._isAdmin = false;
     /** @type {boolean} */
@@ -42,6 +46,14 @@ export default class Session {
       method: 'post',
       user: user,
       pass: password
+    }).then((data) => this.load(data));
+  }
+
+  logout() {
+    this.init();
+    return Http.post('index.php', {
+      route: 'session',
+      method: 'delete'
     });
   }
 

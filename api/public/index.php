@@ -42,7 +42,15 @@ if ($route === 'session') {
       $auth->exitWithUnauthorized();
     }
   }
-  Utils::exitWithSuccess();
+  $result = [
+    "isAdmin" => $auth->isAdmin(),
+    "isAuthenticated" => $auth->isAuthenticated()
+  ];
+  if ($auth->isAuthenticated()) {
+    $result["userId"] = $auth->user->id;
+    $result["userLogin"] = $auth->user->login;
+  }
+  Utils::exitWithSuccess($result);
 }
 
 if ($config->requireAuthentication && !$auth->isAuthenticated()) {
@@ -60,16 +68,23 @@ switch ($route) {
 
 Utils::exitWithSuccess();
 
-          <div id="other" class="section">
-            <a id="altitudes" class="menu-link menu-hidden" data-bind="onChartToggle"><?= $lang['chart'] ?></a>
-          </div>
+// Routes
+/*
+/config
+ GET - get configuration
+ POST - save configuration
 
-          <div>
-            <label for="api"><?= $lang['api'] ?></label>
-            <select id="api" name="api" data-bind="mapApi">
-              <option value="gmaps"<?= ($config->mapApi === 'gmaps') ? ' selected' : '' ?>>Google Maps</option>
-              <option value="openlayers"<?= ($config->mapApi === 'openlayers') ? ' selected' : '' ?>>OpenLayers</option>
-            </select>
-          </div>
+/session
+ GET - get session data
+ POST - log in
+ DELETE - log out
+/users
+/users/{id}
+/tracks
+/tracks/{id}
+/positions
+/positions/{id}
+/locale
+*/
 
 ?>
