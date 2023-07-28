@@ -1,4 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-node .githooks/build-status.js
+# this is only needed when we publish dist folder
+# node .githooks/build-status.js
