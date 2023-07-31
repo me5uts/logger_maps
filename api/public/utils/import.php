@@ -68,10 +68,10 @@ if ($gpx === false) {
   }
   Utils::exitWithError($message);
 }
-else if ($gpx->getName() !== "gpx") {
+elseif ($gpx->getName() !== "gpx") {
     Utils::exitWithError($lang["iparsefailure"]);
 }
-else if (empty($gpx->trk)) {
+elseif (empty($gpx->trk)) {
   Utils::exitWithError($lang["idatafailure"]);
 }
 
@@ -94,7 +94,7 @@ foreach ($gpx->trk as $trk) {
       }
       $time = isset($point->time) ? strtotime((string) $point->time) : 1;
       $altitude = isset($point->ele) ? (double) $point->ele : null;
-      $comment = isset($point->desc) && !empty($point->desc) ? (string) $point->desc : null;
+      $comment = !empty($point->desc) ? (string) $point->desc : null;
       $speed = null;
       $bearing = null;
       $accuracy = null;
