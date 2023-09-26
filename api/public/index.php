@@ -32,7 +32,11 @@ $auth = new Auth();
 
 // check session route
 if ($route === 'session') {
-  if ($method === 'get' && $config->requireAuthentication && !$auth->isAuthenticated()) {
+  if ($method === 'delete') {
+    $auth->logOut();
+    Utils::exitWithSuccess();
+  }
+  elseif ($method === 'get' && $config->requireAuthentication && !$auth->isAuthenticated()) {
     $auth->exitWithUnauthorized();
   }
   elseif ($method === 'post') {
@@ -58,10 +62,6 @@ if ($config->requireAuthentication && !$auth->isAuthenticated()) {
 }
 
 switch ($route) {
-  case 'session':
-    if ($method === 'delete') {
-      $auth->logOut();
-    }
 
 
 }

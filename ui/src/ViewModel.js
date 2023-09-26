@@ -17,6 +17,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+import { config, lang as $ } from './Initializer.js';
 import Observer from './Observer.js';
 
 /**
@@ -148,5 +149,18 @@ export default class ViewModel {
 
   getBoundElement(property) {
     return this.root.querySelector(`[data-bind='${property}']`);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  getHtml() {
+    return '';
+  }
+
+  loadHtmlIntoBody() {
+    const html = this.getHtml();
+    const body = document.querySelector('body');
+    body.innerHTML = html;
+    document.title = $._('title');
+    document.documentElement.setAttribute('lang', config.lang);
   }
 }

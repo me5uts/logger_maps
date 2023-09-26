@@ -18,7 +18,8 @@
  */
 
 import { lang as $, auth, config } from '../Initializer.js';
-import Utils from '../Utils.js';
+import Router from '../Router.js';
+import Session from '../Session.js';
 import ViewModel from '../ViewModel.js';
 
 const hiddenClass = 'menu-hidden';
@@ -38,8 +39,8 @@ export default class MainViewModel extends ViewModel {
     this.state = state;
     this.model.onMenuToggle = () => this.toggleSideMenu();
     this.model.onShowUserMenu = () => this.toggleUserMenu();
-    this.model.onLogin = () => MainViewModel.login();
-    this.model.onLogout = () => MainViewModel.logout();
+    this.model.onLogin = () => this.login();
+    this.model.onLogout = () => this.logout();
     this.hideUserMenuCallback = (e) => this.hideUserMenu(e);
   }
 
@@ -47,7 +48,7 @@ export default class MainViewModel extends ViewModel {
    * @return {MainViewModel}
    */
   init() {
-    this.show();
+    this.loadHtmlIntoBody();
     this.menuEl = document.querySelector('#menu');
     this.userMenuEl = document.querySelector('#user-menu');
     this.bindAll();
@@ -87,24 +88,25 @@ export default class MainViewModel extends ViewModel {
     }
   }
 
-  static login() {
-    Utils.openUrl(`login.php${window.location.hash}`);
+  login() {
+    Router.loadLoginView(this.state);
   }
 
-  static logout() {
-    let url = 'utils/logout.php';
-    if (!config.requireAuth) {
-      url += `?hash=${window.location.hash.replace('#', '')}`;
-    }
-    Utils.openUrl(url);
-  }
-
-  show() {
-    const html = this.getHtml();
-    const body = document.querySelector('body');
-    body.innerHTML = html;
-    document.title = $._('title');
-    document.documentElement.setAttribute('lang', config.lang);
+  logout() {
+    // let url = 'utils/logout.php';
+    // if (!config.requireAuth) {
+    //   url += `?hash=${window.location.hash.replace('#', '')}`;
+    // }
+    // Utils.openUrl(url);
+    const session = new Session();
+    session.logout().then(
+      () => {
+        console.log('successful logout')
+        Router.initView()
+      }
+    ).catch(
+      (e) => console.error('logout failed', e)
+    );
   }
 
   getHtml() {

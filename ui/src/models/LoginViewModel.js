@@ -18,6 +18,7 @@
  */
 
 import { lang as $, auth, config } from '../Initializer.js';
+import Router from '../Router.js';
 import ViewModel from '../ViewModel.js';
 
 
@@ -43,20 +44,24 @@ export default class LoginViewModel extends ViewModel {
    * @return {LoginViewModel}
    */
   init() {
-    this.show();
+    this.loadHtmlIntoBody();
     this.bindAll();
     return this;
   }
 
   onCancel() {
     console.log('login cancel');
-    // Router.reload()
+    Router.initView()
   }
 
   onSubmit() {
     if (this.validate()) {
       auth.login(this.model.user, this.model.password)
-        .then(() => { this.model.error = ''; console.log(`login successful: ${this.model.user}:${this.model.password}`); /* Router.loadMainView() */ })
+        .then(() => {
+          this.model.error = '';
+          console.log(`login successful: ${this.model.user}:${this.model.password}`);
+          Router.initView();
+        })
         .catch(() => { this.model.error = $._('authfail'); });
     }
   }
@@ -67,14 +72,7 @@ export default class LoginViewModel extends ViewModel {
   }
 
 
-  show() {
-    const html = this.getHtml();
-    // FIXME: all below should be in Router class
-    const body = document.querySelector('body');
-    body.innerHTML = html;
-    document.title = $._('title');
-    document.documentElement.setAttribute('lang', config.lang);
-  }
+
 
   getHtml() {
     let cancelButton = '';
