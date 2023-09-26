@@ -40,6 +40,7 @@ class Lang {
     "en" => "English",
     "es" => "Español",
     "eu" => "Euskera",
+    "fi" => "Suomi",
     "fr" => "Français",
     "it" => "Italiano",
     "pl" => "Polski",
