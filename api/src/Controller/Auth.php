@@ -206,7 +206,16 @@ class Auth {
    * @return bool True if has access
    */
   public function hasReadAccess(int $ownerId): bool {
-    return $this->hasReadWriteAccess($ownerId) || Config::getInstance()->publicTracks;
+    return $this->hasReadWriteAccess($ownerId) || $this->hasPublicReadAccess();
+  }
+
+  /**
+   * Check session user has RO access to all resources
+
+   * @return bool True if has access
+   */
+  public function hasPublicReadAccess(): bool {
+    return ($this->isAuthenticated() || !Config::getInstance()->requireAuthentication) && Config::getInstance()->publicTracks;
   }
 
 }

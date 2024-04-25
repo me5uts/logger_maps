@@ -307,6 +307,58 @@ class InternalAPITest extends UloggerAPITestCase {
    */
   public function testGetPositionsNoAuth(): void {
 
+    $this->addTestConfigValue("require_auth", "b:0;");
+    $this->addTestConfigValue("public_tracks", "b:0;");
+
+    $trackId = $this->addTestTrack($this->testUserId);
+    $this->addTestPosition($this->testUserId, $trackId, $this->testTimestamp);
+    self::assertEquals(1, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
+
+    $options = [
+      "http_errors" => false,
+      "query" => [ "userid" => $this->testUserId, "trackid" => $trackId ],
+    ];
+    $response = $this->http->get("/utils/getpositions.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(1, $json, "Wrong count of positions");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetPositionsRequireAuthNoAuth(): void {
+
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:0;");
+
+    $trackId = $this->addTestTrack($this->testUserId);
+    $this->addTestPosition($this->testUserId, $trackId, $this->testTimestamp);
+    self::assertEquals(1, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
+
+    $options = [
+      "http_errors" => false,
+      "query" => [ "userid" => $this->testUserId, "trackid" => $trackId ],
+    ];
+    $response = $this->http->get("/utils/getpositions.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(0, $json, "Wrong count of positions");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetPositionsPublicTracksNoAuth(): void {
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:1;");
+
     $trackId = $this->addTestTrack($this->testUserId);
     $this->addTestPosition($this->testUserId, $trackId, $this->testTimestamp);
     self::assertEquals(1, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
@@ -358,6 +410,156 @@ class InternalAPITest extends UloggerAPITestCase {
     self::assertEquals($this->testTrackName, (string) $position->trackname, "Wrong trackname");
     self::assertEquals(111195, (int) $position->meters, "Wrong distance delta");
     self::assertEquals(1, (int) $position->seconds, "Wrong timestamp delta");
+  }
+
+  /* getusers.php */
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetUsersNoAuth(): void {
+
+    $this->addTestConfigValue("require_auth", "b:0;");
+    $this->addTestConfigValue("public_tracks", "b:0;");
+
+    $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
+    $this->addTestUser($this->testUser2, password_hash($this->testPass, PASSWORD_DEFAULT));
+    self::assertEquals(3, $this->getConnection()->getRowCount("users"), "Wrong row count");
+
+    $options = [
+      "http_errors" => false
+    ];
+    $response = $this->http->get("/utils/getusers.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(3, $json, "Wrong count of users");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetUsersRequireAuthNoAuth(): void {
+
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:0;");
+
+    $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
+    $this->addTestUser($this->testUser2, password_hash($this->testPass, PASSWORD_DEFAULT));
+    self::assertEquals(3, $this->getConnection()->getRowCount("users"), "Wrong row count");
+//    self::assertTrue($this->authenticate($this->testUser, $this->testPass), "Authentication failed");
+
+    $options = [
+      "http_errors" => false
+    ];
+    $response = $this->http->get("/utils/getusers.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(0, $json, "Wrong count of users");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetUsersPublicTracksNoAuth(): void {
+
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:1;");
+
+    $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
+    $this->addTestUser($this->testUser2, password_hash($this->testPass, PASSWORD_DEFAULT));
+    self::assertEquals(3, $this->getConnection()->getRowCount("users"), "Wrong row count");
+
+    $options = [
+      "http_errors" => false
+    ];
+    $response = $this->http->get("/utils/getusers.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(0, $json, "Wrong count of users");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetUsersAdmin(): void {
+
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:0;");
+
+    $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
+    $this->addTestUser($this->testUser2, password_hash($this->testPass, PASSWORD_DEFAULT));
+    self::assertEquals(3, $this->getConnection()->getRowCount("users"), "Wrong row count");
+    self::assertTrue($this->authenticate(), "Authentication failed");
+
+    $options = [
+      "http_errors" => false
+    ];
+    $response = $this->http->get("/utils/getusers.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(3, $json, "Wrong count of users");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetUsersUser(): void {
+
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:0;");
+
+    $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
+    $this->addTestUser($this->testUser2, password_hash($this->testPass, PASSWORD_DEFAULT));
+    self::assertEquals(3, $this->getConnection()->getRowCount("users"), "Wrong row count");
+    self::assertTrue($this->authenticate($this->testUser, $this->testPass), "Authentication failed");
+
+    $options = [
+      "http_errors" => false
+    ];
+    $response = $this->http->get("/utils/getusers.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(1, $json, "Wrong count of users");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetUsersPublicTracksUser(): void {
+
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:1;");
+
+    $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
+    $this->addTestUser($this->testUser2, password_hash($this->testPass, PASSWORD_DEFAULT));
+    self::assertEquals(3, $this->getConnection()->getRowCount("users"), "Wrong row count");
+    self::assertTrue($this->authenticate($this->testUser, $this->testPass), "Authentication failed");
+
+    $options = [
+      "http_errors" => false
+    ];
+    $response = $this->http->get("/utils/getusers.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(3, $json, "Wrong count of users");
   }
 
 
@@ -482,9 +684,59 @@ class InternalAPITest extends UloggerAPITestCase {
    */
   public function testGetTracksNoAuth(): void {
 
+    $this->addTestConfigValue("require_auth", "b:0;");
+    $this->addTestConfigValue("public_tracks", "b:0;");
+
     $this->addTestTrack($this->testUserId);
     $this->addTestTrack($this->testUserId, $this->testTrackName . "2");
+    self::assertEquals(2, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
 
+    $options = [
+      "http_errors" => false,
+      "query" => [ "userid" => $this->testUserId ],
+    ];
+    $response = $this->http->get("/utils/gettracks.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(2, $json, "Wrong count of tracks");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetTracksRequireAuthNoAuth(): void {
+
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:0;");
+
+    $this->addTestTrack($this->testUserId);
+    $this->addTestTrack($this->testUserId, $this->testTrackName . "2");
+    self::assertEquals(2, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
+
+    $options = [
+      "http_errors" => false,
+      "query" => [ "userid" => $this->testUserId ],
+    ];
+    $response = $this->http->get("/utils/gettracks.php", $options);
+    self::assertEquals(200, $response->getStatusCode(), "Unexpected status code");
+
+    $json = json_decode((string) $response->getBody());
+    self::assertNotNull($json, "JSON object is null");
+    self::assertCount(0, $json, "Wrong count of tracks");
+  }
+
+  /**
+   * @throws GuzzleException
+   */
+  public function testGetTracksPublicTracksNoAuth(): void {
+
+    $this->addTestConfigValue("require_auth", "b:1;");
+    $this->addTestConfigValue("public_tracks", "b:1;");
+
+    $this->addTestTrack($this->testUserId);
+    $this->addTestTrack($this->testUserId, $this->testTrackName . "2");
     self::assertEquals(2, $this->getConnection()->getRowCount("tracks"), "Wrong row count");
 
     $options = [

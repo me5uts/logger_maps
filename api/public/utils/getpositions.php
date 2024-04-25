@@ -48,7 +48,7 @@ if ($userId) {
     }
   }
 } else if ($last) {
-  if ($config->publicTracks || ($auth->isAuthenticated() && $auth->isAdmin())) {
+  if ($auth->hasPublicReadAccess() || $auth->isAdmin()) {
     $positionsArr = Position::getLastAllUsers();
   }
 }

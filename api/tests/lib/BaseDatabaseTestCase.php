@@ -243,6 +243,17 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
   }
 
   /**
+   * Insert config value to database
+   *
+   * @param string $name Config option name
+   * @param string|null $value Config option value
+   * @return void
+   */
+  protected function addTestConfigValue(string $name, ?string $value) {
+    $this->pdoInsert('config', [ 'name' => $name, 'value' => $value ]);
+  }
+
+  /**
    * Insert position data to database
    * If parameters are omitted they default test values are used
    *
