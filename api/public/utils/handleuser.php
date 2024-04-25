@@ -36,12 +36,12 @@ $admin = Utils::postBool('admin', false);
 
 $lang = (new Lang($config))->getStrings();
 
-if (($auth->user && $auth->user->login === $login) || empty($action) || empty($login) || !$auth->isAuthenticated() || !$auth->isAdmin()) {
-  Utils::exitWithError($lang["servererror"]);
+if (($auth->user && $auth->user->login === $login) || !$auth->isAdmin()) {
+  Utils::exitWithError($lang["notauthorized"]);
 }
 
-if ($admin && !$auth->isAdmin()) {
-  Utils::exitWithError($lang["notauthorized"]);
+if (empty($action) || empty($login)) {
+  Utils::exitWithError($lang["servererror"]);
 }
 
 $aUser = new User($login);
