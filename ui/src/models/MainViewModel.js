@@ -19,7 +19,6 @@
 
 import { lang as $, auth, config } from '../Initializer.js';
 import Router from '../Router.js';
-import Session from '../Session.js';
 import ViewModel from '../ViewModel.js';
 
 const hiddenClass = 'menu-hidden';
@@ -98,8 +97,7 @@ export default class MainViewModel extends ViewModel {
     //   url += `?hash=${window.location.hash.replace('#', '')}`;
     // }
     // Utils.openUrl(url);
-    const session = new Session();
-    session.logout().then(
+    auth.logout().then(
       () => {
         console.log('successful logout')
         Router.initView()
