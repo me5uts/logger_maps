@@ -21,11 +21,25 @@ import { lang as $ } from './Initializer.js';
 
 export default class Dialog {
 
+  /** @var {HTMLDivElement} */
+  element;
+  /** @var {boolean} */
+  visible = false;
+
   /**
    * Builds modal dialog
    * @param {(string|Node|NodeList|Array.<Node>)} content
    */
   constructor(content) {
+    this.element = Dialog.#getDialog(content);
+  }
+
+  /**
+   * Get dialog HTML element
+   * @param content
+   * @return {HTMLDivElement}
+   */
+  static #getDialog(content) {
     const dialog = document.createElement('div');
     dialog.setAttribute('id', 'modal');
     const dialogHeader = document.createElement('div');
@@ -53,8 +67,7 @@ export default class Dialog {
     }
     dialogBody.prepend(dialogHeader);
     dialog.append(dialogBody);
-    this.element = dialog;
-    this.visible = false;
+    return dialog;
   }
 
   /**

@@ -21,6 +21,17 @@ import Utils from './Utils.js';
 
 export default class Alert {
 
+  /** @var {number} */
+  autoClose;
+  /** @var {boolean} */
+  #hasButton;
+  /** @var {boolean} */
+  #fixedPosition;
+  /** @var {HTMLElement} */
+  box;
+  /** @var {?Timeout} */
+  #closeHandle = null;
+
   /**
    * @typedef {Object} AlertOptions
    * @property {number} [autoClose=0] Optional autoclose delay time in ms, default 0 – no autoclose
@@ -37,10 +48,9 @@ export default class Alert {
    */
   constructor(message, options = {}) {
     this.autoClose = options.autoClose || 0;
-    this.hasButton = typeof options.hasButton !== 'undefined' ? options.hasButton : this.autoClose === 0
-    this.fixedPosition = options.fixed || false;
+    this.#hasButton = typeof options.hasButton !== 'undefined' ? options.hasButton : this.autoClose === 0
+    this.#fixedPosition = options.fixed || false;
     const html = `<div class="alert"><span>${message}</span></div>`;
-    /** @var HTMLElement */
     this.box = Utils.nodeFromHtml(html);
     if (options.id) {
       this.box.id = options.id;
@@ -48,14 +58,13 @@ export default class Alert {
     if (options.class) {
       this.box.classList.add(options.class);
     }
-    if (this.hasButton) {
+    if (this.#hasButton) {
       const button = document.createElement('button');
       button.setAttribute('type', 'button');
       button.textContent = '×';
       button.onclick = () => this.destroy();
       this.box.appendChild(button);
     }
-    this.closeHandle = null;
   }
 
   /**
@@ -77,7 +86,7 @@ export default class Alert {
   }
 
   render() {
-    if (!this.fixedPosition) {
+    if (!this.#fixedPosition) {
       const top = Alert.getPosition();
       if (top) {
         this.box.style.top = `${top}px`;
@@ -92,9 +101,9 @@ export default class Alert {
   }
 
   destroy() {
-    if (this.closeHandle) {
-      clearTimeout(this.closeHandle);
-      this.closeHandle = null;
+    if (this.#closeHandle) {
+      clearTimeout(this.#closeHandle);
+      this.#closeHandle = null;
     }
     if (this.box && document.body.contains(this.box)) {
       const element = this.box;
@@ -118,7 +127,7 @@ export default class Alert {
     const box = new Alert(message, options);
     box.render();
     if (box.autoClose) {
-      box.closeHandle = setTimeout(() => box.destroy(), box.autoClose);
+      box.#closeHandle = setTimeout(() => box.destroy(), box.autoClose);
     }
     return box;
   }

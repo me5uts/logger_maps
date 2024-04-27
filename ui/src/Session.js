@@ -22,17 +22,21 @@ import User from './User.js';
 
 export default class Session {
 
+  /** @var {boolean} */
+  #isAdmin;
+  /** @var {boolean} */
+  #isAuthenticated;
+  /** @var {?User} */
+  #user;
+
   constructor() {
     this.init();
   }
 
   init() {
-    /** @type {boolean} */
-    this._isAdmin = false;
-    /** @type {boolean} */
-    this._isAuthenticated = false;
-    /** @type {?User} */
-    this._user = null;
+    this.#isAdmin = false;
+    this.#isAuthenticated = false;
+    this.#user = null;
   }
 
   /**
@@ -62,12 +66,12 @@ export default class Session {
    */
   set user(user) {
     if (user) {
-      this._user = user;
-      this._isAuthenticated = true;
+      this.#user = user;
+      this.#isAuthenticated = true;
     } else {
-      this._user = null;
-      this._isAuthenticated = false;
-      this._isAdmin = false;
+      this.#user = null;
+      this.#isAuthenticated = false;
+      this.#isAdmin = false;
     }
   }
 
@@ -75,31 +79,31 @@ export default class Session {
    * @param {boolean} isAdmin
    */
   set isAdmin(isAdmin) {
-    if (!this._user) {
+    if (!this.#user) {
       throw new Error('No authenticated user');
     }
-    this._isAdmin = isAdmin;
+    this.#isAdmin = isAdmin;
   }
 
   /**
    * @return {boolean}
    */
   get isAdmin() {
-    return this._isAdmin;
+    return this.#isAdmin;
   }
 
   /**
    * @return {boolean}
    */
   get isAuthenticated() {
-    return this._isAuthenticated;
+    return this.#isAuthenticated;
   }
 
   /**
    * @return {?User}
    */
   get user() {
-    return this._user;
+    return this.#user;
   }
 
   /**

@@ -200,7 +200,7 @@ export default class Utils {
 
   /**
    * @param {string} html HTML representing a single element
-   * @return {Node|NodeList}
+   * @return {Node|NodeList|HTMLElement}
    */
   static nodeFromHtml(html) {
     const template = document.createElement('template');

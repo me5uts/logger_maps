@@ -17,7 +17,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { config, lang as $ } from './Initializer.js';
+import { lang as $, config } from './Initializer.js';
 import Observer from './Observer.js';
 
 /**
@@ -26,11 +26,16 @@ import Observer from './Observer.js';
  */
 export default class ViewModel {
 
+  /** @var {Object} */
+  #model;
+  /** @var {Document} */
+  root;
+
   /**
    * @param {Object} model
    */
   constructor(model) {
-    this._model = model;
+    this.#model = model;
     this.root = document;
   }
 
@@ -38,7 +43,7 @@ export default class ViewModel {
    * @return {Object}
    */
   get model() {
-    return this._model;
+    return this.#model;
   }
 
   /**
@@ -47,8 +52,8 @@ export default class ViewModel {
    */
   bindAll(root = document) {
     this.root = root;
-    for (const key in this._model) {
-      if (this._model.hasOwnProperty(key)) {
+    for (const key in this.#model) {
+      if (this.#model.hasOwnProperty(key)) {
         this.bind(key);
       }
     }
@@ -87,10 +92,10 @@ export default class ViewModel {
    */
   onClickBind(element, key) {
     element.addEventListener('click', (event) => {
-      if (typeof this._model[key] !== 'function') {
+      if (typeof this.#model[key] !== 'function') {
         throw new Error(`Property ${key} is not a callback`);
       }
-      this._model[key](event);
+      this.#model[key](event);
       event.preventDefault();
     });
   }
@@ -108,7 +113,7 @@ export default class ViewModel {
       getVal = (val) => !!val;
     }
     element.addEventListener('change', () => {
-      this._model[key] = element[prop];
+      this.#model[key] = element[prop];
     });
     Observer.observe(this.model, key, (val) => {
       val = getVal(val);
