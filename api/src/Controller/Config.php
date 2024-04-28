@@ -38,7 +38,7 @@ class Config {
   /**
    * @var string Version number
    */
-  public $version = "1.2-beta";
+  public $version = "2.0-beta";
 
   /**
    * @var string Default map drawing framework
