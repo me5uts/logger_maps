@@ -2,7 +2,9 @@
     "name": "bfabiszewski/ulogger-server",
     "description": "ulogger server",
     "autoload": {
-        "psr-4": {"uLogger\\": "src/"}
+        "psr-4": {
+            "uLogger\\": "src/"
+        }
     },
     "autoload-dev": {
         "psr-4": {
@@ -10,7 +12,7 @@
         }
     },
     "require": {
-        "php": ">=7.4",
+        "php": ">=8.0",
         "ulrichsg/getopt-php": "^3.2",
         "ext-json": "*",
         "ext-pdo": "*",
@@ -32,7 +34,7 @@
     },
     "config": {
       "platform": {
-        "php": "7.4"
+        "php": "8.0"
       }
     }
 }
