@@ -40,22 +40,20 @@ export default class Session {
   }
 
   /**
-   * @param {string} user
+   * @param {string} login
    * @param {string} password
    * @return {Promise<Object, Error>}
    */
-  login(user, password) {
-    return Http.post('index.php', {
-      route: 'session',
-      method: 'post',
-      user: user,
-      pass: password
+  login(login, password) {
+    return Http.post('api/session', {
+      login: login,
+      password: password
     }).then((data) => this.load(data));
   }
 
   logout() {
     this.init();
-    return Http.post('index.php', {
+    return Http.delete('api/session', {
       route: 'session',
       method: 'delete'
     });

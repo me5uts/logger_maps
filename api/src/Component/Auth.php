@@ -7,8 +7,9 @@ declare(strict_types = 1);
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL version 3 or later
  */
 
-namespace uLogger\Controller;
+namespace uLogger\Component;
 
+use uLogger\Entity\Config;
 use uLogger\Entity\User;
 use uLogger\Helper\Utils;
 
@@ -16,6 +17,15 @@ use uLogger\Helper\Utils;
  * Authentication
  */
 class Auth {
+
+  public const ACCESS_OPEN = "access open";
+  public const ACCESS_PUBLIC = "access public";
+  public const ACCESS_PRIVATE = "access private";
+  public const ACCESS_ALL = "access all";
+  public const ALLOW_ALL = "allow all";
+  public const ALLOW_AUTHORIZED = "allow authorized";
+  public const ALLOW_OWNER = "allow owner";
+  public const ALLOW_ADMIN = "allow admin";
 
   /** @var bool Is user authenticated */
   private $isAuthenticated = false;
@@ -29,6 +39,27 @@ class Auth {
     if ($user->isValid) {
       $this->setAuthenticated($user);
     }
+  }
+
+  /**
+   * config
+   * - R/A (require authorization)
+   * - P/A (implies R/A, public access)
+   *
+   * access types
+   * - OPEN (!R/A)
+   * - PUBLIC (R/A && P/A)
+   * - PRIVATE (R/A && !P/A)
+   * @return string
+   */
+  public function getAccessType(): string {
+    if (!Config::getInstance()->requireAuthentication) {
+      return self::ACCESS_OPEN;
+    }
+    elseif (Config::getInstance()->requireAuthentication && Config::getInstance()->publicTracks) {
+      return self::ACCESS_PUBLIC;
+    }
+    return self::ACCESS_PRIVATE;
   }
 
   /**

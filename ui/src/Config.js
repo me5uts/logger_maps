@@ -137,7 +137,7 @@ export default class Config {
         obj[key] = this[key];
         return obj;
       }, {});
-    return Http.post('utils/saveconfig.php', data);
+    return Http.put('api/config', { config: data });
   }
 
   reinitialize() {

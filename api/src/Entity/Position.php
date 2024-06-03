@@ -10,7 +10,7 @@ declare(strict_types = 1);
 namespace uLogger\Entity;
 
 use PDOException;
-use uLogger\Controller\Db;
+use uLogger\Component\Db;
 use uLogger\Helper\Upload;
 
 /**

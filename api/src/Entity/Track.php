@@ -11,7 +11,7 @@ namespace uLogger\Entity;
 
 use PDO;
 use PDOException;
-use uLogger\Controller\Db;
+use uLogger\Component\Db;
 
 /**
  * Track handling

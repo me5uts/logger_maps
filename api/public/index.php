@@ -9,71 +9,30 @@ declare(strict_types = 1);
 
 require_once('../vendor/autoload.php');
 
-use uLogger\Controller\Auth;
-use uLogger\Controller\Config;
-use uLogger\Helper\Utils;
-
-$route = Utils::postString('route');
-$method = Utils::postString('method');
+use uLogger\Component\Auth;
+use uLogger\Component\Request;
+use uLogger\Component\Response;
+use uLogger\Component\Router;
+use uLogger\Entity\Config;
+use uLogger\Middleware;
 
 $config = Config::getInstance();
 $auth = new Auth();
 
-// check session route
-if ($route === 'session') {
-  if ($method === 'delete') {
-    $auth->logOut();
-    Utils::exitWithSuccess();
-  }
-  elseif ($method === 'get' && $config->requireAuthentication && !$auth->isAuthenticated()) {
-    $auth->exitWithUnauthorized();
-  }
-  elseif ($method === 'post') {
-    $login = Utils::postString('user');
-    $pass = Utils::postPass('pass');
-    if ($auth->checkLogin($login, $pass) === false) {
-      $auth->exitWithUnauthorized();
-    }
-  }
-  $result = [
-    "isAdmin" => $auth->isAdmin(),
-    "isAuthenticated" => $auth->isAuthenticated()
-  ];
-  if ($auth->isAuthenticated()) {
-    $result["userId"] = $auth->user->id;
-    $result["userLogin"] = $auth->user->login;
-  }
-  Utils::exitWithSuccess($result);
+$accessControl = new Middleware\AccessControl($auth);
+$request = new Request();
+$request->loadFromServer();
+
+$router = new Router();
+$router->addMiddleware($accessControl);
+$router->setupRoutes($auth, $config);
+
+try {
+  $response = $router->dispatch($request);
+} catch (Exception $e) {
+  $response = Response::internalServerError($e->getMessage());
 }
 
-if ($config->requireAuthentication && !$auth->isAuthenticated()) {
-  $auth->exitWithUnauthorized();
-}
-
-switch ($route) {
-
-
-}
-
-Utils::exitWithSuccess();
-
-// Routes
-/*
-/config
- GET - get configuration
- POST - save configuration
-
-/session
- GET - get session data
- POST - log in
- DELETE - log out
-/users
-/users/{id}
-/tracks
-/tracks/{id}
-/positions
-/positions/{id}
-/locale
-*/
+$response->sendAndExit();
 
 ?>

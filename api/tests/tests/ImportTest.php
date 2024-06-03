@@ -6,7 +6,7 @@ declare(strict_types = 1);
 namespace uLogger\Tests\tests;
 
 use GuzzleHttp\Exception\GuzzleException;
-use uLogger\Controller\Lang;
+use uLogger\Component\Lang;
 use uLogger\Tests\lib\UloggerAPITestCase;
 
 class ImportTest extends UloggerAPITestCase {

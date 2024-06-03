@@ -6,7 +6,7 @@ namespace uLogger\Tests\lib;
 use Dotenv;
 use ReflectionClass;
 use ReflectionException;
-use uLogger\Controller\Db;
+use uLogger\Component\Db;
 
 class UloggerDatabaseTestCase extends BaseDatabaseTestCase {
 

@@ -7,12 +7,11 @@ declare(strict_types = 1);
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL version 3 or later
  */
 
-
 require_once('../../vendor/autoload.php');
 
-use uLogger\Controller\Auth;
-use uLogger\Controller\Config;
-use uLogger\Controller\Lang;
+use uLogger\Component\Auth;
+use uLogger\Component\Lang;
+use uLogger\Entity\Config;
 use uLogger\Entity\Track;
 use uLogger\Helper\Upload;
 use uLogger\Helper\Utils;

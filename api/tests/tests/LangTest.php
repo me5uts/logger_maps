@@ -4,8 +4,8 @@ declare(strict_types = 1);
 namespace uLogger\Tests\tests;
 
 use PHPUnit\Framework\TestCase;
-use uLogger\Controller\Config;
-use uLogger\Controller\Lang;
+use uLogger\Component\Config;
+use uLogger\Component\Lang;
 
 class LangTest extends TestCase {
 

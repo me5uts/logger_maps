@@ -9,8 +9,8 @@ declare(strict_types = 1);
 
 require_once('../../vendor/autoload.php');
 
-use uLogger\Controller\Auth;
-use uLogger\Controller\Config;
+use uLogger\Component\Auth;
+use uLogger\Entity\Config;
 use uLogger\Entity\User;
 
 $auth = new Auth();

@@ -30,6 +30,16 @@ export default class Http {
   }
 
   /**
+   * Perform PUT HTTP request
+   * @alias request
+   */
+  static put(url, data, options) {
+    const params = options || {};
+    params.method = 'PUT';
+    return this.request(url, data, params);
+  }
+
+  /**
    * Perform GET HTTP request
    * @alias request
    */
@@ -40,6 +50,47 @@ export default class Http {
   }
 
   /**
+   * Perform DELETE HTTP request
+   * @alias request
+   */
+  static delete(url, data, options) {
+    const params = options || {};
+    params.method = 'DELETE';
+    return this.request(url, data, params);
+  }
+
+  /**
+   * Perform HTTP request
+   * @param {string} url Request URL
+   * @param {Object} [data] Optional request parameters: key/value pairs or form element
+   * @param {Object} [options] Optional options
+   * @param {string} [options.method='GET'] Optional query method, default 'GET'
+   * @return {Promise<Object, Error>}
+   */
+  static request(url, data, options) {
+    data = data || {};
+    options = options || {};
+    const method = options.method || 'GET';
+
+    const init = {};
+    init.method = method;
+
+    if (method === 'POST' || method === 'PUT') {
+      init.headers = { 'Content-Type': 'application/json' };
+      init.body = JSON.stringify(data);
+    }
+    return fetch(url, init).then((response) => {
+      const statusClass = Math.trunc(response.status / 100);
+      if (statusClass === Http.CLASS_SUCCESS) {
+        return response.json();
+      } else if (statusClass === Http.CLASS_ERROR_SERVER) {
+        return Promise.reject(response);
+      }
+      return Promise.resolve(response);
+    });
+  }
+
+  /**
    * Perform HTTP request
    * @param {string} url Request URL
    * @param {Object|HTMLFormElement|FormData} [data] Optional request parameters: key/value pairs or form element
@@ -47,7 +98,7 @@ export default class Http {
    * @param {string} [options.method='GET'] Optional query method, default 'GET'
    * @return {Promise<Object, Error>}
    */
-  static request(url, data, options) {
+  static request2(url, data, options) {
     const params = [];
     data = data || {};
     options = options || {};
@@ -126,3 +177,14 @@ export default class Http {
     return encodeURIComponent(value);
   }
 }
+
+Http.CLASS_INFORM = 1;
+Http.CLASS_SUCCESS = 2;
+Http.CLASS_REDIRECT = 3;
+Http.CLASS_ERROR_CLIENT = 4;
+Http.CLASS_ERROR_SERVER = 5;
+
+Http.ERROR_NOT_AUTHORIZED = 401;
+Http.ERROR_FORBIDDEN = 403;
+Http.ERROR_NOT_FOUND = 404;
+Http.ERROR_CONFLICT = 409;

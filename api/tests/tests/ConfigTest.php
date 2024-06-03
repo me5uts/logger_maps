@@ -5,7 +5,7 @@ namespace uLogger\Tests\tests;
 
 use PHPUnit\DbUnit\DataSet\IDataSet;
 use ReflectionClass;
-use uLogger\Controller\Config;
+use uLogger\Component\Config;
 use uLogger\Entity\Layer;
 use uLogger\Tests\lib\UloggerDatabaseTestCase;
 

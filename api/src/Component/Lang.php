@@ -7,8 +7,9 @@ declare(strict_types = 1);
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL version 3 or later
  */
 
-namespace uLogger\Controller;
+namespace uLogger\Component;
 
+use uLogger\Entity\Config;
 use uLogger\Helper\Utils;
 
 /**

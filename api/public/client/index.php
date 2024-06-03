@@ -9,7 +9,7 @@ declare(strict_types = 1);
 
 require_once('../../vendor/autoload.php');
 
-use uLogger\Controller\Auth;
+use uLogger\Component\Auth;
 use uLogger\Entity\Position;
 use uLogger\Entity\Track;
 use uLogger\Entity\User;

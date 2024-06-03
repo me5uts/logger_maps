@@ -20,9 +20,9 @@ if (PHP_VERSION_ID < 70300) {
 
 require_once('../../vendor/autoload.php');
 
-use uLogger\Controller\Config;
-use uLogger\Controller\Db;
-use uLogger\Controller\Lang;
+use uLogger\Component\Db;
+use uLogger\Component\Lang;
+use uLogger\Entity\Config;
 use uLogger\Entity\Layer;
 use uLogger\Entity\User;
 use uLogger\Helper\Utils;

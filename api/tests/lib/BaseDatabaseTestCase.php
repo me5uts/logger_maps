@@ -9,7 +9,7 @@ use PDO;
 use PHPUnit;
 use PHPUnit\DbUnit\Database\Connection;
 use PHPUnit\DbUnit\DataSet\IDataSet;
-use uLogger\Controller\Config;
+use uLogger\Component\Config;
 
 abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
 

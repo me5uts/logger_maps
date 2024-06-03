@@ -64,7 +64,7 @@ export default class User extends ListItem {
    * @return {Promise<User[], Error>}
    */
   static fetchList() {
-    return Http.get('utils/getusers.php').then((_users) => {
+    return Http.get('api/users').then((_users) => {
       const users = [];
       for (const user of _users) {
         users.push(new User(user.id, user.login, user.isAdmin));

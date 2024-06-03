@@ -11,7 +11,7 @@ namespace uLogger\Tests\tests;
 
 use PDO;
 use PDOException;
-use uLogger\Controller\Db;
+use uLogger\Component\Db;
 use uLogger\Helper\Migration;
 use uLogger\Tests\lib\UloggerDatabaseTestCase;
 

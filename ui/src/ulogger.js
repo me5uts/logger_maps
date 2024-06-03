@@ -30,4 +30,12 @@ Promise.all([ domReady, initReady ])
   .then(() => {
     Router.initView();
   })
-  .catch((msg) => Alert.error(`${$._('actionfailure')}\n${msg}`));
+  .catch((msg) => {
+    let title;
+    try {
+      title = $._('actionfailure');
+    } catch {
+      title = 'Initialization error'
+    }
+    return Alert.error(`${title}\n${msg}`);
+  });

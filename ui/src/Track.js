@@ -148,16 +148,24 @@ export default class Track extends PositionSet {
    * @return {Promise<void, Error>}
    */
   fetchPositions() {
-    const params = {
-      userid: this.user.id,
-      trackid: this.id
-    };
+    let url = `api/tracks/${this.id}/positions`;
     if (this.maxId) {
-      params.afterid = this.maxId;
+      url += `?afterId=${this.maxId}`;
     }
-    return PositionSet.fetch(params).then((_positions) => {
-      this.fromJson(_positions, params.afterid > 0);
+    return Http.get(url).then((_positions) => {
+      this.fromJson(_positions, this.maxId > 0);
     });
+
+    // const params = {
+    //   userid: this.user.id,
+    //   trackid: this.id
+    // };
+    // if (this.maxId) {
+    //   params.afterid = this.maxId;
+    // }
+    // return PositionSet.fetch(params).then((_positions) => {
+    //   this.fromJson(_positions, params.afterid > 0);
+    // });
   }
 
   /**
@@ -166,13 +174,11 @@ export default class Track extends PositionSet {
    * @return {Promise<?Track, Error>}
    */
   static fetchLatest(user) {
-    return this.fetch({
-      last: true,
-      userid: user.id
-    }).then((_positions) => {
-      if (_positions.length) {
-        const track = new Track(_positions[0].trackid, _positions[0].trackname, user);
-        track.fromJson(_positions);
+    return Http.get(`api/users/${user.id}/position`)
+      .then((_position) => {
+      if (_position) {
+        const track = new Track(_position.trackid, _position.trackname, user);
+        track.fromJson([ _position ]);
         return track;
       }
       return null;
@@ -186,7 +192,7 @@ export default class Track extends PositionSet {
    * @return {Promise<Track[], Error>}
    */
   static fetchList(user) {
-    return Http.get('utils/gettracks.php', { userid: user.id }).then(
+    return Http.get(`api/users/${user.id}/tracks`).then(
       /**
        * @param {Array.<{id: number, name: string}>} _tracks
        * @return {Track[]}
@@ -253,10 +259,7 @@ export default class Track extends PositionSet {
    * @return {Promise<{id: number, name: string, userId: number, comment: string|null}, Error>}
    */
   static getMeta(id) {
-    return Track.update({
-      action: 'getmeta',
-      trackid: id
-    });
+    return Http.get(`api/tracks/${id}`);
   }
 
   /**

@@ -12,8 +12,8 @@ namespace uLogger\Helper;
 use InvalidArgumentException;
 use PDO;
 use PDOException;
-use uLogger\Controller\Config;
-use uLogger\Controller\Db;
+use uLogger\Component\Db;
+use uLogger\Entity\Config;
 use uLogger\Entity\Layer;
 
 /**

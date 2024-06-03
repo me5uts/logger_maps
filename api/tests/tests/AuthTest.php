@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace uLogger\Tests\tests;
 
-use uLogger\Controller\Auth;
+use uLogger\Component\Auth;
 use uLogger\Entity\User;
 use uLogger\Tests\lib\UloggerDatabaseTestCase;
 

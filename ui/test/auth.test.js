@@ -20,7 +20,7 @@
 import Session from '../src/Session.js';
 import User from '../src/User.js';
 
-describe('Auth tests', () => {
+describe('AuthReadOnly tests', () => {
 
   let auth;
   let user;

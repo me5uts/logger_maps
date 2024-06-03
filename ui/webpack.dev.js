@@ -13,6 +13,11 @@ module.exports = merge(common, {
         path: '**/*.php',
         changeOrigin: true,
         target: 'http://ulogger.test'
+      },
+      {
+        path: '/api/**',
+        changeOrigin: true,
+        target: 'http://ulogger.test'
       }
     ]
   },

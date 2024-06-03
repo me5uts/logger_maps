@@ -7,7 +7,7 @@ declare(strict_types = 1);
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL version 3 or later
  */
 
-namespace uLogger\Controller;
+namespace uLogger\Component;
 
 use PDO;
 use PDOException;
@@ -110,7 +110,7 @@ class Db extends PDO {
    * @noinspection IssetArgumentExistenceInspection
    */
   private static function getConfig(): void {
-    $configFile = dirname(__DIR__, 2) . "/config.php";
+    $configFile = dirname(__DIR__, 2) . "/config/config.php";
     if (!file_exists($configFile)) {
       header("HTTP/1.1 503 Service Unavailable");
       die("Missing config.php file!");

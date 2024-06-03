@@ -9,9 +9,9 @@ declare(strict_types = 1);
 
 require_once('../../vendor/autoload.php');
 
-use uLogger\Controller\Auth;
-use uLogger\Controller\Config;
-use uLogger\Controller\Lang;
+use uLogger\Component\Auth;
+use uLogger\Component\Lang;
+use uLogger\Entity\Config;
 use uLogger\Entity\Position;
 use uLogger\Helper\Utils;
 
@@ -203,7 +203,7 @@ if ($trackId && $userId) {
             $xml->writeElement("ele", $position->altitude);
         }
             $xml->writeElement("time", gmdate("Y-m-d\TH:i:s\Z", $position->timestamp));
-            $xml->writeElement("name", ++$i);
+            $xml->writeElement("name", (string) ++$i);
         if (!is_null($position->comment)) {
             $xml->startElement("desc");
               $xml->writeCData($position->comment);

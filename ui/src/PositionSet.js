@@ -86,7 +86,7 @@ export default class PositionSet extends ListItem {
    */
   fetchLatest() {
     this.clear();
-    return PositionSet.fetch({ last: true }).then((_positions) => {
+    return Http.get('api/users/position').then((_positions) => {
       this.fromJson(_positions);
     });
   }
@@ -105,11 +105,11 @@ export default class PositionSet extends ListItem {
     });
   }
 
-  /**
-   * @param params
-   * @return {Promise<Object[], Error>}
-   */
-  static fetch(params) {
-    return Http.get('utils/getpositions.php', params);
-  }
+  // /**
+  //  * @param params
+  //  * @return {Promise<Object[], Error>}
+  //  */
+  // static fetch(params) {
+  //   return Http.get('utils/getpositions.php', params);
+  // }
 }

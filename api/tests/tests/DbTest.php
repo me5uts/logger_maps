@@ -4,7 +4,7 @@ declare(strict_types = 1);
 namespace uLogger\Tests\tests;
 
 use PHPUnit\Framework\TestCase;
-use uLogger\Controller\Db;
+use uLogger\Component\Db;
 use uLogger\Helper\Utils;
 
 class DbTest extends TestCase {
