@@ -10,22 +10,47 @@ declare(strict_types = 1);
 namespace uLogger\Controller;
 
 use uLogger\Component\Auth;
+use uLogger\Component\FileUpload;
+use uLogger\Component\Request;
 use uLogger\Component\Response;
+use uLogger\Component\Route;
 use uLogger\Entity;
-use uLogger\Helper\Utils;
+use uLogger\Entity\Config;
+use uLogger\Exception\DatabaseException;
+use uLogger\Exception\GpxParseException;
+use uLogger\Exception\InvalidInputException;
+use uLogger\Exception\NotFoundException;
+use uLogger\Exception\ServerException;
+use uLogger\Helper\Gpx;
+use uLogger\Helper\Kml;
 
 class Track {
 
   private Auth $auth;
+  private Config $config;
 
-  public function __construct(Auth $auth) {
+  /**
+   * @param Auth $auth
+   * @param Config $config
+   */
+  public function __construct(Auth $auth, Config $config) {
     $this->auth = $auth;
+    $this->config = $config;
   }
-
+  /**
+   * GET /api/tracks/{id} (get track metadata; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER:ADMIN)
+   * @param int $trackId
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/tracks/{trackId}', [
+    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
+    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
+    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ]
+  ])]
   public function get(int $trackId): Response {
     $track = new Entity\Track($trackId);
     if (!$track->isValid) {
-      return Response::internalServerError("servererror");//$lang["servererror"]);
+      return Response::notFound();
     }
     $result = [
       "id" => $track->id,
@@ -36,66 +61,107 @@ class Track {
     return Response::success($result);
   }
 
-  public function xxx($trackId): Response {
-    $userId = Utils::getInt('userid');
-//    $trackId = Utils::getInt('trackid');
-    $afterId = Utils::getInt('afterid');
-    $last = Utils::getBool('last');
-
-    $positionsArr = [];
-    if ($userId) {
-      if ($this->auth->hasReadAccess($userId)) {
-        if ($trackId) {
-          // get all track data
-          $positionsArr = Entity\Position::getAll($userId, $trackId, $afterId);
-        } else if ($last) {
-          // get data only for latest point
-          $position = Entity\Position::getLast($userId);
-          if ($position->isValid) {
-            $positionsArr[] = $position;
-          }
-        }
-      }
-    } else if ($last) {
-      if ($this->auth->hasPublicReadAccess() || $this->auth->isAdmin()) {
-        $positionsArr = Entity\Position::getLastAllUsers();
-      }
+  /**
+   * PUT /api/tracks/{id} (update track metadata; access: OPEN-OWNER:ADMIN, PUBLIC-OWNER:ADMIN, PRIVATE-OWNER:ADMIN)
+   * @param int $trackId
+   * @param Entity\Track $track
+   * @return Response
+   */
+  #[Route(Request::METHOD_PUT, '/api/tracks/{trackId}', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ] ])]
+  public function update(int $trackId, Entity\Track $track): Response {
+    if ($trackId !== $track->id) {
+      return Response::unprocessableError("Wrong track id");
     }
-
-    $result = [];
-    if ($positionsArr === false) {
-      $result = [ "error" => true ];
-    } else if (!empty($positionsArr)) {
-      if ($afterId) {
-        $afterPosition = new Entity\Position($afterId);
-        if ($afterPosition->isValid) {
-          $prevPosition = $afterPosition;
-        }
-      }
-      foreach ($positionsArr as $position) {
-        $meters = !$last && isset($prevPosition) ? $position->distanceTo($prevPosition) : 0;
-        $seconds = !$last && isset($prevPosition) ? $position->secondsTo($prevPosition) : 0;
-        $result[] = [
-          "id" => $position->id,
-          "latitude" => $position->latitude,
-          "longitude" => $position->longitude,
-          "altitude" => ($position->altitude) ? round($position->altitude) : $position->altitude,
-          "speed" => $position->speed,
-          "bearing" => $position->bearing,
-          "timestamp" => $position->timestamp,
-          "accuracy" => $position->accuracy,
-          "provider" => $position->provider,
-          "comment" => $position->comment,
-          "image" => $position->image,
-          "username" => $position->userLogin,
-          "trackid" => $position->trackId,
-          "trackname" => $position->trackName,
-          "meters" => $meters,
-          "seconds" => $seconds
-        ];
-        $prevPosition = $position;
-      }
+    try {
+      $track->update();
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (InvalidInputException $e) {
+      return Response::unprocessableError($e->getMessage());
+    } catch (NotFoundException) {
+      return Response::notFound();
     }
-    return Response::success($result);
+    return Response::success();
   }
+
+  /**
+   * DELETE /api/tracks/{id} (delete track; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
+   * @param int $trackId
+   * @return Response
+   */
+  #[Route(Request::METHOD_DELETE, '/api/tracks/{trackId}', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ] ])]
+  public function delete(int $trackId): Response {
+
+    $track = new Entity\Track($trackId);
+    if (!$track->isValid) {
+      return Response::notFound();
+    }
+
+    if ($track->delete() === false) {
+      return Response::internalServerError("Track delete failed");
+    }
+
+    return Response::success();
+  }
+
+  /**
+   * POST /api/tracks/import (import uploaded file; access: OPEN-AUTHORIZED, PUBLIC-AUTHORIZED, PRIVATE-AUTHORIZED)
+   * @param FileUpload $gpxUpload
+   * @return Response
+   */
+  #[Route(Request::METHOD_POST, '/api/tracks/import', [ Auth::ACCESS_ALL => [ Auth::ALLOW_AUTHORIZED ] ])]
+  public function import(FileUpload $gpxUpload): Response {
+    $gpxFile = $gpxUpload->getTmpName();
+    $gpxName = basename($gpxUpload->getName());
+    $gpx = new Gpx($gpxName, $this->config);
+    try {
+      $result = $gpx->import($this->auth->user->id, $gpxFile);
+      return Response::success($result);
+    } catch (GpxParseException $e) {
+      return Response::unprocessableError($e->getMessage());
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
+    } finally {
+      unlink($gpxFile);
+    }
+  }
+
+  /**
+   * GET /api/tracks/{trackId}/export?format={format} (download exported file; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
+   * @param int $trackId
+   * @param string $format
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/tracks/{trackId}/export', [
+    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
+    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
+    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ],
+    ]
+  )]
+  public function export(int $trackId, string $format): Response {
+    $track = new Entity\Track($trackId);
+    if (!$track->isValid) {
+      return Response::notFound();
+    }
+    $positions = Entity\Position::getAll(null, $trackId);
+    if (empty($positions)) {
+      return Response::notFound();
+    }
+
+    switch ($format) {
+      case 'gpx':
+        $file = new Gpx($track->name, $this->config);
+        break;
+
+      case 'kml':
+        $file = new Kml($track->name, $this->config);
+        break;
+
+      default:
+        return Response::unprocessableError("Unsupported format: $format");
+    }
+
+    return Response::file($file->export($positions), $file->getExportedName(), $file->getMimeType());
+  }
+
 }

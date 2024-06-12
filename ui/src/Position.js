@@ -118,31 +118,22 @@ export default class Position {
    * @return {Promise<void, Error>}
    */
   delete() {
-    return Position.update({
-      action: 'delete',
-      posid: this.id
-    });
+    return Http.delete(`/api/positions/${this.id}`);
   }
 
   /**
    * @return {Promise<void, Error>}
    */
   save() {
-    return Position.update({
-      action: 'update',
-      posid: this.id,
-      comment: this.comment
-    });
+    return Http.put(`/api/positions/${this.id}`, this);
   }
 
   /**
    * @return {Promise<void, Error>}
    */
   imageDelete() {
-    return Position.update({
-      action: 'imagedel',
-      posid: this.id
-    }).then(() => { this.image = null; });
+    return Http.delete(`/api/positions/${this.id}/image`)
+      .then(() => { this.image = null; });
   }
 
   /**
@@ -151,24 +142,13 @@ export default class Position {
    */
   imageAdd(imageFile) {
     const data = new FormData();
-    data.append('image', imageFile);
-    data.append('action', 'imageadd');
-    data.append('posid', this.id.toString());
-    return Position.update(data).then(
+    data.append('imageUpload', imageFile);
+    return Http.post(`/api/positions/${this.id}/image`, data).then(
       /**
        * @param {Object} result
        * @param {string} result.image
        */
       (result) => { this.image = result.image; });
-  }
-
-  /**
-   * Save track data
-   * @param {Object} data
-   * @return {Promise<void|Object, Error>}
-   */
-  static update(data) {
-    return Http.post('utils/handleposition.php', data);
   }
 
   /**

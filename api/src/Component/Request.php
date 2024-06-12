@@ -91,7 +91,7 @@ class Request {
    */
   public function matchPath(string $routePath): bool {
     // Perform pattern matching (e.g., "/api/users/{id}" matches "/api/users/123")
-    $pattern = str_replace('\{id\}', '(\d+)', preg_quote($routePath));
+    $pattern = preg_replace('/\\\{[a-zA-Z0-9]+\\\}/', '(\\w+)', preg_quote($routePath));
     if (preg_match("#^$pattern$#", $this->path) === 1) {
       $this->extractParams($routePath);
       return true;
@@ -131,6 +131,10 @@ class Request {
         syslog(LOG_ERR, "Payload parsing failed: \"$input\" [{$e->getMessage()}]");
       }
     }
+  }
+
+  public function hasPayload(): bool {
+    return !empty($this->payload);
   }
 
 }

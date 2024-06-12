@@ -74,10 +74,7 @@ export default class User extends ListItem {
   }
 
   delete() {
-    return User.update({
-      action: 'delete',
-      login: this.login
-    });
+    return Http.delete(`api/users/${this.id}`);
   }
 
   /**
@@ -88,20 +85,8 @@ export default class User extends ListItem {
    * @return {Promise<User>}
    */
   static add(login, password, isAdmin) {
-    return User.update({
-      action: 'add',
-      login: login,
-      pass: password,
-      admin: isAdmin
-    }).then((user) => new User(user.id, login, isAdmin));
-  }
-
-  /**
-   * @param {Object} data
-   * @return {Promise<*, Error>}
-   */
-  static update(data) {
-    return Http.post('utils/handleuser.php', data);
+    return Http.post('api/users', { login, password, isAdmin })
+      .then((user) => new User(user.id, login, isAdmin));
   }
 
   /**
@@ -110,12 +95,7 @@ export default class User extends ListItem {
    * @return {Promise<void, Error>}
    */
   setPassword(password, oldPassword) {
-    return Http.post('utils/changepass.php',
-      {
-        login: this.login,
-        pass: password,
-        oldpass: oldPassword
-      });
+    return Http.put(`api/users/${this.id}/password`, { password, oldPassword });
   }
 
   /**
@@ -125,14 +105,14 @@ export default class User extends ListItem {
    */
   modify(isAdmin, password = null) {
     const data = {
-      action: 'update',
+      id: this.id,
       login: this.login,
-      admin: isAdmin
+      isAdmin: isAdmin
     };
     if (password) {
-      data.pass = password;
+      data.password = password;
     }
-    return User.update(data)
+    return Http.put(`api/users/${this.id}`, data)
       .then(() => { this.isAdmin = isAdmin; });
   }
 

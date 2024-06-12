@@ -9,46 +9,48 @@ declare(strict_types = 1);
 
 namespace uLogger\Entity;
 
+use ErrorException;
 use PDOException;
 use uLogger\Component\Db;
-use uLogger\Helper\Upload;
+use uLogger\Component\FileUpload;
+use uLogger\Exception\ServerException;
 
 /**
  * Positions handling
  */
 class Position {
-  /** @param int Position id */
-  public $id;
-  /** @param int Unix time stamp */
-  public $timestamp;
-  /** @param int User id */
-  public $userId;
-  /** @param string User login */
-  public $userLogin;
-  /** @param int Track id */
-  public $trackId;
-  /** @param string Track name */
-  public $trackName;
-  /** @param float Latitude */
-  public $latitude;
-  /** @param float Longitude */
-  public $longitude;
-  /** @param float Altitude */
-  public $altitude;
-  /** @param float Speed */
-  public $speed;
-  /** @param float Bearing */
-  public $bearing;
-  /** @param int Accuracy */
-  public $accuracy;
-  /** @param string Provider */
-  public $provider;
-  /** @param string Comment */
-  public $comment;
-  /** @param string Image path */
-  public $image;
+  /** @var int Position id */
+  public int $id;
+  /** @var int Unix time stamp */
+  public int $timestamp;
+  /** @var int User id */
+  public int $userId;
+  /** @var string User login */
+  public string $userLogin;
+  /** @var int Track id */
+  public int $trackId;
+  /** @var string Track name */
+  public string $trackName;
+  /** @var float Latitude */
+  public float $latitude;
+  /** @var float Longitude */
+  public float $longitude;
+  /** @var ?float Altitude */
+  public ?float $altitude;
+  /** @var ?float Speed */
+  public ?float $speed;
+  /** @var ?float Bearing */
+  public ?float $bearing;
+  /** @var ?int Accuracy */
+  public ?int $accuracy;
+  /** @var ?string Provider */
+  public ?string $provider;
+  /** @var ?string Comment */
+  public ?string $comment;
+  /** @var ?string Image path */
+  public ?string $image;
 
-  public $isValid = false;
+  public bool $isValid = false;
 
   /**
    * Constructor
@@ -188,7 +190,6 @@ class Position {
         $stmt->execute([ $this->id ]);
         $this->removeImage();
         $ret = true;
-        $this->id = null;
         $this->isValid = false;
       } catch (PDOException $e) {
         // TODO: handle exception
@@ -378,22 +379,21 @@ class Position {
 
   /**
    * Add uploaded image
-   * @param array $imageMeta File metadata array
+   * @param FileUpload $imageMeta File metadata
    * @return bool
+   * @throws ErrorException
+   * @throws ServerException
    */
-  public function setImage(array $imageMeta): bool {
-    $result = false;
-    if (!empty($imageMeta)) {
-      if ($this->hasImage()) {
-        $this->removeImage();
-      }
-      $this->image = Upload::add($imageMeta, $this->trackId);
-      $query = "UPDATE " . self::db()->table('positions') . "
-            SET image = ? WHERE id = ?";
-      $stmt = self::db()->prepare($query);
-      $result = $stmt->execute([ $this->image, $this->id ]);
+  public function setImage(FileUpload $imageMeta): bool {
+
+    if ($this->hasImage()) {
+      $this->removeImage();
     }
-    return $result;
+    $this->image = $imageMeta->add($this->trackId);
+    $query = "UPDATE " . self::db()->table('positions') . "
+          SET image = ? WHERE id = ?";
+    $stmt = self::db()->prepare($query);
+    return $stmt->execute([ $this->image, $this->id ]);
   }
 
   /**
@@ -407,7 +407,7 @@ class Position {
       $stmt = self::db()->prepare($query);
       $result = $stmt->execute([ $this->id ]);
       // ignore unlink errors
-      Upload::delete($this->image);
+      FileUpload::delete($this->image);
       $this->image = null;
     }
     return $result;
@@ -490,6 +490,33 @@ class Position {
     $this->comment = $row['comment'];
     $this->image = $row['image'];
     $this->isValid = true;
+  }
+
+  /**
+   * @param Position $position
+   * @param int $meters
+   * @param int $seconds
+   * @return array
+   */
+  public static function getArray(Position $position, int $meters = 0, int $seconds = 0): array {
+    return [
+      "id" => $position->id,
+      "latitude" => $position->latitude,
+      "longitude" => $position->longitude,
+      "altitude" => ($position->altitude) ? round($position->altitude) : $position->altitude,
+      "speed" => $position->speed,
+      "bearing" => $position->bearing,
+      "timestamp" => $position->timestamp,
+      "accuracy" => $position->accuracy,
+      "provider" => $position->provider,
+      "comment" => $position->comment,
+      "image" => $position->image,
+      "username" => $position->userLogin,
+      "trackid" => $position->trackId,
+      "trackname" => $position->trackName,
+      "meters" => $meters,
+      "seconds" => $seconds
+    ];
   }
 }
 

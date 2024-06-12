@@ -9,9 +9,11 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
+use uLogger\Component\Auth;
+use uLogger\Component\Request;
 use uLogger\Component\Response;
+use uLogger\Component\Route;
 use uLogger\Entity;
-use uLogger\Entity\Layer;
 
 class Config {
   private Entity\Config $config;
@@ -23,8 +25,14 @@ class Config {
     $this->config = $config;
   }
 
+  /**
+   * Get config
+   * GET /config (get configuration; access: OPEN-ALL, PUBLIC-ALL, PRIVATE-ALL)
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/config', [ Auth::ACCESS_ALL => [ Auth::ALLOW_ALL ] ])]
   public function get(): Response {
-    $resultConfig = [
+    $result = [
       "colorExtra" => $this->config->colorExtra,
       "colorHilite" => $this->config->colorHilite,
       "colorNormal" => $this->config->colorNormal,
@@ -49,30 +57,24 @@ class Config {
       "layers" => []
     ];
     foreach ($this->config->olLayers as $key => $val) {
-      $resultConfig["layers"][$key] = $val;
+      $result["layers"][$key] = $val;
     }
-    $result["config"] = $resultConfig;
 
     return Response::success($result);
   }
 
-  public function save(array $data): Response {
-    $this->config->setFromArray($data);
-    // FIXME: olLayers can be null?
-    $olLayers = in_array('olLayers', $data) ? $data['olLayers'] : null;
-    if (!is_null($olLayers)) {
-      $this->config->olLayers = [];
-      foreach ($olLayers as $json) {
-        $obj = json_decode($json);
-        if (json_last_error() === JSON_ERROR_NONE) {
-          $this->config->olLayers[] = new Layer($obj->id, $obj->name, $obj->url, $obj->priority);
-        }
-      }
-    }
+  /**
+   * PUT /config (save configuration; access: OPEN-ADMIN, PUBLIC-ADMIN, PRIVATE-ADMIN)
+   * @param Entity\Config $config
+   * @return Response
+   */
+  #[Route(Request::METHOD_PUT, '/api/config', [ Auth::ACCESS_ALL => [ Auth::ALLOW_ADMIN ] ])]
+  public function update(Entity\Config $config): Response {
 
-    if ($this->config->save() === false) {
+    if ($config->save() === false) {
       return Response::internalServerError("servererror");//($lang["servererror"]);
     }
+    $this->config->setFromConfig($config);
     return Response::success();
   }
 }

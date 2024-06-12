@@ -10,7 +10,9 @@ declare(strict_types = 1);
 namespace uLogger\Controller;
 
 use uLogger\Component\Auth;
+use uLogger\Component\Request;
 use uLogger\Component\Response;
+use uLogger\Component\Route;
 use uLogger\Entity\Config;
 
 class Session {
@@ -26,11 +28,25 @@ class Session {
     $this->config = $config;
   }
 
+  /**
+   * End current session
+   * DELETE /session (log out; access: OPEN-AUTHORIZED, PUBLIC-AUTHORIZED, PRIVATE-AUTHORIZED)
+   * @return Response
+   */
+  #[Route(Request::METHOD_DELETE, '/api/session', [ Auth::ACCESS_ALL => [ Auth::ALLOW_AUTHORIZED ] ])]
   public function logOut(): Response {
     $this->auth->logOut();
     return Response::success();
   }
 
+  /**
+   * Start session for user and password
+   * POST /session (log in; payload: {login, password}; access: OPEN-ALL, PUBLIC-ALL PRIVATE-ALL)
+   * @param string $login
+   * @param string $password
+   * @return Response
+   */
+  #[Route(Request::METHOD_POST, '/api/session', [ Auth::ACCESS_ALL => [ Auth::ALLOW_ALL ] ])]
   public function logIn(string $login, string $password): Response {
     if ($this->auth->checkLogin($login, $password) === false) {
       return Response::notAuthorized();
@@ -38,6 +54,12 @@ class Session {
     return $this->ResponseWithSessionData();
   }
 
+  /**
+   * Get session data
+   * GET /session (get session data; access: OPEN-AUTHORIZED, PUBLIC-AUTHORIZED, PRIVATE-AUTHORIZED)
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/session', [ Auth::ACCESS_ALL => [ Auth::ALLOW_AUTHORIZED ] ])]
   public function check(): Response {
     if ($this->config->requireAuthentication && !$this->auth->isAuthenticated()) {
       return Response::notAuthorized();

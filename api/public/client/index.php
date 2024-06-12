@@ -13,7 +13,7 @@ use uLogger\Component\Auth;
 use uLogger\Entity\Position;
 use uLogger\Entity\Track;
 use uLogger\Entity\User;
-use uLogger\Helper\Upload;
+use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
 
 /**
@@ -21,7 +21,7 @@ use uLogger\Helper\Utils;
  *
  * @param string $message Message
  */
-function exitWithError(string $message) {
+function exitWithError(string $message): void {
   $response = [];
   $response['error'] = true;
   $response['message'] = $message;
@@ -36,7 +36,7 @@ function exitWithError(string $message) {
  * @param array $params Optional params
  * @return void
  */
-function exitWithSuccess(array $params = []) {
+function exitWithSuccess(array $params = []): void {
   $response = [];
   $response['error'] = false;
   header('Content-Type: application/json');
@@ -105,7 +105,7 @@ switch ($action) {
     $accuracy = Utils::postInt('accuracy');
     $provider = Utils::postString('provider');
     $comment = Utils::postString('comment');
-    $imageMeta = Utils::requestFile('image');
+    $fileUpload = Utils::requestFile('image');
     $trackId = Utils::postInt('trackid');
 
     if (!is_float($lat) || !is_float($lon) || !is_int($timestamp) || !is_int($trackId)) {
@@ -113,8 +113,12 @@ switch ($action) {
     }
 
     $image = null;
-    if (!empty($imageMeta)) {
-      $image = Upload::add($imageMeta, $trackId);
+    if ($fileUpload) {
+      try {
+        $image = $fileUpload->add($trackId);
+      } catch (ErrorException|ServerException $e) {
+        // ignore
+      }
     }
 
     $positionId = Position::add($auth->user->id, $trackId,

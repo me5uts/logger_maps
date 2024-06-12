@@ -105,11 +105,4 @@ export default class PositionSet extends ListItem {
     });
   }
 
-  // /**
-  //  * @param params
-  //  * @return {Promise<Object[], Error>}
-  //  */
-  // static fetch(params) {
-  //   return Http.get('utils/getpositions.php', params);
-  // }
 }

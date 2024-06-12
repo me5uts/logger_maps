@@ -22,52 +22,52 @@ class Config {
   /**
    * Singleton instance
    *
-   * @var Config Object instance
+   * @var Config|null Object instance
    */
-  private static $instance;
+  private static ?Config $instance = null;
   /**
    * @var string Version number
    */
-  public $version = "2.0-beta";
+  public string $version = "2.0-beta";
 
   /**
    * @var string Default map drawing framework
    */
-  public $mapApi = "openlayers";
+  public string $mapApi = "openlayers";
 
   /**
    * @var string|null Google maps key
    */
-  public $googleKey;
+  public ?string $googleKey;
 
   /**
    * @var Layer[] Openlayers extra map layers
    */
-  public $olLayers = [];
+  public array $olLayers = [];
 
   /**
    * @var float Default latitude for initial map
    */
-  public $initLatitude = 52.23;
+  public float $initLatitude = 52.23;
   /**
    * @var float Default longitude for initial map
    */
-  public $initLongitude = 21.01;
+  public float $initLongitude = 21.01;
 
   /**
    * @var bool Require login/password authentication
    */
-  public $requireAuthentication = true;
+  public bool $requireAuthentication = true;
 
   /**
    * @var bool All users tracks are visible to authenticated user
    */
-  public $publicTracks = false;
+  public bool $publicTracks = false;
 
   /**
-   * @var int Miniumum required length of user password
+   * @var int Minimum required length of user password
    */
-  public $passLenMin = 10;
+  public int $passLenMin = 10;
 
   /**
    * @var int Required strength of user password
@@ -76,60 +76,60 @@ class Config {
    * 2 = require mixed case and numbers
    * 3 = require mixed case, numbers and non-alphanumeric characters
    */
-  public $passStrength = 2;
+  public int $passStrength = 2;
 
   /**
    * @var int Default interval in seconds for live auto reload
    */
-  public $interval = 10;
+  public int $interval = 10;
 
   /**
    * @var string Default language code
    */
-  public $lang = "en";
+  public string $lang = "en";
 
   /**
    * @var string Default units
    */
-  public $units = "metric";
+  public string $units = "metric";
 
   /**
    * @var int Stroke weight
    */
-  public $strokeWeight = 2;
+  public int $strokeWeight = 2;
   /**
    * @var string Stroke color
    */
-  public $strokeColor = "#ff0000";
+  public string $strokeColor = "#ff0000";
   /**
    * @var float Stroke opacity
    */
-  public $strokeOpacity = 1.0;
+  public float $strokeOpacity = 1.0;
   /**
    * @var string Stroke color
    */
-  public $colorNormal = "#ffffff";
+  public string $colorNormal = "#ffffff";
   /**
    * @var string Stroke color
    */
-  public $colorStart = "#55b500";
+  public string $colorStart = "#55b500";
   /**
    * @var string Stroke color
    */
-  public $colorStop = "#ff6a00";
+  public string $colorStop = "#ff6a00";
   /**
    * @var string Stroke color
    */
-  public $colorExtra = "#cccccc";
+  public string $colorExtra = "#cccccc";
   /**
    * @var string Stroke color
    */
-  public $colorHilite = "#feff6a";
+  public string $colorHilite = "#feff6a";
   /**
    * @var int Maximum size of uploaded files in bytes.
    * Will be adjusted to system maximum upload size
    */
-  public $uploadMaxSize = 5242880;
+  public int $uploadMaxSize = 5242880;
 
   public function __construct(bool $useDatabase = true) {
     if ($useDatabase) {
@@ -422,6 +422,28 @@ class Config {
       $this->uploadMaxSize = (int) $arr['upload_maxsize'];
       $this->setUploadLimit();
     }
+  }
+  public function setFromConfig(Config $config) {
+    $this->mapApi = $config->mapApi;
+    $this->initLatitude = $config->initLatitude;
+    $this->initLongitude = $config->initLongitude;
+    $this->googleKey = $config->googleKey;
+    $this->requireAuthentication = $config->requireAuthentication;
+    $this->publicTracks = $config->publicTracks;
+    $this->passLenMin = $config->passLenMin;
+    $this->passStrength = $config->passStrength;
+    $this->interval = $config->interval;
+    $this->lang = $config->lang;
+    $this->units = $config->units;
+    $this->strokeWeight = $config->strokeWeight;
+    $this->strokeColor = $config->strokeColor;
+    $this->strokeOpacity = $config->strokeOpacity;
+    $this->colorNormal = $config->colorNormal;
+    $this->colorStart = $config->colorStart;
+    $this->colorStop = $config->colorStop;
+    $this->colorExtra = $config->colorExtra;
+    $this->colorHilite = $config->colorHilite;
+    $this->uploadMaxSize = $config->uploadMaxSize;
   }
 
   /**

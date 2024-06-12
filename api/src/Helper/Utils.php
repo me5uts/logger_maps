@@ -9,8 +9,8 @@ declare(strict_types = 1);
 
 namespace uLogger\Helper;
 
-use ErrorException;
-use Exception;
+use uLogger\Component\FileUpload;
+use uLogger\Exception\InvalidInputException;
 
 /**
  * Various util functions
@@ -106,7 +106,7 @@ class Utils {
 
   /**
    * Exit with xml response
-   * @param boolean $isError Error if true
+   * @param bool $isError Error if true
    * @param array|null $extra Optional array of extra parameters
    */
   private static function exitWithStatus(bool $isError, ?array $extra = null): void {
@@ -225,14 +225,14 @@ class Utils {
 
   /**
    * @param string $name
-   * @param mixed $default
-   * @return mixed
+   * @param mixed|null $default
+   * @return FileUpload|mixed
    */
-  public static function requestFile(string $name, $default = null) {
+  public static function requestFile(string $name, mixed $default = null): mixed {
     if (isset($_FILES[$name])) {
       $files = $_FILES[$name];
       if (isset($files["name"], $files["type"], $files["size"], $files["tmp_name"])) {
-        return $_FILES[$name];
+        return new FileUpload($_FILES[$name]);
       }
     }
     return $default;
@@ -249,13 +249,14 @@ class Utils {
 
   /**
    * @param string $name Input name
-   * @param boolean $checkMime Optionally check mime with known types
-   * @return array File metadata array
-   * @throws Exception Upload exception
-   * @throws ErrorException Internal server exception
+   * @param bool $checkMime Optionally check mime with known types
+   * @return FileUpload File metadata
+   * @throws InvalidInputException
    */
-  public static function requireFile(string $name, bool $checkMime = false): array {
-    return Upload::sanitizeUpload($_FILES[$name], $checkMime);
+  public static function requireFile(string $name, bool $checkMime = false): FileUpload {
+    $fileUpload = new FileUpload($_FILES[$name]);
+    $fileUpload->sanitizeUpload($checkMime);
+    return $fileUpload;
   }
 
   /**

@@ -10,17 +10,30 @@ declare(strict_types = 1);
 namespace uLogger\Controller;
 
 use uLogger\Component\Auth;
+use uLogger\Component\Request;
 use uLogger\Component\Response;
+use uLogger\Component\Route;
 use uLogger\Entity;
 
 class User {
   private Auth $auth;
+  private Entity\Config $config;
 
-  public function __construct(Auth $auth) {
+  public function __construct(Auth $auth, Entity\Config $config) {
     $this->auth = $auth;
+    $this->config = $config;
   }
 
-  // FIXME: private access is not handled!
+  /**
+   * GET /users (get all users; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-ADMIN)
+   * FIXME: private access is not handled!
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/users', [
+    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
+    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
+    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_ADMIN ]
+  ])]
   public function getAll(): Response {
     $result = [];
     $usersArr = Entity\User::getAll();
@@ -36,7 +49,17 @@ class User {
     return Response::success($result);
   }
 
-  public function getTracks($userId): Response {
+  /**
+   * GET /users/{id}/tracks (get user tracks; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER:ADMIN)
+   * @param int $userId
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/users/{userId}/tracks', [
+    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
+    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
+    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ]
+  ])]
+  public function getTracks(int $userId): Response {
     $tracksArr = Entity\Track::getAll($userId);
 
     $result = [];
@@ -50,27 +73,20 @@ class User {
     return Response::success($result);
   }
 
+  /**
+   * GET /users/{id}/position (get user last position; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER:ADMIN)
+   * @param int $userId
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/users/{userId}/position', [
+    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
+    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
+    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ]
+  ])]
   public function getPosition(int $userId): Response {
     $position = Entity\Position::getLast($userId);
     if ($position->isValid) {
-      $result = [
-        "id" => $position->id,
-        "latitude" => $position->latitude,
-        "longitude" => $position->longitude,
-        "altitude" => ($position->altitude) ? round($position->altitude) : $position->altitude,
-        "speed" => $position->speed,
-        "bearing" => $position->bearing,
-        "timestamp" => $position->timestamp,
-        "accuracy" => $position->accuracy,
-        "provider" => $position->provider,
-        "comment" => $position->comment,
-        "image" => $position->image,
-        "username" => $position->userLogin,
-        "trackid" => $position->trackId,
-        "trackname" => $position->trackName,
-        "meters" => 0,
-        "seconds" => 0
-      ];
+      $result = Entity\Position::getArray($position);
     } else {
       $result = [ "error" => true ];
     }
@@ -78,35 +94,136 @@ class User {
     return Response::success($result);
   }
 
+  /**
+   * GET /users/position (get all users last positions; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-ADMIN)
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/users/position', [
+    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
+    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
+    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_ADMIN ]
+  ])]
   public function getAllPosition(): Response {
-    $positionsArr = Entity\Position::getLastAllUsers();
+    $positions = Entity\Position::getLastAllUsers();
     $result = [];
-    if ($positionsArr === false) {
+    if ($positions === false) {
       $result = [ "error" => true ];
-    } elseif (!empty($positionsArr)) {
+    } elseif (!empty($positions)) {
 
-      foreach ($positionsArr as $position) {
-        $result[] = [
-          "id" => $position->id,
-          "latitude" => $position->latitude,
-          "longitude" => $position->longitude,
-          "altitude" => ($position->altitude) ? round($position->altitude) : $position->altitude,
-          "speed" => $position->speed,
-          "bearing" => $position->bearing,
-          "timestamp" => $position->timestamp,
-          "accuracy" => $position->accuracy,
-          "provider" => $position->provider,
-          "comment" => $position->comment,
-          "image" => $position->image,
-          "username" => $position->userLogin,
-          "trackid" => $position->trackId,
-          "trackname" => $position->trackName,
-          "meters" => 0,
-          "seconds" => 0
-        ];
+      foreach ($positions as $position) {
+        $result[] = Entity\Position::getArray($position);
       }
     }
     return Response::success($result);
   }
+
+  /**
+   * PUT /api/users/{id} (for admin to edit other users; access: OPEN-ADMIN, PUBLIC-ADMIN, PRIVATE-ADMIN)
+   * @param int $userId
+   * @param Entity\User $user
+   * @return Response
+   */
+  #[Route(Request::METHOD_PUT, '/api/users/{userId}', [ Auth::ACCESS_ALL => [ Auth::ALLOW_ADMIN ] ])]
+  public function update(int $userId, Entity\User $user): Response {
+    if ($userId !== $user->id) {
+      return Response::unprocessableError("Wrong user id");
+    }
+
+    $currentUser = new Entity\User($userId);
+    if (!$currentUser->isValid) {
+      return Response::notFound();
+    }
+
+    if ($userId === $this->auth->user->id) {
+      return Response::unprocessableError("selfeditwarn");
+    }
+    if ($currentUser->setAdmin($user->isAdmin) === false) {
+      return Response::internalServerError("Setting admin failed");
+    }
+    if (!empty($user->password) && (!$this->config->validPassStrength($user->password) || $currentUser->setPass($user->password) === false)) {
+      return Response::internalServerError("Setting pass failed");
+    }
+    return Response::success();
+  }
+
+  /**
+   * PUT /api/users/{id}/password (password update; access: OPEN-OWNER, PUBLIC-OWNER, PRIVATE-OWNER)
+   * @param int $userId
+   * @param string $password
+   * @param string $oldPassword
+   * @return Response
+   */
+  #[Route(Request::METHOD_PUT, '/api/users/{userId}/password', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER ] ])]
+  public function updatePassword(int $userId, string $password, string $oldPassword): Response {
+
+    if ($this->auth->user->id !== $userId) {
+      return Response::notAuthorized();
+    }
+
+    if (!$this->config->validPassStrength($password)) {
+      return Response::unprocessableError("passstrengthwarn");
+    }
+    if (!$this->auth->user->validPassword($oldPassword)) {
+      return Response::unprocessableError("oldpassinvalid");
+    }
+
+    if ($this->auth->user->setPass($password) === false) {
+      return Response::internalServerError("Setting pass failed");
+    }
+    $this->auth->updateSession();
+
+    return Response::success();
+  }
+
+  /**
+   * POST /api/users (new user; access: OPEN-ADMIN, PUBLIC-ADMIN, PRIVATE-ADMIN)
+   * @param Entity\User $user
+   * @return Response
+   */
+  #[Route(Request::METHOD_POST, '/api/users', [ Auth::ACCESS_ALL => [ Auth::ALLOW_ADMIN ] ])]
+  public function add(Entity\User $user): Response {
+
+    if ((new Entity\User($user->login))->isValid) {
+      return Response::unprocessableError("userexists");
+    }
+
+    if (!$this->config->validPassStrength($user->password)) {
+      return Response::unprocessableError("passstrengthwarn");
+    }
+
+    $userId = Entity\User::add($user->login, $user->password, $user->isAdmin);
+
+    if ($userId === false) {
+      return Response::internalServerError("User add failed");
+    }
+
+    return Response::success([ 'id' => $userId ]);
+  }
+
+  /**
+   * DELETE /api/users/{id} (delete user; access: OPEN-ADMIN, PUBLIC-ADMIN, PRIVATE-ADMIN)
+   * @param int $userId
+   * @return Response
+   */
+  #[Route(Request::METHOD_DELETE, '/api/users/{userId}', [ Auth::ACCESS_ALL => [ Auth::ALLOW_ADMIN ] ])]
+  public function delete(int $userId): Response {
+
+    if ($userId === $this->auth->user->id) {
+      return Response::unprocessableError("selfeditwarn");
+    }
+
+    $user = new Entity\User($userId);
+    if (!$user->isValid) {
+      return Response::notFound();
+    }
+
+    if ($user->delete() === false) {
+      return Response::internalServerError("Delete failed");
+    }
+
+    return Response::success();
+
+  }
+
 
 }

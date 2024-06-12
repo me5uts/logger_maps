@@ -15,9 +15,14 @@ use JsonException;
 class Response {
 
   public const TYPE_JSON = 'application/json; charset=UTF-8';
+  public const TYPE_GPX = 'application/gpx+xml';
+  public const TYPE_KML = 'application/vnd.google-earth.kml+xml';
+
+  public const CODE_1_CONTINUE = 100;
 
   public const CODE_2_OK = 200;
   public const CODE_2_CREATED = 201;
+  public const CODE_2_NOCONTENT = 204;
 
   public const CODE_3_FOUND = 302;
 
@@ -34,14 +39,15 @@ class Response {
   private int $code;
   /** @var array|object|string|null  */
   private mixed $payload;
-  /** @var string  */
-  private string $contentType = self::TYPE_JSON;
+  /** @var string|null */
+  private ?string $contentType;
   /** @var array  */
   private array $extraHeaders = [];
 
-  public function __construct($payload = null, int $code = self::CODE_2_OK) {
+  public function __construct($payload = null, int $code = self::CODE_2_OK, $contentType = self::TYPE_JSON) {
     $this->payload = $payload;
     $this->code = $code;
+    $this->contentType = $contentType;
   }
 
 
@@ -78,6 +84,9 @@ class Response {
         break;
       case self::CODE_2_CREATED:
         $text = 'Created';
+        break;
+      case self::CODE_2_NOCONTENT:
+        $text = 'No Content';
         break;
       case self::CODE_3_FOUND:
         $text = 'Found';
@@ -128,7 +137,19 @@ class Response {
   }
 
   public static function success($payload = null, int $code = self::CODE_2_OK): Response {
-    return new Response($payload, $code);
+    if (empty($payload)) {
+      $contentType = null;
+      $code = self::CODE_2_NOCONTENT;
+    } else {
+      $contentType = self::TYPE_JSON;
+    }
+    return new Response($payload, $code, $contentType);
+  }
+
+  public static function file(string $fileContent, string $filename, string $contentType): Response {
+    $response = new Response($fileContent, self::CODE_2_OK, $contentType);
+    $response->extraHeaders['Content-Disposition'] = "attachment; filename=\"$filename\"";
+    return $response;
   }
 
   public static function internalServerError(string $message): Response {
@@ -157,13 +178,17 @@ class Response {
 
   public static function redirect($path): Response {
     $response = new Response(null, self::CODE_3_FOUND);
-    $response->extraHeaders[] = "Location: $path";
+    $response->extraHeaders["Location"] = "$path";
     $response->setContentType('');
     return $response;
   }
 
   public static function notAuthorized(): Response {
     return new Response(null, self::CODE_4_UNAUTHORIZED);
+  }
+
+  public static function continue(): Response {
+    return new Response(null, self::CODE_1_CONTINUE);
   }
 
   public static function forbidden(string $message = null): Response {
@@ -175,25 +200,29 @@ class Response {
   }
 
   public function send(): void {
-    foreach ($this->extraHeaders as $header) {
-      header($header);
+    foreach ($this->extraHeaders as $key => $value) {
+      header("$key: $value");
     }
     $this->sendHttpCodeHeader();
-    if (!empty($this->contentType)) {
-      header("Content-Type: $this->contentType");
-    }
+    $responseBody = '';
     if (!empty($this->payload)) {
       if ($this->contentType === self::TYPE_JSON) {
         try {
-          echo json_encode($this->payload, JSON_THROW_ON_ERROR);
+          $responseBody = json_encode($this->payload, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
           $response = self::error($e->getMessage(), self::CODE_5_INTERNAL);
           $response->sendAndExit();
         }
       } else {
-        echo $this->payload;
+        $responseBody = $this->payload;
+      }
+      if (!empty($this->contentType)) {
+        header("Content-Type: $this->contentType");
       }
     }
+
+    header('Content-Length: ' . strlen($responseBody));
+    echo $responseBody;
   }
 
   #[NoReturn]

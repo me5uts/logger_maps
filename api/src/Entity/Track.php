@@ -12,17 +12,20 @@ namespace uLogger\Entity;
 use PDO;
 use PDOException;
 use uLogger\Component\Db;
+use uLogger\Exception\DatabaseException;
+use uLogger\Exception\InvalidInputException;
+use uLogger\Exception\NotFoundException;
 
 /**
  * Track handling
  */
 class Track {
-  public $id;
-  public $userId;
-  public $name;
-  public $comment;
+  public int $id;
+  public int $userId;
+  public string $name;
+  public ?string $comment = null;
 
-  public $isValid = false;
+  public bool $isValid = false;
 
   /**
    * Constructor
@@ -36,11 +39,15 @@ class Track {
         $query = "SELECT id, user_id, name, comment FROM " . self::db()->table('tracks') . " WHERE id = ? LIMIT 1";
         $stmt = self::db()->prepare($query);
         $stmt->execute([$trackId]);
-        $stmt->bindColumn('id', $this->id, PDO::PARAM_INT);
-        $stmt->bindColumn('user_id', $this->userId, PDO::PARAM_INT);
-        $stmt->bindColumn('name', $this->name);
-        $stmt->bindColumn('comment', $this->comment);
+        $stmt->bindColumn('id', $id, PDO::PARAM_INT);
+        $stmt->bindColumn('user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindColumn('name', $name);
+        $stmt->bindColumn('comment', $comment);
         if ($stmt->fetch(PDO::FETCH_BOUND)) {
+          $this->id = $id;
+          $this->userId = $userId;
+          $this->name = $name;
+          $this->comment = $comment;
           $this->isValid = true;
         }
       } catch (PDOException $e) {
@@ -131,10 +138,7 @@ class Track {
         $stmt = self::db()->prepare($query);
         $stmt->execute([ $this->id ]);
         $ret = true;
-        $this->id = null;
-        $this->userId = null;
-        $this->name = null;
-        $this->comment = null;
+
         $this->isValid = false;
       } catch (PDOException $e) {
         // TODO: handle exception
@@ -147,30 +151,27 @@ class Track {
   /**
    * Update track
    *
-   * @param string|null $name New name (not empty string) or NULL if not changed
-   * @param string|null $comment New comment or NULL if not changed (to remove content use empty string: "")
-   * @return bool True if success, false otherwise
+   * @throws DatabaseException
+   * @throws InvalidInputException
+   * @throws NotFoundException
    */
-  public function update(?string $name = null, ?string $comment = null): bool {
-    $ret = false;
-    if (empty($name)) { $name = $this->name; }
-    if (is_null($comment)) { $comment = $this->comment; }
-    if ($comment === "") { $comment = null; }
-    if ($this->isValid) {
-      try {
-        $query = "UPDATE " . self::db()->table('tracks') . " SET name = ?, comment = ? WHERE id = ?";
-        $stmt = self::db()->prepare($query);
-        $params = [ $name, $comment, $this->id ];
-        $stmt->execute($params);
-        $ret = true;
-        $this->name = $name;
-        $this->comment = $comment;
-      } catch (PDOException $e) {
-        // TODO: handle exception
-        syslog(LOG_ERR, $e->getMessage());
-      }
+  public function update(): void {
+    if (empty($this->name)) {
+      throw new InvalidInputException("Empty track name");
     }
-    return $ret;
+    if ($this->comment === "") { $this->comment = null; }
+    try {
+      $query = "UPDATE " . self::db()->table('tracks') . " SET name = ?, comment = ? WHERE id = ?";
+      $stmt = self::db()->prepare($query);
+      $params = [ $this->name, $this->comment, $this->id ];
+      $stmt->execute($params);
+      if ($stmt->rowCount() !== 1) {
+        throw new NotFoundException();
+      }
+    } catch (PDOException $e) {
+      throw new DatabaseException($e->getMessage());
+    }
+
   }
 
   /**

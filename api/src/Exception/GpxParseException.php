@@ -7,11 +7,10 @@ declare(strict_types = 1);
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL version 3 or later
  */
 
-namespace uLogger\Middleware;
+namespace uLogger\Exception;
 
-use uLogger\Component\Request;
-use uLogger\Component\Route;
+use Exception;
 
-interface Middleware {
-  public function run(Request $request, Route $route): bool;
+class GpxParseException extends Exception {
+
 }

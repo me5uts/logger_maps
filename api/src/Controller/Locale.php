@@ -9,8 +9,11 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
+use uLogger\Component\Auth;
 use uLogger\Component\Lang;
+use uLogger\Component\Request;
 use uLogger\Component\Response;
+use uLogger\Component\Route;
 use uLogger\Entity;
 
 class Locale {
@@ -23,6 +26,11 @@ class Locale {
     $this->config = $config;
   }
 
+  /**
+   * GET /locales (list of languages, translated strings for current language; access: OPEN-ALL, PUBLIC-ALL, PRIVATE-ALL)
+   * @return Response
+   */
+  #[Route(Request::METHOD_GET, '/api/locales', [ Auth::ACCESS_ALL => [ Auth::ALLOW_ALL ] ])]
   public function get(): Response {
     $langStrings = (new Lang($this->config))->getStrings();
     $result = [

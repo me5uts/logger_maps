@@ -212,19 +212,19 @@ export default class Track extends PositionSet {
    */
   export(type) {
     if (this.hasPositions) {
-      const url = `utils/export.php?type=${type}&userid=${this.user.id}&trackid=${this.id}`;
+      const url = `api/tracks/${this.id}/export?format=${type}`;
       Utils.openUrl(url);
     }
   }
 
   /**
-   * Imports tracks submited with HTML form and returns last imported track id
+   * Imports tracks submitted with HTML form and returns last imported track id
    * @param {HTMLFormElement} form
    * @param {User} user
    * @return {Promise<Track[], Error>}
    */
   static import(form, user) {
-    return Http.post('utils/import.php', form)
+    return Http.post('api/tracks/import', form)
       .then(
         /**
          * @param {Array.<{id: number, name: string}>} _tracks
@@ -240,18 +240,16 @@ export default class Track extends PositionSet {
   }
 
   delete() {
-    return Track.update({
-      action: 'delete',
-      trackid: this.id
-    });
+    return Http.delete(`api/tracks/${this.id}`);
   }
 
   saveMeta() {
-    return Track.update({
-      action: 'update',
-      trackid: this.id,
-      trackname: this.name
-    });
+    const data = {
+      id: this.id,
+      name: this.name,
+      userId: this.user.id
+    }
+    return Http.put(`api/tracks/${this.id}`, data);
   }
 
   /**
@@ -260,15 +258,6 @@ export default class Track extends PositionSet {
    */
   static getMeta(id) {
     return Http.get(`api/tracks/${id}`);
-  }
-
-  /**
-   * Save track data
-   * @param {Object} data
-   * @return {Promise<void, Error>}
-   */
-  static update(data) {
-    return Http.post('utils/handletrack.php', data);
   }
 
   recalculatePositions() {

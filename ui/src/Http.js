@@ -17,6 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+import HttpError from './HttpError';
+
 export default class Http {
 
   /**
@@ -74,19 +76,51 @@ export default class Http {
 
     const init = {};
     init.method = method;
-
+    init.headers = {};
     if (method === 'POST' || method === 'PUT') {
-      init.headers = { 'Content-Type': 'application/json' };
-      init.body = JSON.stringify(data);
+      if (data instanceof HTMLFormElement) {
+        data = new FormData(data);
+      }
+      if (data instanceof FormData) {
+        init.headers = { };
+        init.body = data;
+      } else {
+        init.headers.ContentType = 'application/json';
+        init.body = JSON.stringify(data);
+      }
     }
     return fetch(url, init).then((response) => {
       const statusClass = Math.trunc(response.status / 100);
-      if (statusClass === Http.CLASS_SUCCESS) {
-        return response.json();
-      } else if (statusClass === Http.CLASS_ERROR_SERVER) {
-        return Promise.reject(response);
-      }
-      return Promise.resolve(response);
+      const contentType = response.headers.get('Content-Type');
+
+      return response.text().then((bodyText) => {
+        let parsedBody;
+
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            parsedBody = JSON.parse(bodyText);
+          } catch (error) {
+            throw new HttpError(error.message, response.status);
+          }
+        } else {
+          parsedBody = bodyText;
+        }
+
+        if (statusClass === Http.CLASS_SUCCESS) {
+          return Promise.resolve(parsedBody);
+        }
+        let errorMessage = response.statusText;
+        if (parsedBody.error && parsedBody.message) {
+          errorMessage = parsedBody.message;
+        }
+        throw new HttpError(errorMessage, response.status);
+
+      }).catch((error) => {
+        if (error instanceof HttpError) {
+          return Promise.reject(error);
+        }
+        return Promise.reject(new HttpError(error.message, response.status));
+      });
     });
   }
 

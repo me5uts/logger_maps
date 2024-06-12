@@ -17,23 +17,29 @@ use uLogger\Component\Db;
  * User handling routines
  */
 class User {
-  public $id;
-  public $login;
-  public $hash;
-  public $isAdmin = false;
-  public $isValid = false;
+  public ?int $id;
+  public ?string $login;
+  public ?string $hash;
+  public ?string $password;
+  public bool $isAdmin = false;
+  public bool $isValid = false;
 
- /**
-  * Constructor
-  *
-  * @param string|null $login Login
-  */
-  public function __construct(?string $login = null) {
-    if (!empty($login)) {
+  /**
+   * Constructor
+   *
+   * @param string|int|null $key Login or ID
+   */
+  public function __construct(string|int|null $key = null) {
+    if (!empty($key)) {
       try {
-        $query = "SELECT id, login, password, admin FROM " . self::db()->table('users') . " WHERE login = ? LIMIT 1";
+        $query = "SELECT id, login, password, admin FROM " . self::db()->table('users');
+        if (is_int($key)) {
+           $query .= " WHERE id = ? LIMIT 1";
+        } else {
+          $query .= " WHERE login = ? LIMIT 1";
+        }
         $stmt = self::db()->prepare($query);
-        $stmt->execute([ $login ]);
+        $stmt->execute([ $key ]);
         $stmt->bindColumn('id', $this->id, PDO::PARAM_INT);
         $stmt->bindColumn('login', $this->login);
         $stmt->bindColumn('password', $this->hash);
@@ -65,7 +71,7 @@ class User {
    * @param bool $isAdmin Is admin
    * @return int|bool New user id, false on error
    */
-  public static function add(string $login, string $pass, bool $isAdmin = false) {
+  public static function add(string $login, string $pass, bool $isAdmin = false): bool|int {
     $userid = false;
     if (!empty($login) && !empty($pass)) {
       $hash = password_hash($pass, PASSWORD_DEFAULT);
@@ -102,11 +108,7 @@ class User {
         $stmt = self::db()->prepare($query);
         $stmt->execute([ $this->id ]);
         $ret = true;
-        $this->id = null;
-        $this->login = null;
-        $this->hash = null;
         $this->isValid = false;
-        $this->isAdmin = false;
       } catch (PDOException $e) {
         // TODO: handle exception
         syslog(LOG_ERR, $e->getMessage());
