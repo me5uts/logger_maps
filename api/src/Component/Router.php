@@ -52,7 +52,6 @@ use uLogger\Middleware\MiddlewareInterface;
  *
  * /api/users
  * ✓ GET /api/users (get all users; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-ADMIN)
- * GET /api/users/{id} (get user meta; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
  * ✓ GET /api/users/{id}/tracks (get user tracks; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
  * ✓ GET /api/users/{id}/position (get user last position; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
  * ✓ GET /api/users/position (get all users last positions; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-ADMIN)
@@ -64,8 +63,7 @@ use uLogger\Middleware\MiddlewareInterface;
  * /api/tracks
  * ✓ GET /api/tracks/{id} (get track metadata; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
  * ✓ PUT /api/tracks/{id} (update track metadata; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
- * ✓ GET /api/tracks/{id}/positions (track positions; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
- * ✓ GET /api/tracks/{id}/positions?after={positionId} (track positions; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
+ * ✓ GET /api/tracks/{id}/positions[?after={positionId}] (track positions; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
  * ✓ GET /api/tracks/{id}/export?format={gpx|kml} (download exported file; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
  * ✓ POST /api/tracks/import (import uploaded file; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ DELETE /api/tracks/{id} (delete track; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)

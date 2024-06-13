@@ -13,6 +13,7 @@ use uLogger\Component\Auth;
 use uLogger\Entity\Position;
 use uLogger\Entity\Track;
 use uLogger\Entity\User;
+use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
 
@@ -116,7 +117,7 @@ switch ($action) {
     if ($fileUpload) {
       try {
         $image = $fileUpload->add($trackId);
-      } catch (ErrorException|ServerException $e) {
+      } catch (InvalidInputException|ServerException $e) {
         // ignore
       }
     }

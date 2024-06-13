@@ -25,8 +25,7 @@ class User {
   }
 
   /**
-   * GET /users (get all users; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-ADMIN)
-   * FIXME: private access is not handled!
+   * GET /api/users (get all users; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-ADMIN)
    * @return Response
    */
   #[Route(Request::METHOD_GET, '/api/users', [
@@ -36,11 +35,11 @@ class User {
   ])]
   public function getAll(): Response {
     $result = [];
-    $usersArr = Entity\User::getAll();
-    if ($usersArr === false) {
+    $users = Entity\User::getAll();
+    if ($users === false) {
       $result = [ "error" => true ];
-    } elseif (!empty($usersArr)) {
-      foreach ($usersArr as $user) {
+    } elseif (!empty($users)) {
+      foreach ($users as $user) {
         // only load admin status on admin user request
         $isAdmin = $this->auth->isAdmin() ? $user->isAdmin : null;
         $result[] = [ "id" => $user->id, "login" => $user->login, "isAdmin" => $isAdmin ];
@@ -50,7 +49,7 @@ class User {
   }
 
   /**
-   * GET /users/{id}/tracks (get user tracks; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER:ADMIN)
+   * GET /users/{id}/tracks (get user tracks; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
    * @param int $userId
    * @return Response
    */
@@ -60,13 +59,13 @@ class User {
     Auth::ACCESS_PRIVATE => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ]
   ])]
   public function getTracks(int $userId): Response {
-    $tracksArr = Entity\Track::getAll($userId);
+    $tracks = Entity\Track::getAll($userId);
 
     $result = [];
-    if ($tracksArr === false) {
+    if ($tracks === false) {
       $result = [ "error" => true ];
-    } elseif (!empty($tracksArr)) {
-      foreach ($tracksArr as $track) {
+    } elseif (!empty($tracks)) {
+      foreach ($tracks as $track) {
         $result[] = [ "id" => $track->id, "name" => $track->name ];
       }
     }
@@ -74,7 +73,7 @@ class User {
   }
 
   /**
-   * GET /users/{id}/position (get user last position; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER:ADMIN)
+   * GET /users/{id}/position (get user last position; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
    * @param int $userId
    * @return Response
    */
