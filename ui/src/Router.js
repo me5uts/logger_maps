@@ -51,6 +51,7 @@ export default class Router {
     mapVM.init().loadMapAPI(config.mapApi);
     chartVM.init();
     configVM.init();
+    userVM.start();
 
     mapVM.onChanged('markerOver', (id) => {
       if (id !== null) {

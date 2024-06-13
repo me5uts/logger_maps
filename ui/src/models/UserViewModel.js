@@ -17,7 +17,7 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-import { lang as $, auth } from '../Initializer.js';
+import { lang as $, auth, config } from '../Initializer.js';
 import Alert from '../Alert.js';
 import Select from '../Select.js';
 import User from '../User.js';
@@ -66,24 +66,37 @@ export default class UserViewModel extends ViewModel {
   init() {
     this.setObservers(this.state);
     this.bindAll();
-    User.fetchList()
-      .then((_users) => {
-      this.model.userList = _users;
-      if (_users.length) {
-        let userId = _users[0].listValue;
-        if (this.state.history) {
-          userId = this.state.history.userId.toString();
-        } else if (auth.isAuthenticated) {
-          const user = this.model.userList.find((_user) => _user.listValue === auth.user.listValue);
-          if (user) {
-            userId = user.listValue;
-          }
-        }
-        this.model.currentUserId = userId;
-      }
-    })
-      .catch((e) => { Alert.error(`${$._('actionfailure')}\n${e.message}`, e); });
     return this;
+  }
+
+  start() {
+    if (!config.publicTracks && auth.isAuthenticated && !auth.isAdmin) {
+      this.setUpUserList([ auth.user ]);
+    } else {
+      User.fetchList()
+        .then((_users) => {
+          this.setUpUserList(_users);
+        })
+        .catch((e) => {
+          Alert.error(`${$._('actionfailure')}\n${e.message}`, e);
+        });
+    }
+  }
+
+  setUpUserList(_users) {
+    this.model.userList = _users;
+    if (_users.length) {
+      let userId = _users[0].listValue;
+      if (this.state.history) {
+        userId = this.state.history.userId.toString();
+      } else if (auth.isAuthenticated) {
+        const user = this.model.userList.find((_user) => _user.listValue === auth.user.listValue);
+        if (user) {
+          userId = user.listValue;
+        }
+      }
+      this.model.currentUserId = userId;
+    }
   }
 
   /**
