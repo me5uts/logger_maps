@@ -9,7 +9,6 @@ declare(strict_types = 1);
 
 namespace uLogger\Component;
 
-use JetBrains\PhpStorm\NoReturn;
 use JsonException;
 
 class Response {
@@ -225,7 +224,9 @@ class Response {
     echo $responseBody;
   }
 
-  #[NoReturn]
+  /**
+   * @return no-return
+   */
   public function sendAndExit(): void {
     $this->send();
     exit();

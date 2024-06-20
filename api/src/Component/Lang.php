@@ -22,7 +22,7 @@ class Lang {
    *
    * @var array
    */
-  private static $languages = [
+  private static array $languages = [
     "ca" => "Català",
     "cs" => "Čeština",
     "de" => "Deutsch",
@@ -46,14 +46,14 @@ class Lang {
    *
    * @var array
    */
-  private $strings;
+  private array $strings;
   /**
    * Setup script strings
    * Array of key => translation pairs
    *
    * @var array
    */
-  private $setupStrings;
+  private array $setupStrings;
 
   /**
    * Constructor

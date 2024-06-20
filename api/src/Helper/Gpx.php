@@ -10,35 +10,44 @@ declare(strict_types = 1);
 namespace uLogger\Helper;
 
 use uLogger\Component\Response;
-use uLogger\Entity\Config;
-use uLogger\Entity\Position;
-use uLogger\Entity\Track;
+use uLogger\Entity;
+use uLogger\Exception\DatabaseException;
 use uLogger\Exception\GpxParseException;
 use uLogger\Exception\ServerException;
+use uLogger\Mapper;
+use uLogger\Mapper\MapperFactory;
 use XMLWriter;
 
 class Gpx implements FileFormatInterface {
 
   private string $name;
   private int $trackId = 0;
-  private Config $config;
+  private Entity\Config $config;
+  /** @var Mapper\Position */
+  private Mapper\Position $mapperPosition;
+  /** @var Mapper\Track */
+  private Mapper\Track $mapperTrack;
 
   /**
    * @param string $name
-   * @param Config $config
+   * @param Entity\Config $config
+   * @param MapperFactory $factory
    */
-  public function __construct(string $name, Config $config) {
+  public function __construct(string $name, Entity\Config $config, MapperFactory $factory) {
     $this->name = $name;
     $this->config = $config;
+    $this->mapperTrack = $factory->getMapper(Mapper\Track::class);
+    $this->mapperPosition = $factory->getMapper(Mapper\Position::class);
   }
 
   /**
    * TODO: create and return Tracks and Positions
    * @param int $userId Track owner ID
    * @param string $filePath Imported file path
-   * @return Track[] Imported tracks metadata
+   * @return Entity\Track[] Imported tracks metadata
    * @throws GpxParseException
    * @throws ServerException
+   * @throws DatabaseException
    */
   public function import(int $userId, string $filePath): array {
 
@@ -65,66 +74,80 @@ class Gpx implements FileFormatInterface {
 
     $tracks = [];
     foreach ($gpx->trk as $trk) {
-      $trackName = empty($trk->name) ? $this->name : (string) $trk->name;
-      $metaName = empty($gpx->metadata->name) ? null : (string) $gpx->metadata->name;
-      $trackId = Track::add($userId, $trackName, $metaName);
-      if ($trackId === false) {
-        throw new ServerException("servererror");
-      }
-      $track = new Track($trackId);
-      $posCnt = 0;
 
-      foreach ($trk->trkseg as $segment) {
-        foreach ($segment->trkpt as $point) {
-          if (!isset($point["lat"], $point["lon"])) {
-            $track->delete();
-            throw new GpxParseException("iparsefailure");
+      $trackName = empty($trk->name) ? $this->name : (string) $trk->name;
+      $trackComment = empty($gpx->metadata->name) ? null : (string) $gpx->metadata->name;
+      $track = new Entity\Track($userId, $trackName, $trackComment);
+
+      try {
+        $this->mapperTrack->create($track);
+
+        $posCnt = 0;
+        foreach ($trk->trkseg as $segment) {
+          foreach ($segment->trkpt as $point) {
+            if (!isset($point["lat"], $point["lon"])) {
+              $this->deleteTrack($track);
+              throw new GpxParseException("iparsefailure");
+            }
+            $time = isset($point->time) ? strtotime((string) $point->time) : 1;
+            $altitude = isset($point->ele) ? (double) $point->ele : null;
+            $comment = !empty($point->desc) ? (string) $point->desc : null;
+            $speed = null;
+            $bearing = null;
+            $accuracy = null;
+            $provider = "gps";
+            if (!empty($point->extensions)) {
+              // parse ulogger extensions
+              $ext = $point->extensions->children('ulogger', true);
+              if (count($ext->speed)) {
+                $speed = (double) $ext->speed;
+              }
+              if (count($ext->bearing)) {
+                $bearing = (double) $ext->bearing;
+              }
+              if (count($ext->accuracy)) {
+                $accuracy = (int) $ext->accuracy;
+              }
+              if (count($ext->provider)) {
+                $provider = (string) $ext->provider;
+              }
+            }
+            $position = new Entity\Position(
+              timestamp: $time,
+              userId: $userId,
+              trackId: $track->id,
+              latitude: (double) $point["lat"],
+              longitude: (double) $point["lon"]
+            );
+            $position->altitude = $altitude;
+            $position->speed = $speed;
+            $position->bearing = $bearing;
+            $position->accuracy = $accuracy;
+            $position->provider = $provider;
+            $position->comment = $comment;
+            $this->mapperPosition->create($position);
+            $posCnt++;
           }
-          $time = isset($point->time) ? strtotime((string) $point->time) : 1;
-          $altitude = isset($point->ele) ? (double) $point->ele : null;
-          $comment = !empty($point->desc) ? (string) $point->desc : null;
-          $speed = null;
-          $bearing = null;
-          $accuracy = null;
-          $provider = "gps";
-          if (!empty($point->extensions)) {
-            // parse ulogger extensions
-            $ext = $point->extensions->children('ulogger', true);
-            if (count($ext->speed)) {
-              $speed = (double) $ext->speed;
-            }
-            if (count($ext->bearing)) {
-              $bearing = (double) $ext->bearing;
-            }
-            if (count($ext->accuracy)) {
-              $accuracy = (int) $ext->accuracy;
-            }
-            if (count($ext->provider)) {
-              $provider = (string) $ext->provider;
-            }
-          }
-          $ret = $track->addPosition($userId,
-            $time, (double) $point["lat"], (double) $point["lon"], $altitude,
-            $speed, $bearing, $accuracy, $provider, $comment);
-          if ($ret === false) {
-            $track->delete();
-            throw new ServerException("servererror");
-          }
-          $posCnt++;
         }
-      }
-      if ($posCnt) {
-        array_unshift($tracks, $track);
-      } else {
-        $track->delete();
+        if ($posCnt) {
+          array_unshift($tracks, $track);
+        } else {
+          $this->deleteTrack($track);
+        }
+      } catch (DatabaseException $e) {
+        try {
+          $this->deleteTrack($track);
+        } catch (DatabaseException) { /* ignore */ }
+        throw new DatabaseException($e->getMessage());
       }
     }
+
 
     return $tracks;
   }
 
   /**
-   * @param Position[] $positions
+   * @param Entity\Position[] $positions
    * @return string GPX file
    */
   public function export(array $positions): string {
@@ -200,5 +223,18 @@ class Gpx implements FileFormatInterface {
 
   public function getMimeType(): string {
     return Response::TYPE_GPX;
+  }
+
+  /**
+   * @param Entity\Track $track
+   * @return void
+   * @throws DatabaseException
+   * @throws ServerException
+   */
+  private function deleteTrack(Entity\Track $track): void {
+    if ($track->id) {
+      $this->mapperPosition->deleteAll($track->userId, $track->id);
+      $this->mapperTrack->delete($track);
+    }
   }
 }

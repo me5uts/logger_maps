@@ -10,10 +10,10 @@ declare(strict_types = 1);
 namespace uLogger\Entity;
 
 class Layer {
-  public $id;
-  public $name;
-  public $url;
-  public $priority;
+  public int $id;
+  public string $name;
+  public string $url;
+  public int $priority;
 
   /**
    * Layer constructor.

@@ -9,7 +9,7 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
-use uLogger\Component\Auth;
+use uLogger\Component\Session;
 use uLogger\Component\FileUpload;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
@@ -23,35 +23,53 @@ use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Gpx;
 use uLogger\Helper\Kml;
+use uLogger\Mapper;
+use uLogger\Mapper\MapperFactory;
 
 class Track {
 
-  private Auth $auth;
+  private Session $session;
   private Config $config;
+  /** @var Mapper\Position */
+  private Mapper\Position $mapperPosition;
+  /** @var Mapper\Track */
+  private Mapper\Track $mapperTrack;
+  private MapperFactory $mapperFactory;
 
   /**
-   * @param Auth $auth
+   * @param MapperFactory $mapperFactory
+   * @param Session $session
    * @param Config $config
    */
-  public function __construct(Auth $auth, Config $config) {
-    $this->auth = $auth;
+  public function __construct(Mapper\MapperFactory $mapperFactory, Session $session, Entity\Config $config) {
+    $this->session = $session;
     $this->config = $config;
+    $this->mapperTrack = $mapperFactory->getMapper(Mapper\Track::class);
+    $this->mapperPosition = $mapperFactory->getMapper(Mapper\Position::class);
+    $this->mapperFactory = $mapperFactory;
   }
+
   /**
    * GET /api/tracks/{id} (get track metadata; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER:ADMIN)
    * @param int $trackId
    * @return Response
    */
   #[Route(Request::METHOD_GET, '/api/tracks/{trackId}', [
-    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
-    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
-    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ]
+    Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
+    Session::ACCESS_PUBLIC => [ Session::ALLOW_AUTHORIZED ],
+    Session::ACCESS_PRIVATE => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ]
   ])]
   public function get(int $trackId): Response {
-    $track = new Entity\Track($trackId);
-    if (!$track->isValid) {
+    try {
+      $track = $this->mapperTrack->fetch($trackId);
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (NotFoundException) {
       return Response::notFound();
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
     }
+
     $result = [
       "id" => $track->id,
       "name" => $track->name,
@@ -67,13 +85,13 @@ class Track {
    * @param Entity\Track $track
    * @return Response
    */
-  #[Route(Request::METHOD_PUT, '/api/tracks/{trackId}', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ] ])]
+  #[Route(Request::METHOD_PUT, '/api/tracks/{trackId}', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function update(int $trackId, Entity\Track $track): Response {
     if ($trackId !== $track->id) {
       return Response::unprocessableError("Wrong track id");
     }
     try {
-      $track->update();
+      $this->mapperTrack->update($track);
     } catch (DatabaseException $e) {
       return Response::databaseError($e->getMessage());
     } catch (InvalidInputException $e) {
@@ -89,16 +107,19 @@ class Track {
    * @param int $trackId
    * @return Response
    */
-  #[Route(Request::METHOD_DELETE, '/api/tracks/{trackId}', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ] ])]
+  #[Route(Request::METHOD_DELETE, '/api/tracks/{trackId}', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function delete(int $trackId): Response {
 
-    $track = new Entity\Track($trackId);
-    if (!$track->isValid) {
+    try {
+      $track = $this->mapperTrack->fetch($trackId);
+      $this->mapperPosition->deleteAll($track->userId, $track->id);
+      $this->mapperTrack->delete($track);
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (NotFoundException) {
       return Response::notFound();
-    }
-
-    if ($track->delete() === false) {
-      return Response::internalServerError("Track delete failed");
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
     }
 
     return Response::success();
@@ -109,13 +130,13 @@ class Track {
    * @param FileUpload $gpxUpload
    * @return Response
    */
-  #[Route(Request::METHOD_POST, '/api/tracks/import', [ Auth::ACCESS_ALL => [ Auth::ALLOW_AUTHORIZED ] ])]
+  #[Route(Request::METHOD_POST, '/api/tracks/import', [ Session::ACCESS_ALL => [ Session::ALLOW_AUTHORIZED ] ])]
   public function import(FileUpload $gpxUpload): Response {
     $gpxFile = $gpxUpload->getTmpName();
     $gpxName = basename($gpxUpload->getName());
-    $gpx = new Gpx($gpxName, $this->config);
+    $gpx = new Gpx($gpxName, $this->config, $this->mapperFactory);
     try {
-      $result = $gpx->import($this->auth->user->id, $gpxFile);
+      $result = $gpx->import($this->session->user->id, $gpxFile);
       return Response::success($result);
     } catch (GpxParseException $e) {
       return Response::unprocessableError($e->getMessage());
@@ -133,17 +154,23 @@ class Track {
    * @return Response
    */
   #[Route(Request::METHOD_GET, '/api/tracks/{trackId}/export', [
-    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
-    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
-    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ],
+    Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
+    Session::ACCESS_PUBLIC => [ Session::ALLOW_AUTHORIZED ],
+    Session::ACCESS_PRIVATE => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ],
     ]
   )]
   public function export(int $trackId, string $format): Response {
-    $track = new Entity\Track($trackId);
-    if (!$track->isValid) {
+
+    try {
+      $track = $this->mapperTrack->fetch($trackId);
+      $positions = $this->mapperPosition->findAll($trackId);
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
+    } catch (NotFoundException) {
       return Response::notFound();
     }
-    $positions = Entity\Position::getAll(null, $trackId);
     if (empty($positions)) {
       return Response::notFound();
     }

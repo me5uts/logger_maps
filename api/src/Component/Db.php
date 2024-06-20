@@ -17,43 +17,37 @@ use uLogger\Helper\Utils;
  * PDO wrapper
  */
 class Db extends PDO {
-  /**
-   * Singleton instance
-   *
-   * @var Db Object instance
-   */
-  protected static $instance;
 
   /**
    * Table names
    *
    * @var array Array of names
    */
-  protected static $tables;
+  protected static array $tables;
 
   /**
    * Database driver name
    *
    * @var string Driver
    */
-  protected static $driver;
+  protected static string $driver;
 
   /**
    * @var string Database DSN
    */
-  private static $dbdsn = "";
+  private static string $dsn = "";
   /**
    * @var string Database user
    */
-  private static $dbuser = "";
+  private static string $user = "";
   /**
    * @var string Database pass
    */
-  private static $dbpass = "";
+  private static string $password = "";
   /**
    * @var string Optional table names prefix, eg. "ulogger_"
    */
-  private static $dbprefix = "";
+  private static string $prefix = "";
 
     /**
    * PDO constuctor
@@ -84,7 +78,7 @@ class Db extends PDO {
    */
   private function initTables(): void {
     self::$tables = [];
-    $prefix = preg_replace('/[^a-z0-9_]/i', '', self::$dbprefix);
+    $prefix = preg_replace('/[^a-z0-9_]/i', '', self::$prefix);
     self::$tables['positions'] = $prefix . "positions";
     self::$tables['tracks'] = $prefix . "tracks";
     self::$tables['users'] = $prefix . "users";
@@ -92,17 +86,9 @@ class Db extends PDO {
     self::$tables['ol_layers'] = $prefix . "ol_layers";
   }
 
-  /**
-   * Returns singleton instance
-   *
-   * @return Db Singleton instance
-   */
-  public static function getInstance(): Db {
-    if (!self::$instance) {
-      self::getConfig();
-      self::$instance = new self(self::$dbdsn, self::$dbuser, self::$dbpass);
-    }
-    return self::$instance;
+  public static function createFromConfig(): Db {
+    self::getConfig();
+    return new self(self::$dsn, self::$user, self::$password);
   }
 
   /**
@@ -117,16 +103,16 @@ class Db extends PDO {
     }
     include($configFile);
     if (isset($dbdsn)) {
-      self::$dbdsn = self::normalizeDsn($dbdsn);
+      self::$dsn = self::normalizeDsn($dbdsn);
     }
     if (isset($dbuser)) {
-      self::$dbuser = $dbuser;
+      self::$user = $dbuser;
     }
     if (isset($dbpass)) {
-      self::$dbpass = $dbpass;
+      self::$password = $dbpass;
     }
     if (isset($dbprefix)) {
-      self::$dbprefix = $dbprefix;
+      self::$prefix = $dbprefix;
     }
   }
 
@@ -256,21 +242,13 @@ class Db extends PDO {
    */
   public static function getDbName(string $dsn): string {
     $name = "";
-    if (strpos($dsn, ":") !== false) {
+    if (str_contains($dsn, ":")) {
       [$scheme, $dsnWithoutScheme] = explode(":", $dsn, 2);
-      switch ($scheme) {
-        case "sqlite":
-        case "sqlite2":
-        case "sqlite3":
-          $pattern = "/(.+)/";
-          break;
-        case "pgsql":
-          $pattern = "/dbname=([^; ]+)/";
-          break;
-        default:
-          $pattern = "/dbname=([^;]+)/";
-          break;
-      }
+      $pattern = match ($scheme) {
+        "sqlite", "sqlite2", "sqlite3" => "/(.+)/",
+        "pgsql" => "/dbname=([^; ]+)/",
+        default => "/dbname=([^;]+)/",
+      };
       $result = preg_match($pattern, $dsnWithoutScheme, $matches);
       if ($result === 1) {
         $name = $matches[1];

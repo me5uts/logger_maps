@@ -151,75 +151,75 @@ class Utils {
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function postFloat(string $name, $default = null) {
+  public static function postFloat(string $name, mixed $default = null): mixed {
     return self::requestValue($name, $default, INPUT_POST, FILTER_VALIDATE_FLOAT);
   }
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function postPass(string $name, $default = null) {
+  public static function postPass(string $name, mixed $default = null): mixed {
     return self::requestValue($name, $default, INPUT_POST);
   }
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function postString(string $name, $default = null) {
+  public static function postString(string $name, mixed $default = null): mixed {
     return self::requestString($name, $default, INPUT_POST);
   }
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function getString(string $name, $default = null) {
+  public static function getString(string $name, mixed $default = null): mixed {
     return self::requestString($name, $default, INPUT_GET);
   }
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function postBool(string $name, $default = null) {
+  public static function postBool(string $name, mixed $default = null): mixed {
     $input = filter_input(INPUT_POST, $name, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
     return $input !== null ? (bool) $input : $default;
   }
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function getBool(string $name, $default = null) {
+  public static function getBool(string $name, mixed $default = null): mixed {
     $input = filter_input(INPUT_GET, $name, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
     return $input !== null ? (bool) $input : $default;
   }
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function postInt(string $name, $default = null) {
+  public static function postInt(string $name, mixed $default = null): mixed {
     return self::requestInt($name, $default, INPUT_POST);
   }
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function getInt(string $name, $default = null) {
+  public static function getInt(string $name, mixed $default = null): mixed {
     return self::requestInt($name, $default, INPUT_GET);
   }
 
@@ -240,10 +240,10 @@ class Utils {
 
   /**
    * @param string $name
-   * @param mixed $default
+   * @param mixed|null $default
    * @return mixed
    */
-  public static function postArray(string $name, $default = null) {
+  public static function postArray(string $name, mixed $default = null): mixed {
     return ((isset($_POST[$name]) && is_array($_POST[$name])) ? $_POST[$name] : $default);
   }
 
@@ -262,10 +262,10 @@ class Utils {
   /**
    * @param string $name
    * @param mixed $default
-   * @param $type
+   * @param int $type
    * @return mixed|string
    */
-  private static function requestString(string $name, $default, $type) {
+  private static function requestString(string $name, mixed $default, int $type): mixed {
     if (is_string(($val = self::requestValue($name, $default, $type)))) {
       return trim($val);
     }
@@ -278,7 +278,7 @@ class Utils {
    * @param int $type
    * @return mixed|int
    */
-  private static function requestInt(string $name, $default, int $type) {
+  private static function requestInt(string $name, mixed $default, int $type): mixed {
     if (is_float(($val = self::requestValue($name, $default, $type, FILTER_VALIDATE_FLOAT)))) {
       return (int) round($val);
     }
@@ -292,7 +292,7 @@ class Utils {
    * @param int $filters
    * @return mixed
    */
-  private static function requestValue(string $name, $default, int $type, int $filters = FILTER_DEFAULT) {
+  private static function requestValue(string $name, mixed $default, int $type, int $filters = FILTER_DEFAULT): mixed {
     $input = filter_input($type, $name, $filters);
     if ($input !== false && $input !== null) {
       return $input;

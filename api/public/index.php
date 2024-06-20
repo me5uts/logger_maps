@@ -9,25 +9,32 @@ declare(strict_types = 1);
 
 require_once('../vendor/autoload.php');
 
-use uLogger\Component\Auth;
+use uLogger\Component\Db;
+use uLogger\Component\ErrorHandler;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Router;
-use uLogger\Entity\Config;
+use uLogger\Component\Session;
+use uLogger\Entity;
+use uLogger\Mapper\MapperFactory;
 use uLogger\Middleware;
 
-$config = Config::getInstance();
-$auth = new Auth();
-
-$accessControl = new Middleware\AccessControl($auth);
-$request = new Request();
-$request->loadFromServer();
-
-$router = new Router();
-$router->addMiddleware($accessControl);
-$router->setupRoutes($auth, $config);
-
 try {
+  ErrorHandler::init();
+
+  $mapperFactory = new MapperFactory(Db::createFromConfig());
+  $config = Entity\Config::createFromMapper($mapperFactory);
+  $session = new Session($mapperFactory, $config);
+  $session->init();
+
+  $accessControl = new Middleware\AccessControl($mapperFactory, $session);
+  $request = new Request();
+  $request->loadFromServer();
+
+  $router = new Router();
+  $router->addMiddleware($accessControl);
+
+  $router->setupRoutes($session, $config, $mapperFactory);
   $response = $router->dispatch($request);
 } catch (Exception $e) {
   $response = Response::internalServerError($e->getMessage());

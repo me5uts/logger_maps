@@ -9,14 +9,19 @@ declare(strict_types = 1);
 
 namespace uLogger\Component;
 
-use uLogger\Entity\Config;
-use uLogger\Entity\User;
+use uLogger\Entity;
+use uLogger\Exception\DatabaseException;
+use uLogger\Exception\InvalidInputException;
+use uLogger\Exception\NotFoundException;
+use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
+use uLogger\Mapper\MapperFactory;
+use uLogger\Mapper;
 
 /**
  * Authentication
  */
-class Auth {
+class Session {
 
   public const ACCESS_OPEN = "access open";
   public const ACCESS_PUBLIC = "access public";
@@ -27,18 +32,33 @@ class Auth {
   public const ALLOW_OWNER = "allow owner";
   public const ALLOW_ADMIN = "allow admin";
 
+  /** @var Mapper\User */
+  private Mapper\User $userMapper;
+  private Entity\Config $config;
   /** @var bool Is user authenticated */
-  private $isAuthenticated = false;
-  /** @var null|User */
-  public $user;
+  private bool $isAuthenticated = false;
+  /** @var null|Entity\User */
+  public ?Entity\User $user = null;
 
-  public function __construct() {
+  public function __construct(MapperFactory $mapperFactory, Entity\Config $config) {
+    $this->userMapper = $mapperFactory->getMapper(Mapper\User::class);
+    $this->config = $config;
+  }
+
+  /**
+   * @return void
+   * @throws DatabaseException
+   * @throws ServerException
+   */
+  public function init(): void {
+
     $this->sessionStart();
 
-    $user = User::getFromSession();
-    if ($user->isValid) {
+    try {
+      $userId = $this->userMapper->getFromSession();
+      $user = $this->userMapper->fetch($userId);
       $this->setAuthenticated($user);
-    }
+    } catch (NotFoundException) { /* ignored */ }
   }
 
   /**
@@ -53,10 +73,10 @@ class Auth {
    * @return string
    */
   public function getAccessType(): string {
-    if (!Config::getInstance()->requireAuthentication) {
+    if (!$this->config->requireAuthentication) {
       return self::ACCESS_OPEN;
     }
-    elseif (Config::getInstance()->requireAuthentication && Config::getInstance()->publicTracks) {
+    elseif ($this->config->requireAuthentication && $this->config->publicTracks) {
       return self::ACCESS_PUBLIC;
     }
     return self::ACCESS_PRIVATE;
@@ -64,17 +84,18 @@ class Auth {
 
   /**
    * Update user instance stored in session
+   * @throws InvalidInputException
    */
   public function updateSession(): void {
     if ($this->isAuthenticated()) {
-      $this->user->storeInSession();
+      $this->userMapper->storeInSession($this->user);
     }
   }
 
   /**
    * Is user authenticated
    *
-   * @return boolean True if authenticated, false otherwise
+   * @return bool True if authenticated, false otherwise
    */
   public function isAuthenticated(): bool {
     return $this->isAuthenticated;
@@ -83,7 +104,7 @@ class Auth {
   /**
    * Is authenticated user admin
    *
-   * @return boolean True if admin, false otherwise
+   * @return bool True if admin, false otherwise
    */
   public function isAdmin(): bool {
     return ($this->isAuthenticated && $this->user->isAdmin);
@@ -128,10 +149,10 @@ class Auth {
   /**
    * Mark as authenticated, set user
    *
-   * @param User $user
+   * @param Entity\User $user
    * @return void
    */
-  private function setAuthenticated(User $user): void {
+  private function setAuthenticated(Entity\User $user): void {
     $this->isAuthenticated = true;
     $this->user = $user;
   }
@@ -140,31 +161,24 @@ class Auth {
    * Check valid pass for given login
    *
    * @param string $login
-   * @param string $pass
-   * @return boolean True if valid
+   * @param string $password
+   * @return bool True if valid
+   * @throws DatabaseException
+   * @throws ServerException
+   * @throws InvalidInputException
    */
-  public function checkLogin(string $login, string $pass): bool {
-    if (!empty($login) && !empty($pass)) {
-      $user = new User($login);
-      if ($user->isValid && $user->validPassword($pass)) {
-        $this->setAuthenticated($user);
-        $this->sessionCleanup();
-        $user->storeInSession();
-        return true;
-      }
-    }
-    return false;
-  }
+  public function checkLogin(string $login, string $password): bool {
+      try {
+        $user = $this->userMapper->fetchByLogin($login);
+        if ($user->validPassword($password)) {
+          $this->setAuthenticated($user);
+          $this->sessionCleanup();
+          $this->userMapper->storeInSession($user);
+          return true;
+        }
+      } catch (NotFoundException) { /* ignored */ }
 
-  /**
-   * Log out with redirect
-   *
-   * @param string $path URL path (without leading slash)
-   * @return void
-   */
-  public function logOutWithRedirect(string $path = ""): void {
-    $this->sessionEnd();
-    $this->exitWithRedirect($path);
+    return false;
   }
 
   /**
@@ -190,52 +204,11 @@ class Auth {
    * Send 401 headers and exit
    *
    * @param string $message
-   * @return void
+   * @return no-return
    */
   public function exitWithUnauthorized(string $message = "Unauthorized"): void {
     $this->sendUnauthorizedHeader();
     Utils::exitWithError($message);
-  }
-
-  /**
-   * Redirect browser and exit
-   *
-   * @param string $path Redirect URL path (without leading slash)
-   * @return void
-   */
-  public function exitWithRedirect(string $path = ""): void {
-    $location = Utils::getBaseUrl() . $path;
-    header("Location: $location");
-    exit();
-  }
-
-  /**
-   * Check session user has RW access to resource owned by given user
-   *
-   * @param int $ownerId
-   * @return bool True if has access
-   */
-  public function hasReadWriteAccess(int $ownerId): bool {
-    return $this->isAuthenticated() && ($this->isAdmin() || $this->user->id === $ownerId);
-  }
-
-  /**
-   * Check session user has RO access to resource owned by given user
-   *
-   * @param int $ownerId
-   * @return bool True if has access
-   */
-  public function hasReadAccess(int $ownerId): bool {
-    return $this->hasReadWriteAccess($ownerId) || $this->hasPublicReadAccess();
-  }
-
-  /**
-   * Check session user has RO access to all resources
-
-   * @return bool True if has access
-   */
-  public function hasPublicReadAccess(): bool {
-    return ($this->isAuthenticated() || !Config::getInstance()->requireAuthentication) && Config::getInstance()->publicTracks;
   }
 
 }

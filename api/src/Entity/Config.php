@@ -9,22 +9,18 @@ declare(strict_types = 1);
 
 namespace uLogger\Entity;
 
-use PDO;
-use PDOException;
-use uLogger\Component\Db;
-use uLogger\Entity\Layer;
+use uLogger\Exception\DatabaseException;
+use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
+use uLogger\Mapper;
+use uLogger\Mapper\Column;
+use uLogger\Mapper\MapperFactory;
 
 /**
  * Handles config values
  */
 class Config {
-  /**
-   * Singleton instance
-   *
-   * @var Config|null Object instance
-   */
-  private static ?Config $instance = null;
+
   /**
    * @var string Version number
    */
@@ -33,40 +29,47 @@ class Config {
   /**
    * @var string Default map drawing framework
    */
+  #[Column(name: "map_api")]
   public string $mapApi = "openlayers";
 
   /**
-   * @var string|null Google maps key
+   * @var string|null Google Maps key
    */
-  public ?string $googleKey;
+  #[Column(name: "google_key")]
+  public ?string $googleKey = null;
 
   /**
-   * @var Layer[] Openlayers extra map layers
+   * @var Layer[] OpenLayers extra map layers
    */
   public array $olLayers = [];
 
   /**
    * @var float Default latitude for initial map
    */
+  #[Column(name: "latitude")]
   public float $initLatitude = 52.23;
   /**
    * @var float Default longitude for initial map
    */
+  #[Column(name: "longitude")]
   public float $initLongitude = 21.01;
 
   /**
    * @var bool Require login/password authentication
    */
+  #[Column(name: "require_auth")]
   public bool $requireAuthentication = true;
 
   /**
    * @var bool All users tracks are visible to authenticated user
    */
+  #[Column(name: "public_tracks")]
   public bool $publicTracks = false;
 
   /**
    * @var int Minimum required length of user password
    */
+  #[Column(name: "pass_lenmin")]
   public int $passLenMin = 10;
 
   /**
@@ -76,245 +79,100 @@ class Config {
    * 2 = require mixed case and numbers
    * 3 = require mixed case, numbers and non-alphanumeric characters
    */
+  #[Column(name: "pass_strength")]
   public int $passStrength = 2;
 
   /**
    * @var int Default interval in seconds for live auto reload
    */
+  #[Column(name: "interval_seconds")]
   public int $interval = 10;
 
   /**
    * @var string Default language code
    */
+  #[Column]
   public string $lang = "en";
 
   /**
    * @var string Default units
    */
+  #[Column]
   public string $units = "metric";
 
   /**
    * @var int Stroke weight
    */
+  #[Column(name: "stroke_weight")]
   public int $strokeWeight = 2;
   /**
    * @var string Stroke color
    */
+  #[Column(name: "stroke_color")]
   public string $strokeColor = "#ff0000";
   /**
    * @var float Stroke opacity
    */
+  #[Column(name: "stroke_opacity")]
   public float $strokeOpacity = 1.0;
   /**
    * @var string Stroke color
    */
+  #[Column(name: "color_normal")]
   public string $colorNormal = "#ffffff";
   /**
    * @var string Stroke color
    */
+  #[Column(name: "color_start")]
   public string $colorStart = "#55b500";
   /**
    * @var string Stroke color
    */
+  #[Column(name: "color_stop")]
   public string $colorStop = "#ff6a00";
   /**
    * @var string Stroke color
    */
+  #[Column(name: "color_extra")]
   public string $colorExtra = "#cccccc";
   /**
    * @var string Stroke color
    */
+  #[Column(name: "color_hilite")]
   public string $colorHilite = "#feff6a";
   /**
    * @var int Maximum size of uploaded files in bytes.
    * Will be adjusted to system maximum upload size
    */
+  #[Column(name: "upload_maxsize")]
   public int $uploadMaxSize = 5242880;
-
-  public function __construct(bool $useDatabase = true) {
-    if ($useDatabase) {
-      $this->setFromDatabase();
-    }
-    $this->setFromCookies();
-  }
-
-  /**
-   * Returns singleton instance
-   *
-   * @return Config Singleton instance
-   */
-  public static function getInstance(): Config {
-    if (!self::$instance) {
-      self::$instance = new self();
-    }
-    return self::$instance;
-  }
+//
+//  public function __construct(bool $useDatabase = true) {
+//    if ($useDatabase) {
+//      $this->setFromDatabase();
+//    }
+//    $this->setFromCookies();
+//  }
 
   /**
-   * Returns singleton instance
-   *
-   * @return Config Singleton instance
+   * @throws DatabaseException
+   * @throws ServerException
    */
-  public static function getOfflineInstance(): Config {
-    if (!self::$instance) {
-      self::$instance = new self(false);
-    }
-    return self::$instance;
+  public static function createFromMapper(MapperFactory $factory): Config {
+    /** @var Mapper\Config $mapper */
+    $mapper = $factory->getMapper(Mapper\Config::class);
+    return $mapper->fetch();
   }
 
-  /**
-   * Get db instance
-   *
-   * @return Db instance
-   */
-  private static function db(): Db {
-    return Db::getInstance();
-  }
-
-  /**
-   * Read config values from database
-   */
-  public function setFromDatabase(): void {
-    try {
-      $query = "SELECT name, value FROM " . self::db()->table("config");
-      $result = self::db()->query($query);
-      $arr = $result->fetchAll(PDO::FETCH_KEY_PAIR);
-      $this->setFromArray(array_map([ $this, "unserialize" ], $arr));
-      $this->setLayersFromDatabase();
-      if (!$this->requireAuthentication) {
-        // tracks must be public if we don't require authentication
-        $this->publicTracks = true;
-      }
-    } catch (PDOException $e) {
-      // TODO: handle exception
-      syslog(LOG_ERR, $e->getMessage());
-    }
-  }
-
-  /**
-   * Unserialize data from database
-   * @param object|string $data Resource returned by pgsql, string otherwise
-   * @return mixed
-   */
-  private function unserialize($data) {
-    if (is_resource($data)) {
-      $data = stream_get_contents($data);
-    }
-    return unserialize($data, ['allowed_classes' => false]);
-  }
-
-  /**
-   * Save config values to database
-   * @return bool True on success, false otherwise
-   */
-  public function save(): bool {
-    $ret = false;
-    try {
-      // PDO::PARAM_LOB doesn't work here with pgsql, why?
-      $placeholder = self::db()->lobPlaceholder();
-      $values = [
-        ["'color_extra'", $placeholder],
-        ["'color_hilite'", $placeholder],
-        ["'color_normal'", $placeholder],
-        ["'color_start'", $placeholder],
-        ["'color_stop'", $placeholder],
-        ["'google_key'", $placeholder],
-        ["'latitude'", $placeholder],
-        ["'longitude'", $placeholder],
-        ["'interval_seconds'", $placeholder],
-        ["'lang'", $placeholder],
-        ["'map_api'", $placeholder],
-        ["'pass_lenmin'", $placeholder],
-        ["'pass_strength'", $placeholder],
-        ["'public_tracks'", $placeholder],
-        ["'require_auth'", $placeholder],
-        ["'stroke_color'", $placeholder],
-        ["'stroke_opacity'", $placeholder],
-        ["'stroke_weight'", $placeholder],
-        ["'units'", $placeholder],
-        ["'upload_maxsize'", $placeholder]
-      ];
-      $query = self::db()->insertOrReplace("config", [ "name", "value" ], $values, "name", "value");
-      $stmt = self::db()->prepare($query);
-      $params = [
-        $this->colorExtra,
-        $this->colorHilite,
-        $this->colorNormal,
-        $this->colorStart,
-        $this->colorStop,
-        $this->googleKey,
-        $this->initLatitude,
-        $this->initLongitude,
-        $this->interval,
-        $this->lang,
-        $this->mapApi,
-        $this->passLenMin,
-        $this->passStrength,
-        $this->publicTracks,
-        $this->requireAuthentication,
-        $this->strokeColor,
-        $this->strokeOpacity,
-        $this->strokeWeight,
-        $this->units,
-        $this->uploadMaxSize
-      ];
-
-      $stmt->execute(array_map("serialize", $params));
-      $this->saveLayers();
-      $ret = true;
-    } catch (PDOException $e) {
-      // TODO: handle exception
-      syslog(LOG_ERR, $e->getMessage());
-    }
-    return $ret;
-  }
-
-  /**
-   * Truncate ol_layers table
-   * @throws PDOException
-   */
-  private function deleteLayers(): void {
-    $query = "DELETE FROM " . self::db()->table("ol_layers");
-    self::db()->exec($query);
-  }
-
-  /**
-   * Save layers to database
-   * @throws PDOException
-   */
-  private function saveLayers(): void {
-    $this->deleteLayers();
-    if (!empty($this->olLayers)) {
-      $query = "INSERT INTO " . self::db()->table("ol_layers") . " (id, name, url, priority) VALUES (?, ?, ?, ?)";
-      $stmt = self::db()->prepare($query);
-      foreach ($this->olLayers as $layer) {
-        $stmt->execute([ $layer->id, $layer->name, $layer->url, $layer->priority]);
-      }
-    }
-  }
-
-  /**
-   * Read config values from database
-   * @throws PDOException
-   */
-  private function setLayersFromDatabase(): void {
-    $this->olLayers = [];
-    $query = "SELECT id, name, url, priority FROM " . self::db()->table('ol_layers');
-    $result = self::db()->query($query);
-    while ($row = $result->fetch()) {
-      $this->olLayers[] = new Layer((int) $row["id"], $row["name"], $row["url"], (int) $row["priority"]);
-    }
-  }
-
-  /**
-   * Read config values stored in cookies
-   */
-  private function setFromCookies(): void {
-    if (isset($_COOKIE["ulogger_api"])) { $this->mapApi = $_COOKIE["ulogger_api"]; }
-    if (isset($_COOKIE["ulogger_lang"])) { $this->lang = $_COOKIE["ulogger_lang"]; }
-    if (isset($_COOKIE["ulogger_units"])) { $this->units = $_COOKIE["ulogger_units"]; }
-    if (isset($_COOKIE["ulogger_interval"])) { $this->interval = $_COOKIE["ulogger_interval"]; }
-  }
+//  /**
+//   * Read config values stored in cookies
+//   */
+//  private function setFromCookies(): void {
+//    if (isset($_COOKIE["ulogger_api"])) { $this->mapApi = $_COOKIE["ulogger_api"]; }
+//    if (isset($_COOKIE["ulogger_lang"])) { $this->lang = $_COOKIE["ulogger_lang"]; }
+//    if (isset($_COOKIE["ulogger_units"])) { $this->units = $_COOKIE["ulogger_units"]; }
+//    if (isset($_COOKIE["ulogger_interval"])) { $this->interval = $_COOKIE["ulogger_interval"]; }
+//  }
 
 
   /**
@@ -361,7 +219,7 @@ class Config {
    */
   public function setFromArray(array $arr): void {
 
-    if (isset($arr['map_api']) && !empty($arr['map_api'])) {
+    if (!empty($arr['map_api'])) {
       $this->mapApi = $arr['map_api'];
     }
     if (isset($arr['latitude']) && is_numeric($arr['latitude'])) {
@@ -388,42 +246,46 @@ class Config {
     if (isset($arr['interval_seconds']) && is_numeric($arr['interval_seconds'])) {
       $this->interval = (int) $arr['interval_seconds'];
     }
-    if (isset($arr['lang']) && !empty($arr['lang'])) {
+    if (!empty($arr['lang'])) {
       $this->lang = $arr['lang'];
     }
-    if (isset($arr['units']) && !empty($arr['units'])) {
+    if (!empty($arr['units'])) {
       $this->units = $arr['units'];
     }
     if (isset($arr['stroke_weight']) && is_numeric($arr['stroke_weight'])) {
       $this->strokeWeight = (int) $arr['stroke_weight'];
     }
-    if (isset($arr['stroke_color']) && !empty($arr['stroke_color'])) {
+    if (!empty($arr['stroke_color'])) {
       $this->strokeColor = $arr['stroke_color'];
     }
     if (isset($arr['stroke_opacity']) && is_numeric($arr['stroke_opacity'])) {
       $this->strokeOpacity = (float) $arr['stroke_opacity'];
     }
-    if (isset($arr['color_normal']) && !empty($arr['color_normal'])) {
+    if (!empty($arr['color_normal'])) {
       $this->colorNormal = $arr['color_normal'];
     }
-    if (isset($arr['color_start']) && !empty($arr['color_start'])) {
+    if (!empty($arr['color_start'])) {
       $this->colorStart = $arr['color_start'];
     }
-    if (isset($arr['color_stop']) && !empty($arr['color_stop'])) {
+    if (!empty($arr['color_stop'])) {
       $this->colorStop = $arr['color_stop'];
     }
-    if (isset($arr['color_extra']) && !empty($arr['color_extra'])) {
+    if (!empty($arr['color_extra'])) {
       $this->colorExtra = $arr['color_extra'];
     }
-    if (isset($arr['color_hilite']) && !empty($arr['color_hilite'])) {
+    if (!empty($arr['color_hilite'])) {
       $this->colorHilite = $arr['color_hilite'];
     }
     if (isset($arr['upload_maxsize']) && is_numeric($arr['upload_maxsize'])) {
       $this->uploadMaxSize = (int) $arr['upload_maxsize'];
       $this->setUploadLimit();
     }
+    if (!$this->requireAuthentication) {
+      // tracks must be public if we don't require authentication
+      $this->publicTracks = true;
+    }
   }
-  public function setFromConfig(Config $config) {
+  public function setFromConfig(Config $config): void {
     $this->mapApi = $config->mapApi;
     $this->initLatitude = $config->initLatitude;
     $this->initLongitude = $config->initLongitude;
@@ -449,7 +311,7 @@ class Config {
   /**
    * Adjust uploadMaxSize to system limits
    */
-  private function setUploadLimit(): void {
+  public function setUploadLimit(): void {
     $limit = Utils::getSystemUploadLimit();
     if ($this->uploadMaxSize <= 0 || $this->uploadMaxSize > $limit) {
       $this->uploadMaxSize = $limit;

@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace uLogger\Tests\tests;
 
-use uLogger\Component\Auth;
+use uLogger\Component\Session;
 use uLogger\Entity\User;
 use uLogger\Tests\lib\UloggerDatabaseTestCase;
 
@@ -21,7 +21,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
-    $auth = new Auth();
+    $auth = new Session();
     $auth->checkLogin($this->testUser, $this->testPass);
     self::assertTrue($auth->isAuthenticated(), "Not authenticated");
     self::assertInstanceOf(User::class, $auth->user, "User variable not set");
@@ -37,7 +37,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
-    $auth = new Auth();
+    $auth = new Session();
     $auth->checkLogin($this->testUser, "badPass");
     self::assertFalse($auth->isAuthenticated(), "Should not be authenticated");
     self::assertNull($auth->user, "User not null");
@@ -50,7 +50,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
-    $auth = new Auth();
+    $auth = new Session();
     $auth->checkLogin("", $this->testPass);
     self::assertFalse($auth->isAuthenticated(), "Should not be authenticated");
     self::assertNull($auth->user, "User not null");
@@ -63,7 +63,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
-    $auth = new Auth();
+    $auth = new Session();
     self::assertFalse($auth->isAuthenticated(), "Should not be authenticated");
     self::assertNull($auth->user, "User not null");
   }
@@ -82,7 +82,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     $_SESSION["user"] = $user;
     unset($user);
 
-    @$auth = new Auth();
+    @$auth = new Session();
     self::assertTrue($auth->isAuthenticated(), "Should be authenticated");
     self::assertEquals($this->testUser, $auth->user->login, "Wrong login");
   }
@@ -101,7 +101,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     $_SESSION["user"] = $user;
     unset($user);
 
-    @$auth = new Auth();
+    @$auth = new Session();
     $auth->checkLogin($this->testUser, $this->testPass);
     self::assertTrue($auth->isAuthenticated(), "Should be authenticated");
     self::assertEquals($this->testUser, $auth->user->login, "Wrong login");
@@ -115,7 +115,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT));
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
-    @$auth = new Auth();
+    @$auth = new Session();
     $auth->checkLogin($this->testUser, $this->testPass);
     self::assertTrue($auth->isAuthenticated(), "Should be authenticated");
     self::assertFalse($auth->isAdmin(), "Should not be admin");
@@ -128,7 +128,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     $this->addTestUser($this->testUser, password_hash($this->testPass, PASSWORD_DEFAULT), true);
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
-    @$auth = new Auth();
+    @$auth = new Session();
     $auth->checkLogin($this->testUser, $this->testPass);
     self::assertTrue($auth->isAuthenticated(), "Should be authenticated");
     self::assertTrue($auth->isAdmin(), "Should be admin");

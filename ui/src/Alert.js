@@ -50,7 +50,9 @@ export default class Alert {
     this.autoClose = options.autoClose || 0;
     this.#hasButton = typeof options.hasButton !== 'undefined' ? options.hasButton : this.autoClose === 0
     this.#fixedPosition = options.fixed || false;
-    const html = `<div class="alert"><span>${message}</span></div>`;
+    message = message.replace(/\r\n|\r|\n/g, '<br>');
+    const cssClass = message.length > 500 ? 'alert wide' : 'alert';
+    const html = `<div class="${cssClass}"><span>${message}</span></div>`;
     this.box = Utils.nodeFromHtml(html);
     if (options.id) {
       this.box.id = options.id;

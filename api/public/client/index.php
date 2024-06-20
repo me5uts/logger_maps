@@ -9,18 +9,21 @@ declare(strict_types = 1);
 
 require_once('../../vendor/autoload.php');
 
-use uLogger\Component\Auth;
-use uLogger\Entity\Position;
-use uLogger\Entity\Track;
-use uLogger\Entity\User;
+use uLogger\Component\Session;
+use uLogger\Component\Db;
+use uLogger\Entity;
+use uLogger\Exception\DatabaseException;
 use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
+use uLogger\Mapper;
+use uLogger\Mapper\MapperFactory;
 
 /**
  * Exit with error status and message
  *
  * @param string $message Message
+ * @return no-return
  */
 function exitWithError(string $message): void {
   $response = [];
@@ -35,7 +38,7 @@ function exitWithError(string $message): void {
  * Exit with success status
  *
  * @param array $params Optional params
- * @return void
+ * @return no-return
  */
 function exitWithSuccess(array $params = []): void {
   $response = [];
@@ -47,7 +50,20 @@ function exitWithSuccess(array $params = []): void {
 
 $action = Utils::postString('action');
 
-$auth = new Auth();
+$db = Db::getInstance();
+try {
+  $config = (new Mapper\Config($db))->fetch();
+  $mapperFactory = new MapperFactory($db);
+  $auth = new Session($mapperFactory, $config);
+} catch (DatabaseException|ServerException $e) {
+  exitWithError("Server error");
+}
+
+
+/** @var Mapper\Track $mapperTrack */
+$mapperTrack = $mapperFactory->getMapper(Mapper\Track::class);
+/** @var Mapper\Position $mapperPosition */
+$mapperPosition = $mapperFactory->getMapper(Mapper\Position::class);
 if ($action !== "auth" && !$auth->isAuthenticated()) {
   $auth->exitWithUnauthorized();
 }
@@ -57,28 +73,15 @@ switch ($action) {
   case "auth":
     $login = Utils::postString('user');
     $pass = Utils::postPass('pass');
-    if ($auth->checkLogin($login, $pass)) {
-      exitWithSuccess();
-    } else {
-      $auth->exitWithUnauthorized();
-    }
-    break;
-
-  // action: adduser (currently unused)
-  case "adduser":
-    if (!$auth->user->isAdmin) {
-      exitWithError("Not allowed");
-    }
-    $login = Utils::postString('login');
-    $pass = Utils::postPass('password');
-    if (empty($login) || empty($pass)) {
-      exitWithError("Empty login or password");
-    }
-    $newId = User::add($login, $pass);
-    if ($newId === false) {
+    try {
+      if ($auth->checkLogin($login, $pass)) {
+        exitWithSuccess();
+      } else {
+        $auth->exitWithUnauthorized();
+      }
+    } catch (DatabaseException|ServerException|InvalidInputException $e) {
       exitWithError("Server error");
     }
-    exitWithSuccess(['userid' => $newId]);
     break;
 
   // action: addtrack
@@ -87,18 +90,20 @@ switch ($action) {
     if (empty($trackName)) {
       exitWithError("Missing required parameter");
     }
-    $trackId = Track::add($auth->user->id, $trackName);
-    if ($trackId === false) {
+    $track = new Entity\Track($auth->user->id, $trackName);
+    try {
+      $mapperTrack->create($track);
+    } catch (DatabaseException $e) {
       exitWithError("Server error");
     }
     // return track id
-    exitWithSuccess(['trackid' => $trackId]);
+    exitWithSuccess(['trackid' => $track->id]);
     break;
 
   // action: addposition
   case "addpos":
-    $lat = Utils::postFloat('lat');
-    $lon = Utils::postFloat('lon');
+    $latitude = Utils::postFloat('lat');
+    $longitude = Utils::postFloat('lon');
     $timestamp = Utils::postInt('time');
     $altitude = Utils::postFloat('altitude');
     $speed = Utils::postFloat('speed');
@@ -109,7 +114,7 @@ switch ($action) {
     $fileUpload = Utils::requestFile('image');
     $trackId = Utils::postInt('trackid');
 
-    if (!is_float($lat) || !is_float($lon) || !is_int($timestamp) || !is_int($trackId)) {
+    if (!is_float($latitude) || !is_float($longitude) || !is_int($timestamp) || !is_int($trackId)) {
       exitWithError("Missing required parameter");
     }
 
@@ -118,16 +123,30 @@ switch ($action) {
       try {
         $image = $fileUpload->add($trackId);
       } catch (InvalidInputException|ServerException $e) {
-        // ignore
+        // save position anyway
       }
     }
+    $position = new Entity\Position(
+      timestamp: $timestamp,
+      userId: $auth->user->id,
+      trackId: $trackId,
+      latitude: $latitude,
+      longitude: $longitude
+    );
+    $position->altitude = $altitude;
+    $position->speed = $speed;
+    $position->bearing = $bearing;
+    $position->accuracy = $accuracy;
+    $position->provider = $provider;
+    $position->comment = $comment;
+    $position->image = $image;
 
-    $positionId = Position::add($auth->user->id, $trackId,
-      $timestamp, $lat, $lon, $altitude, $speed, $bearing, $accuracy, $provider, $comment, $image);
-
-    if ($positionId === false) {
+    try {
+      $mapperPosition->create($position);
+    } catch (DatabaseException $e) {
       exitWithError("Server error");
     }
+
     exitWithSuccess();
     break;
 

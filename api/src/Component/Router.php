@@ -16,11 +16,13 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use uLogger\Controller;
-use uLogger\Entity\Config;
+use uLogger\Component;
+use uLogger\Entity;
 use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
+use uLogger\Mapper\MapperFactory;
 use uLogger\Middleware\MiddlewareInterface;
 
 /**
@@ -86,15 +88,16 @@ class Router {
   /**
    * @throws ReflectionException
    */
-  public function setupRoutes(Auth $auth, Config $config): void {
+  public function setupRoutes(Component\Session $session, Entity\Config $config, MapperFactory $mapperFactory): void {
+
 
     $controllers = [
-      new Controller\Session($auth, $config),
-      new Controller\Position(),
-      new Controller\Track($auth, $config),
-      new Controller\Config($config),
+      new Controller\Session($session, $config),
+      new Controller\Position($mapperFactory),
+      new Controller\Track($mapperFactory, $session, $config),
+      new Controller\Config($mapperFactory, $config),
       new Controller\Locale($config),
-      new Controller\User($auth, $config)
+      new Controller\User($mapperFactory, $session, $config)
     ];
 
     foreach ($controllers as $controller) {
@@ -207,14 +210,11 @@ class Router {
   private function mapEntity(string $className): mixed {
     $entityClass = new ReflectionClass($className);
 
-    // Create a new instance of the class without invoking the constructor
     $instance = $entityClass->newInstanceWithoutConstructor();
     $payload = $this->request->getPayload();
-    // Set the properties using reflection
     foreach ($entityClass->getProperties() as $property) {
       $name = $property->getName();
       if (array_key_exists($name, $payload)) {
-        // Make the property accessible if it is private or protected
         if (!$property->isPublic()) {
           $property->setAccessible(true);
         }

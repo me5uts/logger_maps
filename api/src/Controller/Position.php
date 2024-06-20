@@ -9,16 +9,29 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
-use ErrorException;
-use uLogger\Component\Auth;
+use uLogger\Component\Session;
 use uLogger\Component\FileUpload;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Route;
 use uLogger\Entity;
+use uLogger\Exception\DatabaseException;
+use uLogger\Exception\InvalidInputException;
+use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
+use uLogger\Mapper;
+use uLogger\Mapper\MapperFactory;
 
 class Position {
+  /** @var Mapper\Position */
+  private Mapper\Position $mapper;
+
+  /**
+   * @param MapperFactory $mapperFactory
+   */
+  public function __construct(Mapper\MapperFactory $mapperFactory) {
+    $this->mapper = $mapperFactory->getMapper(Mapper\Position::class);
+  }
 
   /**
    * Get positions for track, optionally filter by minimum ID
@@ -28,28 +41,33 @@ class Position {
    * @return Response
    */
   #[Route(Request::METHOD_GET, '/api/tracks/{trackId}/positions', [
-    Auth::ACCESS_OPEN => [ Auth::ALLOW_ALL ],
-    Auth::ACCESS_PUBLIC => [ Auth::ALLOW_AUTHORIZED ],
-    Auth::ACCESS_PRIVATE => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ]
+    Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
+    Session::ACCESS_PUBLIC => [ Session::ALLOW_AUTHORIZED ],
+    Session::ACCESS_PRIVATE => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ]
   ])]
   public function getAll(int $trackId, ?int $afterId = null): Response {
-    $positions = Entity\Position::getAll(null, $trackId, $afterId);
-    $result = [];
-    if ($positions === false) {
-      $result = [ "error" => true ];
-    } elseif (!empty($positions)) {
-      if ($afterId) {
-        $afterPosition = new Entity\Position($afterId);
-        if ($afterPosition->isValid) {
-          $prevPosition = $afterPosition;
+    try {
+      $positions = $this->mapper->findAll($trackId, $afterId);
+
+      $result = [];
+      if (!empty($positions)) {
+        if ($afterId) {
+          try {
+            $prevPosition = $this->mapper->fetch($afterId);
+          } catch (NotFoundException) {/* ignored */}
+
+        }
+        foreach ($positions as $position) {
+          $meters = isset($prevPosition) ? $position->distanceTo($prevPosition) : 0;
+          $seconds = isset($prevPosition) ? $position->secondsTo($prevPosition) : 0;
+          $result[] = Entity\Position::getArray($position, $meters, $seconds);
+          $prevPosition = $position;
         }
       }
-      foreach ($positions as $position) {
-        $meters = isset($prevPosition) ? $position->distanceTo($prevPosition) : 0;
-        $seconds = isset($prevPosition) ? $position->secondsTo($prevPosition) : 0;
-        $result[] = Entity\Position::getArray($position, $meters, $seconds);
-        $prevPosition = $position;
-      }
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
     }
     return Response::success($result);
   }
@@ -60,21 +78,23 @@ class Position {
    * @param Entity\Position $position
    * @return Response
    */
-  #[Route(Request::METHOD_PUT, '/api/positions/{positionId}', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ] ])]
+  #[Route(Request::METHOD_PUT, '/api/positions/{positionId}', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function update(int $positionId, Entity\Position $position): Response {
 
     if ($positionId !== $position->id) {
       return Response::unprocessableError("Wrong position id");
     }
 
-    $currentPosition = new Entity\Position($positionId);
-    if (!$currentPosition->isValid) {
+    try {
+      $currentPosition = $this->mapper->fetch($positionId);
+      $currentPosition->comment = $position->comment;
+      $this->mapper->update($currentPosition);
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (NotFoundException) {
       return Response::notFound();
-    }
-
-    $currentPosition->comment = $position->comment;
-    if ($currentPosition->update() === false) {
-      return Response::internalServerError("Position update failed");
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
     }
 
     return Response::success();
@@ -85,15 +105,17 @@ class Position {
    * @param int $positionId
    * @return Response
    */
-  #[Route(Request::METHOD_DELETE, '/api/positions/{positionId}', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ] ])]
+  #[Route(Request::METHOD_DELETE, '/api/positions/{positionId}', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function delete(int $positionId): Response {
-    $position = new Entity\Position($positionId);
-    if (!$position->isValid) {
+    try {
+      $position = $this->mapper->fetch($positionId);
+      $this->mapper->delete($position);
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (NotFoundException) {
       return Response::notFound();
-    }
-
-    if ($position->delete() === false) {
-      return Response::internalServerError("Position delete failed");
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
     }
 
     return Response::success();
@@ -105,23 +127,23 @@ class Position {
    * @param FileUpload $imageUpload
    * @return Response
    */
-  #[Route(Request::METHOD_POST, '/api/positions/{positionId}/image', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ] ])]
+  #[Route(Request::METHOD_POST, '/api/positions/{positionId}/image', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function addImage(int $positionId, FileUpload $imageUpload): Response {
 
-    $position = new Entity\Position($positionId);
-    if (!$position->isValid) {
-      return Response::notFound();
-    }
-
     try {
-      if ($position->setImage($imageUpload) === false) {
-        return Response::internalServerError("Position image adding failed");
-      }
-    } catch (ErrorException|ServerException $e) {
+      $position = $this->mapper->fetch($positionId);
+      $this->mapper->setImage($position, $imageUpload);
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (NotFoundException) {
+      return Response::notFound();
+    } catch (ServerException $e) {
       return Response::internalServerError($e->getMessage());
+    } catch (InvalidInputException $e) {
+      return Response::unprocessableError($e->getMessage());
     }
-    return Response::success([ "image" => $position->image ]);
 
+    return Response::success([ "image" => $position->image ]);
   }
 
   /**
@@ -129,16 +151,18 @@ class Position {
    * @param int $positionId
    * @return Response
    */
-  #[Route(Request::METHOD_DELETE, '/api/positions/{positionId}/image', [ Auth::ACCESS_ALL => [ Auth::ALLOW_OWNER, Auth::ALLOW_ADMIN ] ])]
+  #[Route(Request::METHOD_DELETE, '/api/positions/{positionId}/image', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function deleteImage(int $positionId): Response {
 
-    $position = new Entity\Position($positionId);
-    if (!$position->isValid) {
+    try {
+      $position = $this->mapper->fetch($positionId);
+      $this->mapper->removeImage($position);
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
+    } catch (NotFoundException) {
       return Response::notFound();
-    }
-
-    if ($position->removeImage() === false) {
-      return Response::internalServerError("Position image delete failed");
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
     }
 
     return Response::success();

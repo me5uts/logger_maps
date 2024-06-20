@@ -18,6 +18,7 @@ use uLogger\Entity\Layer;
 
 /**
  * Migration scripts helper
+ * FIXME: broken (probably not needed in 2.x anyway)
  */
 class Migration {
   /**
@@ -25,9 +26,10 @@ class Migration {
    * @return bool True if valid version
    */
   public static function verifyVersion(): bool {
+    $config = new Config();
     if (!class_exists("uLogger\\Controller\\Config") || !class_exists("uLogger\\Controller\\Db") ||
       !method_exists("uLogger\\Controller\\Config", "getOfflineInstance") ||
-      strpos(Config::getOfflineInstance()->version, '1.') !== 0) {
+      !str_starts_with($config->version, '1.')) {
       echo "You need μlogger version 1.x to run this script" . PHP_EOL;
       return false;
     }
@@ -96,7 +98,7 @@ class Migration {
     }
     echo "Migrating config to database..." . PHP_EOL;
     require_once($path);
-    if (isset($admin_user) && !empty($admin_user)) {
+    if (!empty($admin_user)) {
       try {
         echo "Setting user $admin_user as admin" . PHP_EOL;
         $query = "UPDATE " . Db::getInstance()->table('users') . " SET admin = ? WHERE login = ?";
@@ -112,7 +114,7 @@ class Migration {
       }
     }
     $config = Config::getOfflineInstance();
-    if (isset($mapapi) && !empty($mapapi)) {
+    if (!empty($mapapi)) {
       $config->mapApi = $mapapi;
     }
     if (isset($ol_layers) && is_array($ol_layers)) {
@@ -127,7 +129,7 @@ class Migration {
     if (isset($init_longitude) && is_numeric($init_longitude)) {
       $config->initLongitude = $init_longitude;
     }
-    if (isset($gkey) && !empty($gkey)) {
+    if (!empty($gkey)) {
       $config->googleKey = $gkey;
     }
     if (isset($require_authentication) && is_numeric($require_authentication)) {
@@ -145,16 +147,16 @@ class Migration {
     if (isset($interval) && is_numeric($interval)) {
       $config->interval = (int) $interval;
     }
-    if (isset($lang) && !empty($lang)) {
+    if (!empty($lang)) {
       $config->lang = $lang;
     }
-    if (isset($units) && !empty($units)) {
+    if (!empty($units)) {
       $config->units = $units;
     }
     if (isset($strokeWeight) && is_numeric($strokeWeight)) {
       $config->strokeWeight = (int) $strokeWeight;
     }
-    if (isset($strokeColor) && !empty($strokeColor)) {
+    if (!empty($strokeColor)) {
       $config->strokeColor = $strokeColor;
     }
     if (isset($strokeOpacity) && is_numeric($strokeOpacity)) {
