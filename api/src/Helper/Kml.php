@@ -120,7 +120,7 @@ class Kml implements FileFormatInterface {
 //        "</div>";
       $description =
         "<div style=\"font-weight: bolder; padding-bottom: 10px; border-bottom: 1px solid gray;\">" .
-          htmlspecialchars($position->userLogin) . "@" . htmlspecialchars($position->trackName) .
+          htmlspecialchars($position->userName) . "@" . htmlspecialchars($position->trackName) .
         "</div>" .
         "<div>" .
           "<div style=\"padding-top: 10px;\">" . date("Y-m-d H:i:s (e)", $position->timestamp) . "<br>" .

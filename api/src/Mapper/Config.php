@@ -235,17 +235,9 @@ class Config extends AbstractMapper {
    */
   public function mapRowToObject(array $row): Entity\Config {
     $row = array_map([ $this, "unserialize" ], $row);
-    return $this->mapRowToEntity($row);
+    return Entity\Config::fromDatabaseRow($row);
   }
 
-//  /**
-//   * @throws ReflectionException
-//   */
-//  public function mapJsonToUser(string $jsonData): Config
-//  {
-//    $data = json_decode($jsonData, true);
-//    return $this->mapDataToEntity($data, new Entity\Config(), JsonField::class);
-//  }
 
 }
 

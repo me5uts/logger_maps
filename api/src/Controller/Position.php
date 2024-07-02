@@ -49,7 +49,6 @@ class Position {
     try {
       $positions = $this->mapper->findAll($trackId, $afterId);
 
-      $result = [];
       if (!empty($positions)) {
         if ($afterId) {
           try {
@@ -58,9 +57,8 @@ class Position {
 
         }
         foreach ($positions as $position) {
-          $meters = isset($prevPosition) ? $position->distanceTo($prevPosition) : 0;
-          $seconds = isset($prevPosition) ? $position->secondsTo($prevPosition) : 0;
-          $result[] = Entity\Position::getArray($position, $meters, $seconds);
+          $position->meters = isset($prevPosition) ? $position->distanceTo($prevPosition) : 0;
+          $position->seconds = isset($prevPosition) ? $position->secondsTo($prevPosition) : 0;
           $prevPosition = $position;
         }
       }
@@ -69,7 +67,7 @@ class Position {
     } catch (ServerException $e) {
       return Response::internalServerError($e->getMessage());
     }
-    return Response::success($result);
+    return Response::success($positions);
   }
 
   /**

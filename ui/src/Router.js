@@ -70,7 +70,7 @@ export default class Router {
     const state = new State();
     const permalink = new Permalink(state);
     const spinner = new Spinner(state);
-    if (config.requireAuth && !auth.isAuthenticated) {
+    if (config.requireAuthentication && !auth.isAuthenticated) {
       // show login
       Router.loadLoginView(state);
     } else {

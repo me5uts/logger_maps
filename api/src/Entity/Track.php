@@ -14,14 +14,18 @@ use uLogger\Mapper\Column;
 /**
  * Track handling
  */
-class Track {
+class Track extends AbstractEntity {
   #[Column]
+  #[JsonField]
   public ?int $id = null;
   #[Column(name: 'user_id')]
+  #[JsonField]
   public int $userId;
   #[Column]
+  #[JsonField]
   public string $name;
   #[Column]
+  #[JsonField]
   public ?string $comment = null;
 
   /**

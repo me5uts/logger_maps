@@ -58,12 +58,9 @@ export default class LoginViewModel extends ViewModel {
     return form.checkValidity();
   }
 
-
-
-
   getHtml() {
     let cancelButton = '';
-    if (!config.requireAuth) {
+    if (!config.requireAuthentication) {
       cancelButton = `<div data-bind="onLoginCancel" id="cancel">${$._('cancel')}</div>`;
     }
 

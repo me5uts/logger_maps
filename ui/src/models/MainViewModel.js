@@ -80,7 +80,7 @@ export default class MainViewModel extends ViewModel {
 
   logout() {
     // let url = 'utils/logout.php';
-    // if (!config.requireAuth) {
+    // if (!config.requireAuthentication) {
     //   url += `?hash=${window.location.hash.replace('#', '')}`;
     // }
     // Utils.openUrl(url);

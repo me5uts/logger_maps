@@ -14,52 +14,73 @@ use uLogger\Mapper\Column;
 /**
  * Positions handling
  */
-class Position {
+class Position extends AbstractEntity {
   /** @var int|null Position id */
   #[Column]
+  #[JsonField]
   public ?int $id = null;
   /** @var int Unix time stamp */
   #[Column(name: 'tstamp')]
+  #[JsonField]
   public int $timestamp;
   /** @var int User id */
   #[Column(name: 'user_id')]
+  #[JsonField]
   public int $userId;
   /** @var string|null User login */
   #[Column(name: 'login')]
-  public ?string $userLogin = null;
+  #[JsonField]
+  public ?string $userName = null;
   /** @var int Track id */
   #[Column(name: 'track_id')]
+  #[JsonField]
   public int $trackId;
   /** @var string|null Track name */
   #[Column(name: 'name')]
+  #[JsonField]
   public ?string $trackName = null;
   /** @var float Latitude */
   #[Column]
+  #[JsonField]
   public float $latitude;
   /** @var float Longitude */
   #[Column]
+  #[JsonField]
   public float $longitude;
   /** @var ?float Altitude */
   #[Column]
+  #[JsonField]
   public ?float $altitude = null;
   /** @var ?float Speed */
   #[Column]
+  #[JsonField]
   public ?float $speed = null;
   /** @var ?float Bearing */
   #[Column]
+  #[JsonField]
   public ?float $bearing = null;
   /** @var ?int Accuracy */
   #[Column]
+  #[JsonField]
   public ?int $accuracy = null;
   /** @var ?string Provider */
   #[Column]
+  #[JsonField]
   public ?string $provider = null;
   /** @var ?string Comment */
   #[Column]
+  #[JsonField]
   public ?string $comment = null;
   /** @var ?string Image path */
   #[Column]
+  #[JsonField]
   public ?string $image = null;
+  /** @var int|null Distance from track beginning */
+  #[JsonField]
+  public ?int $meters = 0;
+  /** @var int|null Time from track beginning */
+  #[JsonField]
+  public ?int $seconds = 0;
 
   /**
    * @param int $timestamp
@@ -76,7 +97,6 @@ class Position {
     $this->longitude = $longitude;
   }
 
-
   /**
    * Has image
    *
@@ -86,12 +106,12 @@ class Position {
     return !empty($this->image);
   }
 
- /**
-  * Calculate distance to target point using haversine formula
-  *
-  * @param Position $target Target position
-  * @return int Distance in meters
-  */
+  /**
+   * Calculate distance to target point using haversine formula
+   *
+   * @param Position $target Target position
+   * @return int Distance in meters
+   */
   public function distanceTo(Position $target): int {
     $lat1 = deg2rad($this->latitude);
     $lon1 = deg2rad($this->longitude);
@@ -103,64 +123,16 @@ class Position {
     return (int) round($bearing * 6371000);
   }
 
- /**
-  * Calculate time elapsed since target point
-  *
-  * @param Position $target Target position
-  * @return int Number of seconds
-  */
+  /**
+   * Calculate time elapsed since target point
+   *
+   * @param Position $target Target position
+   * @return int Number of seconds
+   */
   public function secondsTo(Position $target): int {
     return $this->timestamp - $target->timestamp;
   }
 
-//  /**
-//   * Set position from array. Array should not be empty
-//   * @param array $row
-//   */
-//  private function setFromArray(array $row): void {
-//    $this->id = (int) $row['id'];
-//    $this->timestamp = (int) $row['tstamp'];
-//    $this->userId = (int) $row['user_id'];
-//    $this->userLogin = $row['login'];
-//    $this->trackId = (int) $row['track_id'];
-//    $this->trackName = $row['name'];
-//    $this->latitude = (float) $row['latitude'];
-//    $this->longitude = (float) $row['longitude'];
-//    $this->altitude = is_null($row['altitude']) ? null : (float) $row['altitude'];
-//    $this->speed = is_null($row['speed']) ? null : (float) $row['speed'];
-//    $this->bearing = is_null($row['bearing']) ? null : (float) $row['bearing'];
-//    $this->accuracy = is_null($row['accuracy']) ? null : (int) $row['accuracy'];
-//    $this->provider = $row['provider'];
-//    $this->comment = $row['comment'];
-//    $this->image = $row['image'];
-//  }
-
-  /**
-   * @param Position $position
-   * @param int $meters
-   * @param int $seconds
-   * @return array
-   */
-  public static function getArray(Position $position, int $meters = 0, int $seconds = 0): array {
-    return [
-      "id" => $position->id,
-      "latitude" => $position->latitude,
-      "longitude" => $position->longitude,
-      "altitude" => ($position->altitude) ? round($position->altitude) : $position->altitude,
-      "speed" => $position->speed,
-      "bearing" => $position->bearing,
-      "timestamp" => $position->timestamp,
-      "accuracy" => $position->accuracy,
-      "provider" => $position->provider,
-      "comment" => $position->comment,
-      "image" => $position->image,
-      "username" => $position->userLogin,
-      "trackid" => $position->trackId,
-      "trackname" => $position->trackName,
-      "meters" => $meters,
-      "seconds" => $seconds
-    ];
-  }
 }
 
 ?>

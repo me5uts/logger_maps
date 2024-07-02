@@ -171,7 +171,7 @@ class User extends AbstractMapper {
 
       $users = [];
       while ($row = $stmt->fetch()) {
-        $users[] = $this->mapRowToEntity($row);
+        $users[] = Entity\User::fromDatabaseRow($row);
       }
       return $users;
     } catch (PDOException $e) {

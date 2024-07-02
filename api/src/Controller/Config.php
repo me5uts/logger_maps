@@ -15,6 +15,7 @@ use uLogger\Component\Response;
 use uLogger\Component\Route;
 use uLogger\Entity;
 use uLogger\Exception\DatabaseException;
+use uLogger\Exception\ServerException;
 use uLogger\Mapper;
 use uLogger\Mapper\MapperFactory;
 
@@ -40,35 +41,8 @@ class Config {
    */
   #[Route(Request::METHOD_GET, '/api/config', [ Session::ACCESS_ALL => [ Session::ALLOW_ALL ] ])]
   public function get(): Response {
-    $result = [
-      "colorExtra" => $this->config->colorExtra,
-      "colorHilite" => $this->config->colorHilite,
-      "colorNormal" => $this->config->colorNormal,
-      "colorStart" => $this->config->colorStart,
-      "colorStop" => $this->config->colorStop,
-      "googleKey" => $this->config->googleKey,
-      "initLatitude" => $this->config->initLatitude,
-      "initLongitude" => $this->config->initLongitude,
-      "interval" => $this->config->interval,
-      "lang" => $this->config->lang,
-      "mapApi" => $this->config->mapApi,
-      "passLenMin" => $this->config->passLenMin,
-      "passStrength" => $this->config->passStrength,
-      "publicTracks" => $this->config->publicTracks,
-      "requireAuth" => $this->config->requireAuthentication,
-      "strokeColor" => $this->config->strokeColor,
-      "strokeOpacity" => $this->config->strokeOpacity,
-      "strokeWeight" => $this->config->strokeWeight,
-      "units" => $this->config->units,
-      "uploadMaxSize" => $this->config->uploadMaxSize,
-      "version" => $this->config->version,
-      "layers" => []
-    ];
-    foreach ($this->config->olLayers as $key => $val) {
-      $result["layers"][$key] = $val;
-    }
 
-    return Response::success($result);
+    return Response::success($this->config);
   }
 
   /**
@@ -79,14 +53,17 @@ class Config {
   #[Route(Request::METHOD_PUT, '/api/config', [ Session::ACCESS_ALL => [ Session::ALLOW_ADMIN ] ])]
   public function update(Entity\Config $config): Response {
 
+    $config->setUploadLimit();
     try {
       if ($this->mapper->update($config) === false) {
         return Response::internalServerError("servererror");
       }
+      $this->config->setFromConfig($config);
     } catch (DatabaseException $e) {
       return Response::databaseError($e->getMessage());
+    } catch (ServerException $e) {
+      return Response::internalServerError($e->getMessage());
     }
-    $this->config->setFromConfig($config);
     return Response::success();
   }
 }

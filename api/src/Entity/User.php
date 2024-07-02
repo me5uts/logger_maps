@@ -14,15 +14,18 @@ use uLogger\Mapper\Column;
 /**
  * User handling routines
  */
-class User {
+class User extends AbstractEntity {
   #[Column]
+  #[JsonField]
   public ?int $id = null;
   #[Column]
+  #[JsonField]
   public string $login;
   #[Column(name: 'password')]
   public ?string $hash = null;
   public ?string $password = null;
   #[Column(name: 'admin')]
+  #[JsonField]
   public bool $isAdmin = false;
 
   /**

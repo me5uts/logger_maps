@@ -112,7 +112,7 @@ export default class PositionDialogModel extends ViewModel {
    */
   getHtml() {
     return `<div class="red-button button-resolve"><b><a data-bind="onPositionDelete">${$._('delposition')}</a></b></div>
-      <div>${$._('editingposition', this.positionIndex + 1, `<b>${Utils.htmlEncode(this.position.trackname)}</b>`)}</div>
+      <div>${$._('editingposition', this.positionIndex + 1, `<b>${Utils.htmlEncode(this.position.trackName)}</b>`)}</div>
       <div style="clear: both; padding-bottom: 1em;"></div>
       <form id="positionForm">
         <label><b>${$._('comment')}</b></label><br>
@@ -131,7 +131,7 @@ export default class PositionDialogModel extends ViewModel {
   }
 
   onPositionDelete() {
-    if (Dialog.isConfirmed($._('positiondelwarn', this.positionIndex + 1, Utils.htmlEncode(this.position.trackname)))) {
+    if (Dialog.isConfirmed($._('positiondelwarn', this.positionIndex + 1, Utils.htmlEncode(this.position.trackName)))) {
       this.position.delete()
         .then(() => {
           const track = this.state.currentTrack;

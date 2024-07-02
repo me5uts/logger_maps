@@ -86,7 +86,7 @@ class Track extends AbstractMapper {
       $result = $this->db->query($query);
       $tracks = [];
       while ($row = $result->fetch()) {
-        $tracks[] = $this->mapRowToEntity($row);
+        $tracks[] = Entity\Track::fromDatabaseRow($row);
       }
       return $tracks;
     } catch (PDOException $e) {

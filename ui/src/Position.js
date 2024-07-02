@@ -19,9 +19,9 @@ import Utils from './Utils.js';
  * @property {?string} provider
  * @property {?string} comment
  * @property {?string} image
- * @property {string} username
- * @property {string} trackname
- * @property {number} trackid
+ * @property {string} userName
+ * @property {string} trackName
+ * @property {number} trackId
  * @property {number} timestamp
  * @property {number} meters Distance to previous position
  * @property {number} seconds Time difference to previous position
@@ -47,9 +47,9 @@ export default class Position {
     position.provider = Utils.getString(pos.provider, true); // may be null
     position.comment = Utils.getString(pos.comment, true); // may be null
     position.image = Utils.getString(pos.image, true); // may be null
-    position.username = Utils.getString(pos.username);
-    position.trackname = Utils.getString(pos.trackname);
-    position.trackid = Utils.getInteger(pos.trackid);
+    position.userName = Utils.getString(pos.userName);
+    position.trackName = Utils.getString(pos.trackName);
+    position.trackId = Utils.getInteger(pos.trackId);
     position.timestamp = Utils.getInteger(pos.timestamp);
     position.meters = Utils.getInteger(pos.meters);
     position.seconds = Utils.getInteger(pos.seconds);

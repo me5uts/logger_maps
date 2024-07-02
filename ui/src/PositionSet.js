@@ -63,7 +63,7 @@ export default class PositionSet extends ListItem {
     for (const pos of posArr) {
       positions.push(Position.fromJson(pos));
     }
-    // update at the end to avoid observers update invidual points
+    // update at the end to avoid observers update individual points
     this.positions = positions;
   }
 

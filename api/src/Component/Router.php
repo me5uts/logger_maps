@@ -18,9 +18,11 @@ use ReflectionNamedType;
 use uLogger\Controller;
 use uLogger\Component;
 use uLogger\Entity;
+use uLogger\Entity\AbstractEntity;
 use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
+use uLogger\Helper\Reflection;
 use uLogger\Helper\Utils;
 use uLogger\Mapper\MapperFactory;
 use uLogger\Middleware\MiddlewareInterface;
@@ -179,7 +181,7 @@ class Router {
       if (!$routeParam->hasType()) {
         throw new ServerException("Parameter $routeParam missing type");
       }
-      $routeParamName = $routeParam->name;
+      $routeParamName = $routeParam->getName();
       $routeParamType = $routeParam->getType();
       if (!$routeParamType instanceof ReflectionNamedType) {
         throw new ServerException("Parameter $routeParam is not named type");
@@ -190,13 +192,13 @@ class Router {
         $preparedArguments[] = $this->handleUpload($routeParamName);
       } elseif (array_key_exists($routeParamName, $requestParams)) {
         // params, filters
-        $preparedArguments[] = $this->castArgument($requestParams[$routeParamName], $routeParamType);
-      } elseif ($this->request->hasPayload() && str_starts_with($routeParamTypeName, "uLogger\\Entity\\")) {
+        $preparedArguments[] = Reflection::castArgument($requestParams[$routeParamName], $routeParamType);
+      } elseif ($this->request->hasPayload() && is_subclass_of($routeParamTypeName, AbstractEntity::class)) {
         // payload (map params to entity)
-        $preparedArguments[] = $this->mapEntity($routeParamTypeName);
+        $preparedArguments[] = $routeParamTypeName::fromPayload($requestPayload);
       } elseif ($this->request->hasPayload() && array_key_exists($routeParamName, $requestPayload)) {
         // payload (map param to argument)
-        $preparedArguments[] = $this->castArgument($requestPayload[$routeParamName], $routeParamType);
+        $preparedArguments[] = Reflection::castArgument($requestPayload[$routeParamName], $routeParamType);
       } elseif (!$routeParam->isOptional()) {
         throw new NotFoundException("Missing parameter $routeParamName type $routeParamTypeName");
       }
@@ -205,54 +207,9 @@ class Router {
   }
 
   /**
-   * @throws ReflectionException|ServerException
-   */
-  private function mapEntity(string $className): mixed {
-    $entityClass = new ReflectionClass($className);
-
-    $instance = $entityClass->newInstanceWithoutConstructor();
-    $payload = $this->request->getPayload();
-    foreach ($entityClass->getProperties() as $property) {
-      $name = $property->getName();
-      if (array_key_exists($name, $payload)) {
-        if (!$property->isPublic()) {
-          $property->setAccessible(true);
-        }
-        $type = $property->getType();
-        if (!$type instanceof ReflectionNamedType) {
-          throw new ServerException("Parameter $name is not named type");
-        }
-        $property->setValue($instance, $this->castArgument($payload[$name], $type));
-      } elseif ($property->hasDefaultValue()) {
-        $property->setValue($instance, $property->getDefaultValue());
-      }
-    }
-
-    return $instance;
-  }
-
-  /**
-   * @param mixed $value
-   * @param ReflectionNamedType $type
-   * @return mixed
-   * @throws ServerException
-   */
-  private function castArgument(mixed $value, ReflectionNamedType $type): mixed {
-    if (is_null($value) && !$type->allowsNull()) {
-      throw new ServerException("Unexpected null value in route parameter");
-    }
-    return match ($type->getName()) {
-      'int' => (int) $value,
-      'float' => (float) $value,
-      'bool' => (bool) $value,
-      default => $value
-    };
-  }
-
-  /**
    * @throws ReflectionException
    */
-  private function setupRoute(mixed $controller): void {
+  private function setupRoute2(mixed $controller): void {
     $reflectionClass = new ReflectionClass($controller);
 
     foreach ($reflectionClass->getMethods( ReflectionMethod::IS_PUBLIC) as $method) {
@@ -265,6 +222,20 @@ class Router {
         $route->setHandler($handler);
         $this->addRoute($route);
       }
+    }
+  }
+
+  /**
+   * @throws ReflectionException
+   */
+  private function setupRoute(mixed $controller): void {
+
+    foreach (Reflection::methodGenerator($controller, Route::class) as $route => $method) {
+
+      /** @var Route $route  */
+      $handler = [$controller, $method->getName()];
+      $route->setHandler($handler);
+      $this->addRoute($route);
     }
   }
 

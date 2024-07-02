@@ -26,7 +26,7 @@ import Observer from './Observer.js';
  * @property {number} passLenMin
  * @property {number} passStrength
  * @property {boolean} publicTracks
- * @property {boolean} requireAuth
+ * @property {boolean} requireAuthentication
  * @property {boolean} showLatest
  * @property {string} strokeColor
  * @property {number} strokeOpacity
@@ -50,7 +50,7 @@ export default class Config {
     this.olLayers = new LayerCollection();
     this.initLatitude = 52.23;
     this.initLongitude = 21.01;
-    this.requireAuth = true;
+    this.requireAuthentication = true;
     this.publicTracks = false;
     this.passStrength = 2;
     this.passLenMin = 10;
@@ -102,7 +102,7 @@ export default class Config {
   load(data) {
     if (data) {
       for (const property in data) {
-        if (property === 'layers') {
+        if (property === 'olLayers') {
           this.olLayers.load(data[property]);
         } else if (data.hasOwnProperty(property) && this.hasOwnProperty(property)) {
           this[property] = data[property];

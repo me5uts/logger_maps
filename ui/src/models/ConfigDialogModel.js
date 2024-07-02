@@ -31,13 +31,13 @@ export default class ConfigDialogModel extends ViewModel {
       lang: config.lang,
       layerId: 0,
       layerName: null,
-      layers: new LayerCollection(new Layer(0, 'OpenStreetMap', '', 0), ...config.olLayers),
+      olLayers: new LayerCollection(new Layer(0, 'OpenStreetMap', '', 0), ...config.olLayers),
       layerUrl: null,
       mapApi: config.mapApi,
       passLenMin: config.passLenMin,
       passStrength: config.passStrength,
       publicTracks: config.publicTracks,
-      requireAuth: config.requireAuth,
+      requireAuthentication: config.requireAuthentication,
       strokeColor: config.strokeColor,
       strokeOpacity: config.strokeOpacity,
       strokeWeight: config.strokeWeight,
@@ -62,18 +62,18 @@ export default class ConfigDialogModel extends ViewModel {
     this.toggleEditEl = this.getBoundElement('onLayerEdit').parentNode;
     this.layerEditEl = this.getBoundElement('layerName').parentNode;
     this.layerSelect = new Select(this.getBoundElement('layerId'));
-    this.setPublicTracksActivity(this.model.requireAuth);
+    this.setPublicTracksActivity(this.model.requireAuthentication);
     this.toggleEditVisible();
     this.onChanged('layerId', (listValue) => {
-      const layer = this.model.layers.get(parseInt(listValue));
+      const layer = this.model.olLayers.get(parseInt(listValue));
       this.model.layerName = layer ? layer.name : '';
       this.model.layerUrl = layer ? layer.url : '';
       this.toggleEditVisible();
     });
     this.model.layerId = config.olLayers.getPriorityLayer().toString();
     this.onChanged('uploadMaxSizeMB', (value) => { this.model.uploadMaxSize = value * 1024 * 1024;})
-    this.onChanged('layers', (list) => this.layerSelect.setOptions(list));
-    this.onChanged('requireAuth', (value) => {
+    this.onChanged('olLayers', (list) => this.layerSelect.setOptions(list));
+    this.onChanged('requireAuthentication', (value) => {
       this.setPublicTracksActivity(value);
     });
   }
@@ -93,7 +93,7 @@ export default class ConfigDialogModel extends ViewModel {
 
   onSave() {
     if (this.validate()) {
-      this.model.layers.setPriorityLayer(parseInt(this.model.layerId));
+      this.model.olLayers.setPriorityLayer(parseInt(this.model.layerId));
       config.save(this.model)
         .then(() => this.dialog.destroy())
         .catch((e) => { Alert.error(`${$._('actionfailure')}\n${e.message}`, e); });
@@ -119,7 +119,7 @@ export default class ConfigDialogModel extends ViewModel {
   }
 
   onLayerDelete() {
-    this.model.layers.delete(parseInt(this.model.layerId));
+    this.model.olLayers.delete(parseInt(this.model.layerId));
     this.model.layerId = '0';
   }
 
@@ -136,19 +136,19 @@ export default class ConfigDialogModel extends ViewModel {
       return;
     }
     if (this.model.layerId === '-1') {
-      this.model.layers.addNewLayer(this.model.layerName, this.model.layerUrl);
+      this.model.olLayers.addNewLayer(this.model.layerName, this.model.layerUrl);
     } else {
       const layer = this.currentLayer();
       layer.setName(this.model.layerName);
       layer.setUrl(this.model.layerUrl);
     }
     this.hideEditElement();
-    this.layerSelect.setOptions(this.model.layers);
+    this.layerSelect.setOptions(this.model.olLayers);
   }
 
   onLayerCancel() {
     this.hideEditElement();
-    this.layerSelect.setOptions(this.model.layers);
+    this.layerSelect.setOptions(this.model.olLayers);
   }
 
   onLayerAdd() {
@@ -165,7 +165,7 @@ export default class ConfigDialogModel extends ViewModel {
   }
 
   currentLayer() {
-    return this.model.layers.get(parseInt(this.model.layerId));
+    return this.model.olLayers.get(parseInt(this.model.layerId));
   }
 
   /**
@@ -181,7 +181,7 @@ export default class ConfigDialogModel extends ViewModel {
       unitOptions += `<option value="${units}"${this.model.units === units ? ' selected' : ''}>${$._(units)}</option>`;
     }
     let layerOptions = '';
-    for (const layer of this.model.layers) {
+    for (const layer of this.model.olLayers) {
       layerOptions += `<option value="${layer.id}"${layer.priority > 0 ? ' selected' : ''}>${layer.name}</option>`;
     }
     return `<div><img style="vertical-align: bottom; margin-right: 10px;" src="images/settings.svg" alt="${$._('settings')}"> <b>${$._('editingconfig')}</b></div>
@@ -235,7 +235,7 @@ export default class ConfigDialogModel extends ViewModel {
         <label><b>${$._('uploadmaxsize')}</b>
         <input type="number" data-bind="uploadMaxSizeMB" min="1" value="${this.model.uploadMaxSizeMB}" required></label>
         <label><b>${$._('requireauth')}</b>
-        <input type="checkbox" data-bind="requireAuth"${this.model.requireAuth ? ' checked' : ''}></label>
+        <input type="checkbox" data-bind="requireAuthentication"${this.model.requireAuthentication ? ' checked' : ''}></label>
         <label><b>${$._('publictracks')}</b>
         <input type="checkbox" data-bind="publicTracks"${this.model.publicTracks ? ' checked' : ''}></label>
         <label><b>${$._('strokeweight')}</b>

@@ -296,8 +296,8 @@ export default class MapViewModel extends ViewModel {
     }
     const html =
        `<div id="pheader">
-        <div><img alt="${$._('user')}" title="${$._('user')}" src="images/user_dark.svg"> ${Utils.htmlEncode(pos.username)}</div>
-        <div><img alt="${$._('track')}" title="${$._('track')}" src="images/route_dark.svg"> ${Utils.htmlEncode(pos.trackname)}</div>
+        <div><img alt="${$._('user')}" title="${$._('user')}" src="images/user_dark.svg"> ${Utils.htmlEncode(pos.userName)}</div>
+        <div><img alt="${$._('track')}" title="${$._('track')}" src="images/route_dark.svg"> ${Utils.htmlEncode(pos.trackName)}</div>
         </div>
         <div id="pbody">
         ${(pos.hasComment()) ? `<div id="pcomments">${Utils.htmlEncode(pos.comment).replace(/\n/, '<br>')}</div>` : ''}

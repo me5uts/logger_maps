@@ -11,6 +11,7 @@ namespace uLogger\Entity;
 
 use uLogger\Exception\DatabaseException;
 use uLogger\Exception\ServerException;
+use uLogger\Helper\Reflection;
 use uLogger\Helper\Utils;
 use uLogger\Mapper;
 use uLogger\Mapper\Column;
@@ -19,57 +20,48 @@ use uLogger\Mapper\MapperFactory;
 /**
  * Handles config values
  */
-class Config {
+class Config extends AbstractEntity {
 
-  /**
-   * @var string Version number
-   */
+  /** @var string Version number */
   public string $version = "2.0-beta";
 
-  /**
-   * @var string Default map drawing framework
-   */
+  /** @var string Default map drawing framework */
   #[Column(name: "map_api")]
+  #[JsonField]
   public string $mapApi = "openlayers";
 
-  /**
-   * @var string|null Google Maps key
-   */
+  /** @var string|null Google Maps key */
   #[Column(name: "google_key")]
+  #[JsonField]
   public ?string $googleKey = null;
 
-  /**
-   * @var Layer[] OpenLayers extra map layers
-   */
+  /** @var Layer[] OpenLayers extra map layers */
+  #[JsonField]
   public array $olLayers = [];
 
-  /**
-   * @var float Default latitude for initial map
-   */
+  /** @var float Default latitude for initial map */
   #[Column(name: "latitude")]
+  #[JsonField]
   public float $initLatitude = 52.23;
-  /**
-   * @var float Default longitude for initial map
-   */
+
+  /** @var float Default longitude for initial map */
   #[Column(name: "longitude")]
+  #[JsonField]
   public float $initLongitude = 21.01;
 
-  /**
-   * @var bool Require login/password authentication
-   */
+  /** @var bool Require login/password authentication */
   #[Column(name: "require_auth")]
+  #[JsonField]
   public bool $requireAuthentication = true;
 
-  /**
-   * @var bool All users tracks are visible to authenticated user
-   */
+  /** @var bool All users tracks are visible to authenticated user */
   #[Column(name: "public_tracks")]
+  #[JsonField]
   public bool $publicTracks = false;
 
-  /**
-   * @var int Minimum required length of user password
-   */
+  /** @var int Minimum required length of user password */
   #[Column(name: "pass_lenmin")]
+  #[JsonField]
   public int $passLenMin = 10;
 
   /**
@@ -80,79 +72,71 @@ class Config {
    * 3 = require mixed case, numbers and non-alphanumeric characters
    */
   #[Column(name: "pass_strength")]
+  #[JsonField]
   public int $passStrength = 2;
 
-  /**
-   * @var int Default interval in seconds for live auto reload
-   */
+  /** @var int Default interval in seconds for live auto reload */
   #[Column(name: "interval_seconds")]
+  #[JsonField]
   public int $interval = 10;
 
-  /**
-   * @var string Default language code
-   */
+  /** @var string Default language code */
   #[Column]
+  #[JsonField]
   public string $lang = "en";
 
-  /**
-   * @var string Default units
-   */
+  /** @var string Default units */
   #[Column]
+  #[JsonField]
   public string $units = "metric";
 
-  /**
-   * @var int Stroke weight
-   */
+  /** @var int Stroke weight */
   #[Column(name: "stroke_weight")]
+  #[JsonField]
   public int $strokeWeight = 2;
-  /**
-   * @var string Stroke color
-   */
+
+  /** @var string Stroke color */
   #[Column(name: "stroke_color")]
+  #[JsonField]
   public string $strokeColor = "#ff0000";
-  /**
-   * @var float Stroke opacity
-   */
+
+  /** @var float Stroke opacity */
   #[Column(name: "stroke_opacity")]
+  #[JsonField]
   public float $strokeOpacity = 1.0;
-  /**
-   * @var string Stroke color
-   */
+
+  /** @var string Stroke color */
   #[Column(name: "color_normal")]
+  #[JsonField]
   public string $colorNormal = "#ffffff";
-  /**
-   * @var string Stroke color
-   */
+
+  /** @var string Stroke color */
   #[Column(name: "color_start")]
+  #[JsonField]
   public string $colorStart = "#55b500";
-  /**
-   * @var string Stroke color
-   */
+
+  /** @var string Stroke color */
   #[Column(name: "color_stop")]
+  #[JsonField]
   public string $colorStop = "#ff6a00";
-  /**
-   * @var string Stroke color
-   */
+
+  /** @var string Stroke color */
   #[Column(name: "color_extra")]
+  #[JsonField]
   public string $colorExtra = "#cccccc";
-  /**
-   * @var string Stroke color
-   */
+
+  /** @var string Stroke color */
   #[Column(name: "color_hilite")]
+  #[JsonField]
   public string $colorHilite = "#feff6a";
+
   /**
    * @var int Maximum size of uploaded files in bytes.
    * Will be adjusted to system maximum upload size
    */
   #[Column(name: "upload_maxsize")]
+  #[JsonField]
   public int $uploadMaxSize = 5242880;
-//
-//  public function __construct(bool $useDatabase = true) {
-//    if ($useDatabase) {
-//      $this->setFromDatabase();
-//    }
-//    $this->setFromCookies();
-//  }
 
   /**
    * @throws DatabaseException
@@ -164,15 +148,19 @@ class Config {
     return $mapper->fetch();
   }
 
-//  /**
-//   * Read config values stored in cookies
-//   */
-//  private function setFromCookies(): void {
-//    if (isset($_COOKIE["ulogger_api"])) { $this->mapApi = $_COOKIE["ulogger_api"]; }
-//    if (isset($_COOKIE["ulogger_lang"])) { $this->lang = $_COOKIE["ulogger_lang"]; }
-//    if (isset($_COOKIE["ulogger_units"])) { $this->units = $_COOKIE["ulogger_units"]; }
-//    if (isset($_COOKIE["ulogger_interval"])) { $this->interval = $_COOKIE["ulogger_interval"]; }
-//  }
+  /**
+   * FIXME: is it needed?
+   * Create offline config
+   * Read some fields from cookies
+   */
+  private static function createFromCookies(): Config {
+    $config = new self();
+    if (isset($_COOKIE["ulogger_api"])) { $config->mapApi = $_COOKIE["ulogger_api"]; }
+    if (isset($_COOKIE["ulogger_lang"])) { $config->lang = $_COOKIE["ulogger_lang"]; }
+    if (isset($_COOKIE["ulogger_units"])) { $config->units = $_COOKIE["ulogger_units"]; }
+    if (isset($_COOKIE["ulogger_interval"])) { $config->interval = $_COOKIE["ulogger_interval"]; }
+    return $config;
+  }
 
 
   /**
@@ -214,98 +202,12 @@ class Config {
   }
 
   /**
-   * Set config values from array
-   * @param array $arr
+   * @throws ServerException
    */
-  public function setFromArray(array $arr): void {
-
-    if (!empty($arr['map_api'])) {
-      $this->mapApi = $arr['map_api'];
-    }
-    if (isset($arr['latitude']) && is_numeric($arr['latitude'])) {
-      $this->initLatitude = (float) $arr['latitude'];
-    }
-    if (isset($arr['longitude']) && is_numeric($arr['longitude'])) {
-      $this->initLongitude = (float) $arr['longitude'];
-    }
-    if (isset($arr['google_key'])) {
-      $this->googleKey = $arr['google_key'];
-    }
-    if (isset($arr['require_auth']) && (is_numeric($arr['require_auth']) || is_bool($arr['require_auth']))) {
-      $this->requireAuthentication = (bool) $arr['require_auth'];
-    }
-    if (isset($arr['public_tracks']) && (is_numeric($arr['public_tracks']) || is_bool($arr['public_tracks']))) {
-      $this->publicTracks = (bool) $arr['public_tracks'];
-    }
-    if (isset($arr['pass_lenmin']) && is_numeric($arr['pass_lenmin'])) {
-      $this->passLenMin = (int) $arr['pass_lenmin'];
-    }
-    if (isset($arr['pass_strength']) && is_numeric($arr['pass_strength'])) {
-      $this->passStrength = (int) $arr['pass_strength'];
-    }
-    if (isset($arr['interval_seconds']) && is_numeric($arr['interval_seconds'])) {
-      $this->interval = (int) $arr['interval_seconds'];
-    }
-    if (!empty($arr['lang'])) {
-      $this->lang = $arr['lang'];
-    }
-    if (!empty($arr['units'])) {
-      $this->units = $arr['units'];
-    }
-    if (isset($arr['stroke_weight']) && is_numeric($arr['stroke_weight'])) {
-      $this->strokeWeight = (int) $arr['stroke_weight'];
-    }
-    if (!empty($arr['stroke_color'])) {
-      $this->strokeColor = $arr['stroke_color'];
-    }
-    if (isset($arr['stroke_opacity']) && is_numeric($arr['stroke_opacity'])) {
-      $this->strokeOpacity = (float) $arr['stroke_opacity'];
-    }
-    if (!empty($arr['color_normal'])) {
-      $this->colorNormal = $arr['color_normal'];
-    }
-    if (!empty($arr['color_start'])) {
-      $this->colorStart = $arr['color_start'];
-    }
-    if (!empty($arr['color_stop'])) {
-      $this->colorStop = $arr['color_stop'];
-    }
-    if (!empty($arr['color_extra'])) {
-      $this->colorExtra = $arr['color_extra'];
-    }
-    if (!empty($arr['color_hilite'])) {
-      $this->colorHilite = $arr['color_hilite'];
-    }
-    if (isset($arr['upload_maxsize']) && is_numeric($arr['upload_maxsize'])) {
-      $this->uploadMaxSize = (int) $arr['upload_maxsize'];
-      $this->setUploadLimit();
-    }
-    if (!$this->requireAuthentication) {
-      // tracks must be public if we don't require authentication
-      $this->publicTracks = true;
-    }
-  }
   public function setFromConfig(Config $config): void {
-    $this->mapApi = $config->mapApi;
-    $this->initLatitude = $config->initLatitude;
-    $this->initLongitude = $config->initLongitude;
-    $this->googleKey = $config->googleKey;
-    $this->requireAuthentication = $config->requireAuthentication;
-    $this->publicTracks = $config->publicTracks;
-    $this->passLenMin = $config->passLenMin;
-    $this->passStrength = $config->passStrength;
-    $this->interval = $config->interval;
-    $this->lang = $config->lang;
-    $this->units = $config->units;
-    $this->strokeWeight = $config->strokeWeight;
-    $this->strokeColor = $config->strokeColor;
-    $this->strokeOpacity = $config->strokeOpacity;
-    $this->colorNormal = $config->colorNormal;
-    $this->colorStart = $config->colorStart;
-    $this->colorStop = $config->colorStop;
-    $this->colorExtra = $config->colorExtra;
-    $this->colorHilite = $config->colorHilite;
-    $this->uploadMaxSize = $config->uploadMaxSize;
+    foreach (Reflection::propertyGenerator($this, JsonField::class) as $field => $property) {
+      $this->{$field} = $config->{$field};
+    }
   }
 
   /**
@@ -316,6 +218,18 @@ class Config {
     if ($this->uploadMaxSize <= 0 || $this->uploadMaxSize > $limit) {
       $this->uploadMaxSize = $limit;
     }
+  }
+
+  #[\Override]
+  public static function fromPayload(mixed $payload): static {
+    $instance = parent::fromPayload($payload);
+    /** @var array $layers Layers are still an array here */
+    $layers = $instance->olLayers;
+    $instance->olLayers = [];
+    foreach ($layers as $layer) {
+      $instance->olLayers[] = Layer::fromPayload($layer);
+    }
+    return $instance;
   }
 }
 

@@ -70,13 +70,7 @@ class Track {
       return Response::internalServerError($e->getMessage());
     }
 
-    $result = [
-      "id" => $track->id,
-      "name" => $track->name,
-      "userId" => $track->userId,
-      "comment" => $track->comment
-    ];
-    return Response::success($result);
+    return Response::success($track);
   }
 
   /**
@@ -142,6 +136,8 @@ class Track {
       return Response::unprocessableError($e->getMessage());
     } catch (ServerException $e) {
       return Response::internalServerError($e->getMessage());
+    } catch (DatabaseException $e) {
+      return Response::databaseError($e->getMessage());
     } finally {
       unlink($gpxFile);
     }
@@ -177,7 +173,7 @@ class Track {
 
     switch ($format) {
       case 'gpx':
-        $file = new Gpx($track->name, $this->config);
+        $file = new Gpx($track->name, $this->config, $this->mapperFactory);
         break;
 
       case 'kml':

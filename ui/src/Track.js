@@ -164,7 +164,7 @@ export default class Track extends PositionSet {
     return Http.get(`api/users/${user.id}/position`)
       .then((_position) => {
       if (_position) {
-        const track = new Track(_position.trackid, _position.trackname, user);
+        const track = new Track(_position.trackId, _position.trackName, user);
         track.fromJson([ _position ]);
         return track;
       }

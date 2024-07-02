@@ -49,7 +49,6 @@ class User {
     Session::ACCESS_PRIVATE => [ Session::ALLOW_ADMIN ]
   ])]
   public function getAll(): Response {
-    $result = [];
     try {
       $users = $this->mapperUser->fetchAll();
     } catch (DatabaseException $e) {
@@ -58,13 +57,7 @@ class User {
       return Response::internalServerError($e->getMessage());
     }
 
-    foreach ($users as $user) {
-      // only load admin status on admin user request
-      $isAdmin = $this->session->isAdmin() ? $user->isAdmin : null;
-      $result[] = [ "id" => $user->id, "login" => $user->login, "isAdmin" => $isAdmin ];
-    }
-
-    return Response::success($result);
+    return Response::success($users);
   }
 
   /**
@@ -87,12 +80,7 @@ class User {
       return Response::internalServerError($e->getMessage());
     }
 
-    $result = [];
-    foreach ($tracks as $track) {
-      $result[] = [ "id" => $track->id, "name" => $track->name ];
-    }
-
-    return Response::success($result);
+    return Response::success($tracks);
   }
 
   /**
@@ -115,9 +103,8 @@ class User {
     } catch (ServerException $e) {
       return Response::internalServerError($e->getMessage());
     }
-    $result = Entity\Position::getArray($position);
 
-    return Response::success($result);
+    return Response::success($position);
   }
 
   /**
@@ -130,6 +117,7 @@ class User {
     Session::ACCESS_PRIVATE => [ Session::ALLOW_ADMIN ]
   ])]
   public function getAllPosition(): Response {
+    $positions = [];
     try {
       $positions = $this->mapperPosition->fetchLastAllUsers();
     } catch (NotFoundException) {
@@ -139,14 +127,8 @@ class User {
     } catch (ServerException $e) {
       return Response::internalServerError($e->getMessage());
     }
-    $result = [];
-    if (!empty($positions)) {
 
-      foreach ($positions as $position) {
-        $result[] = Entity\Position::getArray($position);
-      }
-    }
-    return Response::success($result);
+    return Response::success($positions);
   }
 
   /**

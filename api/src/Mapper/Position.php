@@ -323,7 +323,8 @@ class Position extends AbstractMapper {
     try {
       $result = $this->db->query($query);
       while ($row = $result->fetch()) {
-        $positions[] = $this->mapRowToEntity($row);
+        $positions[] = Entity\Position::fromDatabaseRow($row);
+
       }
     } catch (PDOException $e) {
       syslog(LOG_ERR, $e->getMessage());
