@@ -9,32 +9,19 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
+use Exception;
 use uLogger\Component;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Route;
-use uLogger\Entity;
-use uLogger\Exception\DatabaseException;
-use uLogger\Exception\InvalidInputException;
-use uLogger\Exception\ServerException;
 
-class Session {
-  private Component\Session $session;
-  private Entity\Config $config;
-
-  /**
-   * @param Component\Session $session
-   * @param Entity\Config $config
-   */
-  public function __construct(Component\Session $session, Entity\Config $config) {
-    $this->session = $session;
-    $this->config = $config;
-  }
+class Session extends AbstractController {
 
   /**
    * End current session
    * DELETE /session (log out; access: OPEN-AUTHORIZED, PUBLIC-AUTHORIZED, PRIVATE-AUTHORIZED)
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_DELETE, '/api/session', [ Component\Session::ACCESS_ALL => [ Component\Session::ALLOW_AUTHORIZED ] ])]
   public function logOut(): Response {
@@ -48,6 +35,7 @@ class Session {
    * @param string $login
    * @param string $password
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_POST, '/api/session', [ Component\Session::ACCESS_ALL => [ Component\Session::ALLOW_ALL ] ])]
   public function logIn(string $login, string $password): Response {
@@ -55,12 +43,8 @@ class Session {
       if ($this->session->checkLogin($login, $password) === false) {
         return Response::notAuthorized();
       }
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (InvalidInputException $e) {
-      return Response::unprocessableError($e->getMessage());
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
     return $this->ResponseWithSessionData();
   }
@@ -69,6 +53,7 @@ class Session {
    * Get session data
    * GET /session (get session data; access: OPEN-AUTHORIZED, PUBLIC-AUTHORIZED, PRIVATE-AUTHORIZED)
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_GET, '/api/session', [ Component\Session::ACCESS_ALL => [ Component\Session::ALLOW_AUTHORIZED ] ])]
   public function check(): Response {

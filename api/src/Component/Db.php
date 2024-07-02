@@ -50,7 +50,7 @@ class Db extends PDO {
   private static string $prefix = "";
 
     /**
-   * PDO constuctor
+   * PDO constructor
    *
    * @param string $dsn
    * @param string $user

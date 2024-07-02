@@ -9,29 +9,17 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
-use uLogger\Component\Session;
+use Exception;
 use uLogger\Component\FileUpload;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Route;
+use uLogger\Component\Session;
 use uLogger\Entity;
-use uLogger\Exception\DatabaseException;
-use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\NotFoundException;
-use uLogger\Exception\ServerException;
 use uLogger\Mapper;
-use uLogger\Mapper\MapperFactory;
 
-class Position {
-  /** @var Mapper\Position */
-  private Mapper\Position $mapper;
-
-  /**
-   * @param MapperFactory $mapperFactory
-   */
-  public function __construct(Mapper\MapperFactory $mapperFactory) {
-    $this->mapper = $mapperFactory->getMapper(Mapper\Position::class);
-  }
+class Position extends AbstractController {
 
   /**
    * Get positions for track, optionally filter by minimum ID
@@ -39,6 +27,7 @@ class Position {
    * @param int $trackId
    * @param int|null $afterId
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_GET, '/api/tracks/{trackId}/positions', [
     Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
@@ -47,12 +36,12 @@ class Position {
   ])]
   public function getAll(int $trackId, ?int $afterId = null): Response {
     try {
-      $positions = $this->mapper->findAll($trackId, $afterId);
+      $positions = $this->mapper(Mapper\Position::class)->findAll($trackId, $afterId);
 
       if (!empty($positions)) {
         if ($afterId) {
           try {
-            $prevPosition = $this->mapper->fetch($afterId);
+            $prevPosition = $this->mapper(Mapper\Position::class)->fetch($afterId);
           } catch (NotFoundException) {/* ignored */}
 
         }
@@ -62,10 +51,8 @@ class Position {
           $prevPosition = $position;
         }
       }
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
     return Response::success($positions);
   }
@@ -75,6 +62,7 @@ class Position {
    * @param int $positionId
    * @param Entity\Position $position
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_PUT, '/api/positions/{positionId}', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function update(int $positionId, Entity\Position $position): Response {
@@ -84,15 +72,11 @@ class Position {
     }
 
     try {
-      $currentPosition = $this->mapper->fetch($positionId);
+      $currentPosition = $this->mapper(Mapper\Position::class)->fetch($positionId);
       $currentPosition->comment = $position->comment;
-      $this->mapper->update($currentPosition);
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (NotFoundException) {
-      return Response::notFound();
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+      $this->mapper(Mapper\Position::class)->update($currentPosition);
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success();
@@ -102,18 +86,15 @@ class Position {
    * DELETE /api/positions/{id} (delete position; access: OPEN-OWNER:ADMIN, PUBLIC-OWNER:ADMIN, PRIVATE-OWNER:ADMIN)
    * @param int $positionId
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_DELETE, '/api/positions/{positionId}', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function delete(int $positionId): Response {
     try {
-      $position = $this->mapper->fetch($positionId);
-      $this->mapper->delete($position);
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (NotFoundException) {
-      return Response::notFound();
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+      $position = $this->mapper(Mapper\Position::class)->fetch($positionId);
+      $this->mapper(Mapper\Position::class)->delete($position);
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success();
@@ -124,21 +105,16 @@ class Position {
    * @param int $positionId
    * @param FileUpload $imageUpload
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_POST, '/api/positions/{positionId}/image', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function addImage(int $positionId, FileUpload $imageUpload): Response {
 
     try {
-      $position = $this->mapper->fetch($positionId);
-      $this->mapper->setImage($position, $imageUpload);
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (NotFoundException) {
-      return Response::notFound();
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
-    } catch (InvalidInputException $e) {
-      return Response::unprocessableError($e->getMessage());
+      $position = $this->mapper(Mapper\Position::class)->fetch($positionId);
+      $this->mapper(Mapper\Position::class)->setImage($position, $imageUpload);
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success([ "image" => $position->image ]);
@@ -148,19 +124,16 @@ class Position {
    * DELETE /api/positions/{id}/image (delete image from position; access: OPEN-OWNER:ADMIN, PUBLIC-OWNER:ADMIN, PRIVATE-OWNER:ADMIN)
    * @param int $positionId
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_DELETE, '/api/positions/{positionId}/image', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function deleteImage(int $positionId): Response {
 
     try {
-      $position = $this->mapper->fetch($positionId);
-      $this->mapper->removeImage($position);
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (NotFoundException) {
-      return Response::notFound();
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+      $position = $this->mapper(Mapper\Position::class)->fetch($positionId);
+      $this->mapper(Mapper\Position::class)->removeImage($position);
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success();

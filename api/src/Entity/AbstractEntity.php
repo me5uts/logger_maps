@@ -100,12 +100,8 @@ abstract class AbstractEntity implements JsonSerializable {
     $key = "$className::$attribute";
     if (!isset(self::$propertyCache[$key])) {
 
-      try {
-        foreach (Reflection::propertyGenerator($className, $attribute) as $field => $property) {
-          self::$propertyCache[$key][$field] = $property;
-        }
-      } catch (ReflectionException $e) {
-        throw new ServerException($e->getMessage());
+      foreach (Reflection::propertyGenerator($className, $attribute) as $field => $property) {
+        self::$propertyCache[$key][$field] = $property;
       }
     }
   }

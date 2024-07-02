@@ -9,35 +9,21 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
-use uLogger\Component\Session;
+use Exception;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Route;
+use uLogger\Component\Session;
 use uLogger\Entity;
-use uLogger\Exception\DatabaseException;
-use uLogger\Exception\ServerException;
 use uLogger\Mapper;
-use uLogger\Mapper\MapperFactory;
 
-class Config {
-
-  private Entity\Config $config;
-  /** @var Mapper\Config */
-  private Mapper\Config $mapper;
-
-  /**
-   * @param MapperFactory $mapperFactory
-   * @param Entity\Config $config
-   */
-  public function __construct(Mapper\MapperFactory $mapperFactory, Entity\Config $config) {
-    $this->config = $config;
-    $this->mapper = $mapperFactory->getMapper(Mapper\Config::class);
-  }
+class Config extends AbstractController {
 
   /**
    * Get config
    * GET /config (get configuration; access: OPEN-ALL, PUBLIC-ALL, PRIVATE-ALL)
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_GET, '/api/config', [ Session::ACCESS_ALL => [ Session::ALLOW_ALL ] ])]
   public function get(): Response {
@@ -49,20 +35,19 @@ class Config {
    * PUT /config (save configuration; access: OPEN-ADMIN, PUBLIC-ADMIN, PRIVATE-ADMIN)
    * @param Entity\Config $config
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_PUT, '/api/config', [ Session::ACCESS_ALL => [ Session::ALLOW_ADMIN ] ])]
   public function update(Entity\Config $config): Response {
 
     $config->setUploadLimit();
     try {
-      if ($this->mapper->update($config) === false) {
+      if ($this->mapper(Mapper\Config::class)->update($config) === false) {
         return Response::internalServerError("servererror");
       }
       $this->config->setFromConfig($config);
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
     return Response::success();
   }

@@ -40,6 +40,9 @@ class Session {
   /** @var null|Entity\User */
   public ?Entity\User $user = null;
 
+  /**
+   * @throws ServerException
+   */
   public function __construct(MapperFactory $mapperFactory, Entity\Config $config) {
     $this->userMapper = $mapperFactory->getMapper(Mapper\User::class);
     $this->config = $config;

@@ -9,27 +9,18 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
-use uLogger\Component\Session;
 use uLogger\Component\Lang;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Route;
-use uLogger\Entity;
-use uLogger\Entity\Config;
+use uLogger\Component\Session;
 
-class Locale {
-  private Entity\Config $config;
-
-  /**
-   * @param Config $config
-   */
-  public function __construct(Entity\Config $config) {
-    $this->config = $config;
-  }
+class Locale extends AbstractController {
 
   /**
    * GET /locales (list of languages, translated strings for current language; access: OPEN-ALL, PUBLIC-ALL, PRIVATE-ALL)
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_GET, '/api/locales', [ Session::ACCESS_ALL => [ Session::ALLOW_ALL ] ])]
   public function get(): Response {

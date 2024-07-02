@@ -32,6 +32,7 @@ class Gpx implements FileFormatInterface {
    * @param string $name
    * @param Entity\Config $config
    * @param MapperFactory $factory
+   * @throws ServerException
    */
   public function __construct(string $name, Entity\Config $config, MapperFactory $factory) {
     $this->name = $name;

@@ -89,6 +89,7 @@ class Utils {
    *
    * @param string $errorMessage Message
    * @param array|null $extra Optional array of extra parameters
+   * @return no-return
    */
   public static function exitWithError(string $errorMessage, ?array $extra = null): void {
     $extra['message'] = $errorMessage;
@@ -99,6 +100,7 @@ class Utils {
    * Exit with successful status code
    *
    * @param array|null $extra Optional array of extra parameters
+   * @return no-return
    */
   public static function exitWithSuccess(?array $extra = null): void {
     self::exitWithStatus(false, $extra);
@@ -108,6 +110,7 @@ class Utils {
    * Exit with xml response
    * @param bool $isError Error if true
    * @param array|null $extra Optional array of extra parameters
+   * @return no-return
    */
   private static function exitWithStatus(bool $isError, ?array $extra = null): void {
     $output = [];

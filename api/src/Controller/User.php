@@ -9,39 +9,21 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
-use uLogger\Component\Session;
+use Exception;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Route;
+use uLogger\Component\Session;
 use uLogger\Entity;
-use uLogger\Exception\DatabaseException;
-use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\NotFoundException;
-use uLogger\Exception\ServerException;
 use uLogger\Mapper;
-use uLogger\Mapper\MapperFactory;
 
-class User {
-  /** @var Mapper\User */
-  private Mapper\User $mapperUser;
-  /** @var Mapper\Position */
-  private Mapper\Position $mapperPosition;
-  /** @var Mapper\Track */
-  private Mapper\Track $mapperTrack;
-
-  public function __construct(
-    private MapperFactory $mapperFactory,
-    private Session       $session,
-    private Entity\Config $config
-  ) {
-    $this->mapperUser = $this->mapperFactory->getMapper(Mapper\User::class);
-    $this->mapperPosition = $this->mapperFactory->getMapper(Mapper\Position::class);
-    $this->mapperTrack = $this->mapperFactory->getMapper(Mapper\Track::class);
-  }
+class User extends AbstractController {
 
   /**
    * GET /api/users (get all users; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-ADMIN)
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_GET, '/api/users', [
     Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
@@ -50,11 +32,9 @@ class User {
   ])]
   public function getAll(): Response {
     try {
-      $users = $this->mapperUser->fetchAll();
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+      $users = $this->mapper(Mapper\User::class)->fetchAll();
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success($users);
@@ -64,6 +44,7 @@ class User {
    * GET /users/{id}/tracks (get user tracks; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
    * @param int $userId
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_GET, '/api/users/{userId}/tracks', [
     Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
@@ -73,11 +54,9 @@ class User {
   public function getTracks(int $userId): Response {
 
     try {
-      $tracks = $this->mapperTrack->fetchByUser($userId);
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+      $tracks = $this->mapper(Mapper\Track::class)->fetchByUser($userId);
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success($tracks);
@@ -87,6 +66,7 @@ class User {
    * GET /users/{id}/position (get user last position; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
    * @param int $userId
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_GET, '/api/users/{userId}/position', [
     Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
@@ -95,13 +75,9 @@ class User {
   ])]
   public function getPosition(int $userId): Response {
     try {
-      $position = $this->mapperPosition->fetchLast($userId);
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (NotFoundException) {
-      return Response::notFound();
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+      $position = $this->mapper(Mapper\Position::class)->fetchLast($userId);
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success($position);
@@ -110,6 +86,7 @@ class User {
   /**
    * GET /users/position (get all users last positions; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-ADMIN)
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_GET, '/api/users/position', [
     Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
@@ -119,13 +96,11 @@ class User {
   public function getAllPosition(): Response {
     $positions = [];
     try {
-      $positions = $this->mapperPosition->fetchLastAllUsers();
+      $positions = $this->mapper(Mapper\Position::class)->fetchLastAllUsers();
     } catch (NotFoundException) {
       /* ignored */
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success($positions);
@@ -136,6 +111,7 @@ class User {
    * @param int $userId
    * @param Entity\User $user
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_PUT, '/api/users/{userId}', [ Session::ACCESS_ALL => [ Session::ALLOW_ADMIN ] ])]
   public function update(int $userId, Entity\User $user): Response {
@@ -147,29 +123,23 @@ class User {
     }
 
     try {
-      $currentUser = $this->mapperUser->fetch($userId);
+      $currentUser = $this->mapper(Mapper\User::class)->fetch($userId);
       if ($userId === $this->session->user->id) {
         return Response::unprocessableError("selfeditwarn");
       }
       $currentUser->isAdmin = $isAdmin;
-      $this->mapperUser->updateIsAdmin($currentUser);
+      $this->mapper(Mapper\User::class)->updateIsAdmin($currentUser);
 
       if (!empty($password)) {
         if (!$this->config->validPassStrength($password)) {
           return Response::internalServerError("Setting pass failed");
         }
         $currentUser->password = $password;
-        $this->mapperUser->updatePassword($currentUser);
+        $this->mapper(Mapper\User::class)->updatePassword($currentUser);
 
       }
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (NotFoundException) {
-      return Response::notFound();
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
-    } catch (InvalidInputException $e) {
-      return Response::unprocessableError($e->getMessage());
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success();
@@ -181,6 +151,7 @@ class User {
    * @param string $password
    * @param string $oldPassword
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_PUT, '/api/users/{userId}/password', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER ] ])]
   public function updatePassword(int $userId, string $password, string $oldPassword): Response {
@@ -198,12 +169,10 @@ class User {
 
     $this->session->user->password = $password;
     try {
-      $this->mapperUser->updatePassword($this->session->user);
+      $this->mapper(Mapper\User::class)->updatePassword($this->session->user);
       $this->session->updateSession();
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (InvalidInputException $e) {
-      return Response::unprocessableError($e->getMessage());
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success();
@@ -213,27 +182,24 @@ class User {
    * POST /api/users (new user; access: OPEN-ADMIN, PUBLIC-ADMIN, PRIVATE-ADMIN)
    * @param Entity\User $user
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_POST, '/api/users', [ Session::ACCESS_ALL => [ Session::ALLOW_ADMIN ] ])]
   public function add(Entity\User $user): Response {
 
     try {
       try {
-        $this->mapperUser->fetchByLogin($user->login);
+        $this->mapper(Mapper\User::class)->fetchByLogin($user->login);
         return Response::conflictError("userexists");
       } catch (NotFoundException) { /* ignored */ }
 
       if (!$this->config->validPassStrength($user->password)) {
         return Response::unprocessableError("passstrengthwarn");
       }
-      $this->mapperUser->create($user);
+      $this->mapper(Mapper\User::class)->create($user);
 
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
-    } catch (InvalidInputException $e) {
-      return Response::unprocessableError($e->getMessage());
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::created($user);
@@ -243,6 +209,7 @@ class User {
    * DELETE /api/users/{id} (delete user; access: OPEN-ADMIN, PUBLIC-ADMIN, PRIVATE-ADMIN)
    * @param int $userId
    * @return Response
+   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_DELETE, '/api/users/{userId}', [ Session::ACCESS_ALL => [ Session::ALLOW_ADMIN ] ])]
   public function delete(int $userId): Response {
@@ -252,13 +219,11 @@ class User {
     }
 
     try {
-      $this->mapperPosition->deleteAll($userId);
-      $this->mapperTrack->deleteAll($userId);
-      $this->mapperUser->delete($userId);
-    } catch (DatabaseException $e) {
-      return Response::databaseError($e->getMessage());
-    } catch (ServerException $e) {
-      return Response::internalServerError($e->getMessage());
+      $this->mapper(Mapper\Position::class)->deleteAll($userId);
+      $this->mapper(Mapper\Track::class)->deleteAll($userId);
+      $this->mapper(Mapper\User::class)->delete($userId);
+    } catch (Exception $e) {
+      return $this->exceptionResponse($e);
     }
 
     return Response::success();

@@ -11,12 +11,11 @@ namespace uLogger\Component;
 
 use Exception;
 use InvalidArgumentException;
-use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
-use uLogger\Controller;
 use uLogger\Component;
+use uLogger\Controller;
 use uLogger\Entity;
 use uLogger\Entity\AbstractEntity;
 use uLogger\Exception\InvalidInputException;
@@ -88,24 +87,24 @@ class Router {
   private Request $request;
 
   /**
-   * @throws ReflectionException
+   * @throws ServerException
    */
   public function setupRoutes(Component\Session $session, Entity\Config $config, MapperFactory $mapperFactory): void {
 
-
-    $controllers = [
-      new Controller\Session($session, $config),
-      new Controller\Position($mapperFactory),
-      new Controller\Track($mapperFactory, $session, $config),
-      new Controller\Config($mapperFactory, $config),
-      new Controller\Locale($config),
-      new Controller\User($mapperFactory, $session, $config)
+    $controllerClasses = [
+      Controller\Config::class,
+      Controller\Locale::class,
+      Controller\Position::class,
+      Controller\Session::class,
+      Controller\Track::class,
+      Controller\User::class
     ];
 
-    foreach ($controllers as $controller) {
+    foreach ($controllerClasses as $controllerClass) {
+      /** @var Controller\AbstractController $controller */
+      $controller = new $controllerClass($mapperFactory, $session, $config);
       $this->setupRoute($controller);
     }
-
   }
 
   private function addRoute(Route $route): void {
@@ -207,28 +206,9 @@ class Router {
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ServerException
    */
-  private function setupRoute2(mixed $controller): void {
-    $reflectionClass = new ReflectionClass($controller);
-
-    foreach ($reflectionClass->getMethods( ReflectionMethod::IS_PUBLIC) as $method) {
-      $attributes = $method->getAttributes(Route::class);
-
-      foreach ($attributes as $attribute) {
-        /** @var Route $route  */
-        $route = $attribute->newInstance();
-        $handler = [$controller, $method->getName()];
-        $route->setHandler($handler);
-        $this->addRoute($route);
-      }
-    }
-  }
-
-  /**
-   * @throws ReflectionException
-   */
-  private function setupRoute(mixed $controller): void {
+  private function setupRoute(Controller\AbstractController $controller): void {
 
     foreach (Reflection::methodGenerator($controller, Route::class) as $route => $method) {
 

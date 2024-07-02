@@ -25,7 +25,6 @@ class ErrorHandler {
       return false;
     }
     self::sendErrorAndExit("Error: $error [$file:$line]", $errno);
-    return true;
   }
 
   public static function exceptionHandler($e): void {
@@ -44,7 +43,7 @@ class ErrorHandler {
   /**
    * @param string $message
    * @param int $errno
-   * @noinspection JsonEncodingApiUsageInspection
+   * @return no-return
    */
   private static function sendErrorAndExit(string $message, int $errno): void {
 

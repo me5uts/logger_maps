@@ -9,8 +9,8 @@ declare(strict_types = 1);
 
 namespace uLogger\Mapper;
 
-use InvalidArgumentException;
 use uLogger\Component\Db;
+use uLogger\Exception\ServerException;
 
 class MapperFactory {
 
@@ -26,9 +26,11 @@ class MapperFactory {
   }
 
   /**
-   * @param string $className
+   * @template T
+   * @param class-string<T> $className
    * @param mixed ...$arguments
-   * @return mixed
+   * @throws ServerException
+   * @return T
    */
   public function getMapper(string $className, ...$arguments): mixed {
     if (array_key_exists($className, $this->cache)) {
@@ -36,7 +38,7 @@ class MapperFactory {
     }
 
     if (!class_exists($className)) {
-      throw new InvalidArgumentException('Unknown class');
+      throw new ServerException("Unknown mapper class $className");
     }
 
     $instance = new $className($this->db, ...$arguments);

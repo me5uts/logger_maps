@@ -42,6 +42,9 @@ class Reflection {
   }
 
   /**
+   * @param object|string $objectOrClass
+   * @param string $attributeName
+   * @return Generator
    * @throws ServerException
    */
   public static function propertyGenerator(object|string $objectOrClass, string $attributeName): Generator {

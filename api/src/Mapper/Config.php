@@ -11,7 +11,6 @@ namespace uLogger\Mapper;
 
 use PDO;
 use PDOException;
-use ReflectionException;
 use uLogger\Entity;
 use uLogger\Exception\DatabaseException;
 use uLogger\Exception\ServerException;
@@ -36,8 +35,6 @@ class Config extends AbstractMapper {
     } catch (PDOException $e) {
       syslog(LOG_ERR, $e->getMessage());
       throw new DatabaseException($e->getMessage());
-    } catch (ReflectionException $e) {
-      throw new ServerException($e->getMessage());
     }
   }
 

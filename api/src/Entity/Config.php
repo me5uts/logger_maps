@@ -153,7 +153,7 @@ class Config extends AbstractEntity {
    * Create offline config
    * Read some fields from cookies
    */
-  private static function createFromCookies(): Config {
+  public static function createFromCookies(): Config {
     $config = new self();
     if (isset($_COOKIE["ulogger_api"])) { $config->mapApi = $_COOKIE["ulogger_api"]; }
     if (isset($_COOKIE["ulogger_lang"])) { $config->lang = $_COOKIE["ulogger_lang"]; }
