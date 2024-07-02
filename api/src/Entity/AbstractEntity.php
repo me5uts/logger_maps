@@ -14,9 +14,10 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionProperty;
+use uLogger\Attribute\Column;
+use uLogger\Attribute\JsonField;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Reflection;
-use uLogger\Mapper\Column;
 
 abstract class AbstractEntity implements JsonSerializable {
 

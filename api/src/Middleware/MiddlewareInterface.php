@@ -9,9 +9,9 @@ declare(strict_types = 1);
 
 namespace uLogger\Middleware;
 
+use uLogger\Attribute\Route;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
-use uLogger\Component\Route;
 
 interface MiddlewareInterface {
   public function run(Request $request, Route $route): Response;

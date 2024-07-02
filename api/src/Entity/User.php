@@ -9,7 +9,8 @@ declare(strict_types = 1);
 
 namespace uLogger\Entity;
 
-use uLogger\Mapper\Column;
+use uLogger\Attribute\Column;
+use uLogger\Attribute\JsonField;
 
 /**
  * User handling routines

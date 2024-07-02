@@ -9,12 +9,13 @@ declare(strict_types = 1);
 
 namespace uLogger\Entity;
 
+use uLogger\Attribute\Column;
+use uLogger\Attribute\JsonField;
 use uLogger\Exception\DatabaseException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Reflection;
 use uLogger\Helper\Utils;
 use uLogger\Mapper;
-use uLogger\Mapper\Column;
 use uLogger\Mapper\MapperFactory;
 
 /**

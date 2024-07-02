@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 1);
 
-namespace uLogger\Mapper;
+namespace uLogger\Attribute;
 
 use Attribute;
 

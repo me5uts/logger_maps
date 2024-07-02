@@ -10,9 +10,9 @@ declare(strict_types = 1);
 namespace uLogger\Controller;
 
 use Exception;
+use uLogger\Attribute\Route;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
-use uLogger\Component\Route;
 use uLogger\Component\Session;
 use uLogger\Entity;
 use uLogger\Exception\NotFoundException;

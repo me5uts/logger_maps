@@ -14,6 +14,7 @@ use InvalidArgumentException;
 use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
+use uLogger\Attribute\Route;
 use uLogger\Component;
 use uLogger\Controller;
 use uLogger\Entity;

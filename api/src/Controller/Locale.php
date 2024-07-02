@@ -9,10 +9,10 @@ declare(strict_types = 1);
 
 namespace uLogger\Controller;
 
+use uLogger\Attribute\Route;
 use uLogger\Component\Lang;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
-use uLogger\Component\Route;
 use uLogger\Component\Session;
 
 class Locale extends AbstractController {

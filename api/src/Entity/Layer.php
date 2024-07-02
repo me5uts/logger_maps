@@ -9,6 +9,8 @@ declare(strict_types = 1);
 
 namespace uLogger\Entity;
 
+use uLogger\Attribute\JsonField;
+
 class Layer extends AbstractEntity {
   #[JsonField]
   public int $id;
