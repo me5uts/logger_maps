@@ -2,7 +2,8 @@
 -- Database: `ulogger`
 --
 
-CREATE DATABASE ulogger WITH ENCODING='UTF8' LC_COLLATE = 'en_US.utf-8' LC_CTYPE = 'en_US.utf-8';
+SELECT 'CREATE DATABASE ulogger WITH ENCODING = ''UTF8'' LC_COLLATE = ''en_US.utf-8'' LC_CTYPE = ''en_US.utf-8'''
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'ulogger')\gexec
 \connect ulogger;
 
 -- --------------------------------------------------------
