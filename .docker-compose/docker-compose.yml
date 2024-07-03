@@ -1,0 +1,21 @@
+name: ulogger
+
+services:
+  ulogger-server:
+    build:
+      context: ../
+      args:
+        DB_DRIVER: ${DB_DRIVER}
+        DB_ROOT_PASS: ${DB_ROOT_PASS}
+        DB_USER_NAME: ${DB_USER_NAME}
+        DB_USER_PASS: ${DB_USER_PASS}
+        ULOGGER_ADMIN_USER: ${ULOGGER_ADMIN_USER}
+        ULOGGER_ADMIN_PASS: ${ULOGGER_ADMIN_PASS}
+        ULOGGER_LANG: ${ULOGGER_LANG}
+    container_name: ulogger_server
+    image: bfabiszewski/ulogger
+    env_file:
+      - .env
+    volumes:
+      - ./local/path/for/data:/data
+    restart: always
