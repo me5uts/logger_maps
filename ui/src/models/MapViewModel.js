@@ -145,7 +145,7 @@ export default class MapViewModel extends ViewModel {
       if (track) {
         Observer.observe(track, 'positions', () => {
           this.displayTrack(track, false);
-          if (track instanceof Track && !this.api.isPositionVisible(track.length - 1)) {
+          if (track instanceof Track && track.length && !this.api.isPositionVisible(track.length - 1)) {
             console.log('last track position not visible');
             this.api.centerToPosition(track.length - 1);
           }
