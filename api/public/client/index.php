@@ -50,26 +50,26 @@ function exitWithSuccess(array $params = []): void {
 
 $action = Utils::postString('action');
 
-$db = Db::getInstance();
 try {
-  $config = (new Mapper\Config($db))->fetch();
-  $mapperFactory = new MapperFactory($db);
+  $mapperFactory = new MapperFactory(Db::createFromConfig());
+  $config = Entity\Config::createFromMapper($mapperFactory);
   $auth = new Session($mapperFactory, $config);
+  $auth->init();
+  /** @var Mapper\Track $mapperTrack */
+  $mapperTrack = $mapperFactory->getMapper(Mapper\Track::class);
+  /** @var Mapper\Position $mapperPosition */
+  $mapperPosition = $mapperFactory->getMapper(Mapper\Position::class);
 } catch (DatabaseException|ServerException $e) {
   exitWithError("Server error");
 }
 
-
-/** @var Mapper\Track $mapperTrack */
-$mapperTrack = $mapperFactory->getMapper(Mapper\Track::class);
-/** @var Mapper\Position $mapperPosition */
-$mapperPosition = $mapperFactory->getMapper(Mapper\Position::class);
 if ($action !== "auth" && !$auth->isAuthenticated()) {
   $auth->exitWithUnauthorized();
 }
 
 switch ($action) {
   // action: authorize
+  // TODO: replace with POST /api/session
   case "auth":
     $login = Utils::postString('user');
     $pass = Utils::postPass('pass');
@@ -85,6 +85,7 @@ switch ($action) {
     break;
 
   // action: addtrack
+  // TODO: replace with POST /api/tracks
   case "addtrack":
     $trackName = Utils::postString('track');
     if (empty($trackName)) {
@@ -101,6 +102,7 @@ switch ($action) {
     break;
 
   // action: addposition
+  // TODO: replace with POST /api/tracks/{id}/positions
   case "addpos":
     $latitude = Utils::postFloat('lat');
     $longitude = Utils::postFloat('lon');

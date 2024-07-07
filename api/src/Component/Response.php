@@ -9,11 +9,17 @@ declare(strict_types = 1);
 
 namespace uLogger\Component;
 
+use Exception;
 use JsonException;
+use uLogger\Exception\DatabaseException;
+use uLogger\Exception\GpxParseException;
+use uLogger\Exception\InvalidInputException;
+use uLogger\Exception\NotFoundException;
+use uLogger\Exception\ServerException;
 
 class Response {
 
-  public const TYPE_JSON = 'application/json; charset=UTF-8';
+  public const TYPE_JSON = 'application/json';
   public const TYPE_GPX = 'application/gpx+xml';
   public const TYPE_KML = 'application/vnd.google-earth.kml+xml';
 
@@ -76,42 +82,22 @@ class Response {
   }
 
   private function sendHttpCodeHeader(): void {
-    $text = '';
-    switch ($this->code) {
-      case self::CODE_2_OK:
-        $text = 'OK';
-        break;
-      case self::CODE_2_CREATED:
-        $text = 'Created';
-        break;
-      case self::CODE_2_NOCONTENT:
-        $text = 'No Content';
-        break;
-      case self::CODE_3_FOUND:
-        $text = 'Found';
-        break;
-      case self::CODE_4_UNAUTHORIZED:
-        $text = 'Unauthorized';
-        break;
-      case self::CODE_4_FORBIDDEN:
-        $text = 'Forbidden';
-        break;
-      case self::CODE_4_NOTFOUND:
-        $text = 'Not Found';
-        break;
-      case self::CODE_4_CONFLICT:
-        $text = 'Conflict';
-        break;
-      case self::CODE_4_UNPROCESSABLE:
-        $text = 'Unprocessable entity';
-        break;
-      case self::CODE_5_INTERNAL:
-        $text = 'Internal server error';
-        break;
-      case self::CODE_5_UNAVAILABLE:
-        $text = 'Service unavailable';
-        break;
-    }
+    $codeTexts = [
+      self::CODE_2_OK => 'OK',
+      self::CODE_2_CREATED => 'Created',
+      self::CODE_2_NOCONTENT => 'No Content',
+      self::CODE_3_FOUND => 'Found',
+      self::CODE_4_UNAUTHORIZED => 'Unauthorized',
+      self::CODE_4_FORBIDDEN => 'Forbidden',
+      self::CODE_4_NOTFOUND => 'Not Found',
+      self::CODE_4_CONFLICT => 'Conflict',
+      self::CODE_4_UNPROCESSABLE => 'Unprocessable entity',
+      self::CODE_5_INTERNAL => 'Internal server error',
+      self::CODE_5_UNAVAILABLE => 'Service unavailable',
+    ];
+
+    $text = $codeTexts[$this->code] ?? '';
+
     header("HTTP/1.1 $this->code $text", true, $this->code);
   }
 
@@ -136,7 +122,7 @@ class Response {
   }
 
   public static function success($payload = null, int $code = self::CODE_2_OK): Response {
-    if (empty($payload)) {
+    if ($payload === null) {
       $contentType = null;
       $code = self::CODE_2_NOCONTENT;
     } else {
@@ -198,13 +184,26 @@ class Response {
     return $response;
   }
 
+  public static function exception(Exception $e): Response {
+    if ($e instanceof DatabaseException) {
+      return Response::databaseError($e->getMessage());
+    } elseif ($e instanceof ServerException) {
+      return Response::internalServerError($e->getMessage());
+    } elseif ($e instanceof InvalidInputException || $e instanceof GpxParseException) {
+      return Response::unprocessableError($e->getMessage());
+    } elseif ($e instanceof NotFoundException) {
+      return Response::notFound();
+    }
+    return Response::internalServerError("An unexpected error occurred.");
+  }
+
   public function send(): void {
     foreach ($this->extraHeaders as $key => $value) {
       header("$key: $value");
     }
     $this->sendHttpCodeHeader();
     $responseBody = '';
-    if (!empty($this->payload)) {
+    if ($this->payload !== null) {
       if ($this->contentType === self::TYPE_JSON) {
         try {
           $responseBody = json_encode($this->payload, JSON_THROW_ON_ERROR);
@@ -230,13 +229,6 @@ class Response {
   public function sendAndExit(): void {
     $this->send();
     exit();
-  }
-
-  public static function sendHeaders(): void {
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: OPTIONS, GET, POST, PUT, DELETE");
-    header("Access-Control-Max-Age: 3600");
-    header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
   }
 
 }

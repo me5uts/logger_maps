@@ -14,6 +14,7 @@ use uLogger\Attribute\Route;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Session;
+use uLogger\Entity;
 use uLogger\Exception\DatabaseException;
 use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
@@ -27,11 +28,20 @@ class AccessControl implements MiddlewareInterface {
   private Route $route;
   private MapperFactory $mapperFactory;
 
+  /**
+   * @param MapperFactory $mapperFactory
+   * @param Session $session
+   */
   public function __construct(MapperFactory $mapperFactory, Session $session) {
     $this->session = $session;
     $this->mapperFactory = $mapperFactory;
   }
 
+  /**
+   * @param Request $request
+   * @param Route $route
+   * @return Response
+   */
   public function run(Request $request, Route $route): Response {
     $this->request = $request;
     $this->route = $route;
@@ -40,7 +50,7 @@ class AccessControl implements MiddlewareInterface {
     $policies = null;
     if (isset($routeAuth[$accessType])) {
       $policies = $routeAuth[$accessType];
-    } elseif (isset($routeAuth[Session::ACCESS_ALL])) {
+    } else if (isset($routeAuth[Session::ACCESS_ALL])) {
       $policies = $routeAuth[Session::ACCESS_ALL];
     }
 
@@ -90,42 +100,77 @@ class AccessControl implements MiddlewareInterface {
       return false;
     }
     $checks = 0;
+    if ($this->request->hasPayload()) {
+      // operation on new track
+      if ($this->request->hasPreparedArgument(Entity\Track::class)) {
+        $checks++;
+        $track = $this->request->getPreparedArgument(Entity\Track::class);
+        if (!$this->session->isSessionUser($track->userId)) {
+          return false;
+        }
+      }
+      // operation on new position
+      if ($this->request->hasPreparedArgument(Entity\Position::class)) {
+        $checks++;
+        $position = $this->request->getPreparedArgument(Entity\Position::class);
+        if (!$this->session->isSessionUser($position->userId)) {
+          return false;
+        }
+        if (!$this->isFeatureOwner($position->trackId, Mapper\Track::class)) {
+          return false;
+        }
+      }
+    }
+    // operation on existing user
     if (str_contains($this->route->getPath(), '{userId}')) {
       $checks++;
-      if ($this->session->user->id !== (int) $this->request->getParams()['userId']) {
+      if (!$this->session->isSessionUser((int) $this->request->getParams()['userId'])) {
         return false;
       }
     }
+    // operation on existing track
     if (str_contains($this->route->getPath(), '{trackId}')) {
       $checks++;
       $trackId = (int) $this->request->getParams()['trackId'];
-      /** @var Mapper\Track $trackMapper */
-      $trackMapper = $this->mapperFactory->getMapper(Mapper\Track::class);
-      try {
-        $track = $trackMapper->fetch($trackId);
-        if ($this->session->user->id !== $track->userId) {
-          return false;
-        }
-      } catch (NotFoundException) {
+      if (!$this->isFeatureOwner($trackId, Mapper\Track::class)) {
         return false;
       }
     }
+    // operation on existing position
     if (str_contains($this->route->getPath(), '{positionId}')) {
       $checks++;
       $positionId = (int) $this->request->getParams()['positionId'];
-      /** @var Mapper\Position $positionMapper */
-      $positionMapper = $this->mapperFactory->getMapper(Mapper\Position::class);
-      try {
-        $position = $positionMapper->fetch($positionId);
-        if ($this->session->user->id !== $position->userId) {
-          return false;
-        }
-      } catch (NotFoundException) {
+      if (!$this->isFeatureOwner($positionId, Mapper\Position::class)) {
         return false;
       }
     }
+
     if ($checks === 0) {
       throw new ServerException('Route misconfigured: no private resource found');
+    }
+    return true;
+  }
+
+  /**
+   * @param int $id
+   * @param class-string $className
+   * @return bool
+   * @throws ServerException
+   * @throws DatabaseException
+   */
+  private function isFeatureOwner(int $id, string $className): bool {
+    if ($className !== Mapper\Position::class && $className !== Mapper\Track::class) {
+      throw new ServerException("Wrong argument $className in feature owner check");
+    }
+    /** @var Mapper\Position|Mapper\Track $mapper */
+    $mapper = $this->mapperFactory->getMapper($className);
+    try {
+      $feature = $mapper->fetch($id);
+      if ($this->session->user->id !== $feature->userId) {
+        return false;
+      }
+    } catch (NotFoundException) {
+      return false;
     }
     return true;
   }

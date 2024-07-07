@@ -12,9 +12,6 @@ namespace uLogger\Entity;
 use uLogger\Attribute\Column;
 use uLogger\Attribute\JsonField;
 
-/**
- * Positions handling
- */
 class Position extends AbstractEntity {
   /** @var int|null Position id */
   #[Column]

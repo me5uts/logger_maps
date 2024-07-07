@@ -110,7 +110,11 @@ class Session {
    * @return bool True if admin, false otherwise
    */
   public function isAdmin(): bool {
-    return ($this->isAuthenticated && $this->user->isAdmin);
+    return $this->isAuthenticated && $this->user->isAdmin;
+  }
+
+  public function isSessionUser(int $userId): bool {
+      return $this->isAuthenticated && $this->user->id === $userId;
   }
 
   /**
@@ -119,6 +123,20 @@ class Session {
    * @return void
    */
   private function sessionStart(): void {
+    $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+      (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    // TODO: add config param for session lifetime
+//    ini_set('session.gc_maxlifetime', (string) $this->config->sessionLifetime);
+//    ini_set('session.gc_probability', '1');
+//    ini_set('session.gc_divisor', '25');
+    ini_set('session.use_cookies', '1');
+    ini_set('session.use_only_cookies', '1');
+    session_set_cookie_params([
+      'lifetime' => 0,
+      'httponly' => true,
+      'samesite' => 'Lax',
+      'secure' => $isHttps
+    ]);
     session_name("ulogger");
     session_start();
   }
@@ -197,6 +215,7 @@ class Session {
    * Send 401 headers
    *
    * @return void
+   * @deprecated
    */
   public function sendUnauthorizedHeader(): void {
     header('WWW-Authenticate: OAuth realm="users@ulogger"');
@@ -208,6 +227,7 @@ class Session {
    *
    * @param string $message
    * @return no-return
+   * @deprecated
    */
   public function exitWithUnauthorized(string $message = "Unauthorized"): void {
     $this->sendUnauthorizedHeader();

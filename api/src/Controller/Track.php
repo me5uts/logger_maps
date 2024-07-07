@@ -16,6 +16,7 @@ use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Session;
 use uLogger\Entity;
+use uLogger\Entity\Position;
 use uLogger\Helper\Gpx;
 use uLogger\Helper\Kml;
 use uLogger\Mapper;
@@ -37,7 +38,7 @@ class Track extends AbstractController {
     try {
       $track = $this->mapper(Mapper\Track::class)->fetch($trackId);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success($track);
@@ -58,9 +59,50 @@ class Track extends AbstractController {
     try {
       $this->mapper(Mapper\Track::class)->update($track);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
     return Response::success();
+  }
+
+  /**
+   * POST /api/tracks (add track; access: OPEN-OWNER:ADMIN, PUBLIC-OWNER:ADMIN, PRIVATE-OWNER:ADMIN)
+   * @param Entity\Track $track
+   * @return Response
+   * @noinspection PhpUnused
+   */
+  #[Route(Request::METHOD_POST, '/api/tracks', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
+  public function add(Entity\Track $track): Response {
+
+    try {
+      $this->mapper(Mapper\Track::class)->create($track);
+    } catch (Exception $e) {
+      return Response::exception($e);
+    }
+    return Response::created($track);
+  }
+
+
+  /**
+   * POST /api/tracks/{id}/positions (add position; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
+   * @param int $trackId
+   * @param Position $position
+   * @return Response
+   * @noinspection PhpUnused
+   */
+  #[Route(Request::METHOD_POST, '/api/tracks/{trackId}/positions', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
+  public function addPosition(int $trackId, Entity\Position $position): Response {
+
+    if ($trackId !== $position->trackId) {
+      return Response::unprocessableError("Wrong track id");
+    }
+
+    try {
+      $this->mapper(Mapper\Position::class)->create($position);
+    } catch (Exception $e) {
+      return Response::exception($e);
+    }
+
+    return Response::created($position);
   }
 
   /**
@@ -77,7 +119,7 @@ class Track extends AbstractController {
       $this->mapper(Mapper\Position::class)->deleteAll($track->userId, $track->id);
       $this->mapper(Mapper\Track::class)->delete($track);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success();
@@ -96,9 +138,9 @@ class Track extends AbstractController {
     try {
       $gpx = new Gpx($gpxName, $this->config, $this->mapperFactory);
       $result = $gpx->import($this->session->user->id, $gpxFile);
-      return Response::success($result);
+      return Response::created($result);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     } finally {
       unlink($gpxFile);
     }
@@ -140,7 +182,7 @@ class Track extends AbstractController {
           return Response::unprocessableError("Unsupported format: $format");
       }
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
     return Response::file($file->export($positions), $file->getExportedName(), $file->getMimeType());
   }

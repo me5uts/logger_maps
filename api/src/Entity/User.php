@@ -12,9 +12,6 @@ namespace uLogger\Entity;
 use uLogger\Attribute\Column;
 use uLogger\Attribute\JsonField;
 
-/**
- * User handling routines
- */
 class User extends AbstractEntity {
   #[Column]
   #[JsonField]

@@ -34,7 +34,7 @@ class User extends AbstractController {
     try {
       $users = $this->mapper(Mapper\User::class)->fetchAll();
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success($users);
@@ -56,7 +56,7 @@ class User extends AbstractController {
     try {
       $tracks = $this->mapper(Mapper\Track::class)->fetchByUser($userId);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success($tracks);
@@ -77,7 +77,7 @@ class User extends AbstractController {
     try {
       $position = $this->mapper(Mapper\Position::class)->fetchLast($userId);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success($position);
@@ -100,7 +100,7 @@ class User extends AbstractController {
     } catch (NotFoundException) {
       /* ignored */
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success($positions);
@@ -139,7 +139,7 @@ class User extends AbstractController {
 
       }
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success();
@@ -172,7 +172,7 @@ class User extends AbstractController {
       $this->mapper(Mapper\User::class)->updatePassword($this->session->user);
       $this->session->updateSession();
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success();
@@ -199,7 +199,7 @@ class User extends AbstractController {
       $this->mapper(Mapper\User::class)->create($user);
 
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::created($user);
@@ -223,7 +223,7 @@ class User extends AbstractController {
       $this->mapper(Mapper\Track::class)->deleteAll($userId);
       $this->mapper(Mapper\User::class)->delete($userId);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success();

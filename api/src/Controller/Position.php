@@ -52,7 +52,7 @@ class Position extends AbstractController {
         }
       }
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
     return Response::success($positions);
   }
@@ -76,7 +76,7 @@ class Position extends AbstractController {
       $currentPosition->comment = $position->comment;
       $this->mapper(Mapper\Position::class)->update($currentPosition);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success();
@@ -94,7 +94,7 @@ class Position extends AbstractController {
       $position = $this->mapper(Mapper\Position::class)->fetch($positionId);
       $this->mapper(Mapper\Position::class)->delete($position);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success();
@@ -114,10 +114,10 @@ class Position extends AbstractController {
       $position = $this->mapper(Mapper\Position::class)->fetch($positionId);
       $this->mapper(Mapper\Position::class)->setImage($position, $imageUpload);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
-    return Response::success([ "image" => $position->image ]);
+    return Response::created([ "image" => $position->image ]);
   }
 
   /**
@@ -133,7 +133,7 @@ class Position extends AbstractController {
       $position = $this->mapper(Mapper\Position::class)->fetch($positionId);
       $this->mapper(Mapper\Position::class)->removeImage($position);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
 
     return Response::success();

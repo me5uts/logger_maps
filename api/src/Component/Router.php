@@ -9,21 +9,16 @@ declare(strict_types = 1);
 
 namespace uLogger\Component;
 
-use Exception;
 use InvalidArgumentException;
 use ReflectionException;
-use ReflectionMethod;
-use ReflectionNamedType;
 use uLogger\Attribute\Route;
 use uLogger\Component;
 use uLogger\Controller;
 use uLogger\Entity;
-use uLogger\Entity\AbstractEntity;
 use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Reflection;
-use uLogger\Helper\Utils;
 use uLogger\Mapper\MapperFactory;
 use uLogger\Middleware\MiddlewareInterface;
 
@@ -66,8 +61,10 @@ use uLogger\Middleware\MiddlewareInterface;
  *
  * /api/tracks
  * ✓ GET /api/tracks/{id} (get track metadata; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
+ * ✓ POST /api/tracks (add track; access: OPEN-AUTHORIZED|ADMIN, PUBLIC-AUTHORIZED|ADMIN, PRIVATE-AUTHORIZED|ADMIN)
  * ✓ PUT /api/tracks/{id} (update track metadata; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ GET /api/tracks/{id}/positions[?after={positionId}] (track positions; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
+ * ✓ POST /api/tracks/{id}/positions (add position; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ GET /api/tracks/{id}/export?format={gpx|kml} (download exported file; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
  * ✓ POST /api/tracks/import (import uploaded file; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ DELETE /api/tracks/{id} (delete track; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
@@ -83,7 +80,9 @@ use uLogger\Middleware\MiddlewareInterface;
  *
  */
 class Router {
+  /** @var array<string, array<string, Route>> $routes [method => [path => route]] */
   private array $routes = [];
+  /** @var MiddlewareInterface[] $middlewares */
   private array $middlewares = [];
   private Request $request;
 
@@ -117,7 +116,12 @@ class Router {
   }
 
   /**
-   * @throws Exception
+   * @param Request $request
+   * @return Response
+   * @throws InvalidInputException
+   * @throws NotFoundException
+   * @throws ReflectionException
+   * @throws ServerException
    */
   public function dispatch(Request $request): Response {
     $this->request = $request;
@@ -128,6 +132,7 @@ class Router {
 
       foreach ($this->routes[$this->request->getMethod()] as $routePath => $route) {
         if ($this->request->matchPath($routePath)) {
+          $this->request->parseHandlerArguments($route->getHandler());
           foreach ($this->middlewares as $middleware) {
             $middlewareResponse = $this->executeMiddleware($middleware, $route);
             if ($middlewareResponse->getCode() != Response::CODE_1_CONTINUE) {
@@ -149,61 +154,14 @@ class Router {
    * Call the controller method or closure
    * @param callable|array $handler
    * @return Response
-   * @throws InvalidInputException
-   * @throws NotFoundException
-   * @throws ReflectionException
-   * @throws ServerException
    */
   private function callHandler(callable|array $handler): Response {
     if (is_callable($handler)) {
-      $arguments = $this->getSanitizedArguments($handler);
+      $arguments = $this->request->getPreparedArguments();
       return call_user_func_array($handler, $arguments);
     } else {
       throw new InvalidArgumentException('Invalid route handler');
     }
-  }
-
-  /**
-   * @param callable $handler
-   * @return array
-   * @throws ReflectionException
-   * @throws NotFoundException
-   * @throws InvalidInputException
-   * @throws ServerException
-   */
-  private function getSanitizedArguments(callable $handler): array {
-    $requestParams = array_merge($this->request->getParams(), $this->request->getFilters());
-    $requestPayload = $this->request->getPayload();
-    $preparedArguments = [];
-
-    $f = new ReflectionMethod($handler[0], $handler[1]);
-    foreach ($f->getParameters() as $routeParam) {
-      if (!$routeParam->hasType()) {
-        throw new ServerException("Parameter $routeParam missing type");
-      }
-      $routeParamName = $routeParam->getName();
-      $routeParamType = $routeParam->getType();
-      if (!$routeParamType instanceof ReflectionNamedType) {
-        throw new ServerException("Parameter $routeParam is not named type");
-      }
-      $routeParamTypeName = $routeParamType->getName();
-
-      if ($routeParamTypeName === FileUpload::class) {
-        $preparedArguments[] = $this->handleUpload($routeParamName);
-      } elseif (array_key_exists($routeParamName, $requestParams)) {
-        // params, filters
-        $preparedArguments[] = Reflection::castArgument($requestParams[$routeParamName], $routeParamType);
-      } elseif ($this->request->hasPayload() && is_subclass_of($routeParamTypeName, AbstractEntity::class)) {
-        // payload (map params to entity)
-        $preparedArguments[] = $routeParamTypeName::fromPayload($requestPayload);
-      } elseif ($this->request->hasPayload() && array_key_exists($routeParamName, $requestPayload)) {
-        // payload (map param to argument)
-        $preparedArguments[] = Reflection::castArgument($requestPayload[$routeParamName], $routeParamType);
-      } elseif (!$routeParam->isOptional()) {
-        throw new NotFoundException("Missing parameter $routeParamName type $routeParamTypeName");
-      }
-    }
-    return $preparedArguments;
   }
 
   /**
@@ -220,17 +178,5 @@ class Router {
     }
   }
 
-  /**
-   * @throws InvalidInputException
-   */
-  private function handleUpload(string $name): FileUpload {
-    try {
-      return Utils::requireFile($name);
-    } catch (InvalidInputException $e) {
-      $message = "iuploadfailure"; // $lang["iuploadfailure"];
-      $message .= ": {$e->getMessage()}";
-      throw new InvalidInputException($message);
-    }
-  }
 
 }

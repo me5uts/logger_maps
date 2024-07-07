@@ -9,10 +9,6 @@ import User from './User.js';
 
 export default class Session {
 
-  /** @var {boolean} */
-  #isAdmin;
-  /** @var {boolean} */
-  #isAuthenticated;
   /** @var {?User} */
   #user;
 
@@ -21,8 +17,6 @@ export default class Session {
   }
 
   init() {
-    this.#isAdmin = false;
-    this.#isAuthenticated = false;
     this.#user = null;
   }
 
@@ -33,8 +27,7 @@ export default class Session {
    */
   login(login, password) {
     return Http.post('api/session', {
-      login: login,
-      password: password
+      login, password
     }).then((data) => this.load(data));
   }
 
@@ -52,11 +45,8 @@ export default class Session {
   set user(user) {
     if (user) {
       this.#user = user;
-      this.#isAuthenticated = true;
     } else {
       this.#user = null;
-      this.#isAuthenticated = false;
-      this.#isAdmin = false;
     }
   }
 
@@ -67,21 +57,21 @@ export default class Session {
     if (!this.#user) {
       throw new Error('No authenticated user');
     }
-    this.#isAdmin = isAdmin;
+    this.#user.isAdmin = isAdmin;
   }
 
   /**
    * @return {boolean}
    */
   get isAdmin() {
-    return this.#isAdmin;
+    return this.#user !== null && this.#user.isAdmin;
   }
 
   /**
    * @return {boolean}
    */
   get isAuthenticated() {
-    return this.#isAuthenticated;
+    return this.#user !== null;
   }
 
   /**
@@ -94,16 +84,13 @@ export default class Session {
   /**
    * Load auth state from data object
    * @param {Object} data
-   * @param {boolean} data.isAdmin
+   * @param {User} data.user
    * @param {boolean} data.isAuthenticated
-   * @param {?number} data.userId
-   * @param {?string} data.userLogin
    */
   load(data) {
     if (data) {
-      if (data.isAuthenticated) {
-        this.user = new User(data.userId, data.userLogin);
-        this.isAdmin = data.isAdmin;
+      if (data.isAuthenticated && data.user) {
+        this.user = new User(data.user.id, data.user.login, data.user.isAdmin);
       }
     }
   }

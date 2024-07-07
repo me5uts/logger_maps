@@ -41,13 +41,17 @@ class Config extends AbstractController {
   public function update(Entity\Config $config): Response {
 
     $config->setUploadLimit();
+    if (!$config->requireAuthentication) {
+      // tracks must be public if we don't require authentication
+      $config->publicTracks = true;
+    }
     try {
       if ($this->mapper(Mapper\Config::class)->update($config) === false) {
         return Response::internalServerError("servererror");
       }
       $this->config->setFromConfig($config);
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
     return Response::success();
   }

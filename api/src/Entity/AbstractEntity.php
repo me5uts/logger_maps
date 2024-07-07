@@ -16,6 +16,7 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use uLogger\Attribute\Column;
 use uLogger\Attribute\JsonField;
+use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Reflection;
 
@@ -49,6 +50,7 @@ abstract class AbstractEntity implements JsonSerializable {
 
   /**
    * @throws ServerException
+   * @throws InvalidInputException
    */
   public static function fromPayload(array $payload): static {
 
@@ -60,11 +62,16 @@ abstract class AbstractEntity implements JsonSerializable {
    */
   public static function fromDatabaseRow(array $row): static {
 
-    return self::getHydratedInstance($row, Column::class);
+    try {
+      return self::getHydratedInstance($row, Column::class);
+    } catch (InvalidInputException $e) {
+      throw new ServerException($e->getMessage());
+    }
   }
 
   /**
    * @throws ServerException
+   * @throws InvalidInputException
    */
   private static function getHydratedInstance(array $data, string $attribute): static {
 
@@ -86,7 +93,7 @@ abstract class AbstractEntity implements JsonSerializable {
       } elseif ($property->hasDefaultValue()) {
         $property->setValue($instance, $property->getDefaultValue());
       } else {
-        throw new ServerException("Missing value for field {$property->getName()}");
+        throw new InvalidInputException("Missing value for field {$property->getName()}");
       }
     }
 

@@ -12,9 +12,6 @@ namespace uLogger\Entity;
 use uLogger\Attribute\Column;
 use uLogger\Attribute\JsonField;
 
-/**
- * Track handling
- */
 class Track extends AbstractEntity {
   #[Column]
   #[JsonField]

@@ -30,7 +30,7 @@ class Session extends AbstractController {
   }
 
   /**
-   * Start session for user and password
+   * Start session for user with login and password
    * POST /session (log in; payload: {login, password}; access: OPEN-ALL, PUBLIC-ALL PRIVATE-ALL)
    * @param string $login
    * @param string $password
@@ -44,9 +44,9 @@ class Session extends AbstractController {
         return Response::notAuthorized();
       }
     } catch (Exception $e) {
-      return $this->exceptionResponse($e);
+      return Response::exception($e);
     }
-    return $this->ResponseWithSessionData();
+    return Response::created($this->sessionDataResult());
   }
 
   /**
@@ -60,18 +60,16 @@ class Session extends AbstractController {
     if ($this->config->requireAuthentication && !$this->session->isAuthenticated()) {
       return Response::notAuthorized();
     }
-    return $this->ResponseWithSessionData();
+    return Response::success($this->sessionDataResult());
   }
 
-  private function ResponseWithSessionData(): Response {
+  private function sessionDataResult(): array {
     $result = [
       "isAuthenticated" => $this->session->isAuthenticated()
     ];
     if ($this->session->isAuthenticated()) {
-      $result["isAdmin"] = $this->session->isAdmin();
-      $result["userId"] = $this->session->user->id;
-      $result["userLogin"] = $this->session->user->login;
+      $result["user"] = $this->session->user;
     }
-    return Response::success($result);
+    return $result;
   }
 }

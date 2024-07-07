@@ -48,7 +48,7 @@ class ErrorHandler {
   private static function sendErrorAndExit(string $message, int $errno): void {
 
     http_response_code(Response::CODE_5_INTERNAL);
-    header("Content-Type: application/json; charset=UTF-8");
+    header("Content-Type: application/json");
 
     die(json_encode([
       'error' => true,

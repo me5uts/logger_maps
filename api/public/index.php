@@ -37,7 +37,7 @@ try {
   $router->setupRoutes($session, $config, $mapperFactory);
   $response = $router->dispatch($request);
 } catch (Exception $e) {
-  $response = Response::internalServerError($e->getMessage());
+  $response = Response::exception($e);
 }
 
 $response->sendAndExit();
