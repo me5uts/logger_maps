@@ -63,16 +63,15 @@ export default class Http {
 
     const init = {};
     init.method = method;
-    init.headers = {};
+    init.headers = new Headers();
     if (method === 'POST' || method === 'PUT') {
       if (data instanceof HTMLFormElement) {
         data = new FormData(data);
       }
       if (data instanceof FormData) {
-        init.headers = { };
         init.body = data;
       } else {
-        init.headers.ContentType = 'application/json';
+        init.headers.append('Content-Type', 'application/json');
         init.body = JSON.stringify(data);
       }
     }
