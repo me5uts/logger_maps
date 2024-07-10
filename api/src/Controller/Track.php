@@ -71,6 +71,7 @@ class Track extends AbstractController {
    * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_POST, '/api/tracks', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
+  #[Route(Request::METHOD_POST, '/api/client/tracks', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER ] ])]
   public function add(Entity\Track $track): Response {
 
     try {
@@ -79,30 +80,6 @@ class Track extends AbstractController {
       return Response::exception($e);
     }
     return Response::created($track);
-  }
-
-
-  /**
-   * POST /api/tracks/{id}/positions (add position; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
-   * @param int $trackId
-   * @param Position $position
-   * @return Response
-   * @noinspection PhpUnused
-   */
-  #[Route(Request::METHOD_POST, '/api/tracks/{trackId}/positions', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
-  public function addPosition(int $trackId, Entity\Position $position): Response {
-
-    if ($trackId !== $position->trackId) {
-      return Response::unprocessableError("Wrong track id");
-    }
-
-    try {
-      $this->mapper(Mapper\Position::class)->create($position);
-    } catch (Exception $e) {
-      return Response::exception($e);
-    }
-
-    return Response::created($position);
   }
 
   /**

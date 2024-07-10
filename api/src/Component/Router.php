@@ -61,15 +61,15 @@ use uLogger\Middleware\MiddlewareInterface;
  *
  * /api/tracks
  * ✓ GET /api/tracks/{id} (get track metadata; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
- * ✓ POST /api/tracks (add track; access: OPEN-AUTHORIZED|ADMIN, PUBLIC-AUTHORIZED|ADMIN, PRIVATE-AUTHORIZED|ADMIN)
+ * ✓ POST /api/tracks (add track; access: OPEN-OWNER:ADMIN, PUBLIC-OWNER:ADMIN, PRIVATE-OWNER:ADMIN)
  * ✓ PUT /api/tracks/{id} (update track metadata; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ GET /api/tracks/{id}/positions[?after={positionId}] (track positions; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
- * ✓ POST /api/tracks/{id}/positions (add position; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ GET /api/tracks/{id}/export?format={gpx|kml} (download exported file; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
  * ✓ POST /api/tracks/import (import uploaded file; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ DELETE /api/tracks/{id} (delete track; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  *
  * /api/positions
+ * ✓ POST /api/tracks/{id}/positions (add position; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ PUT /api/positions/{id} (update position; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
  * ✓ DELETE /api/positions/{id} (delete position; access: OPEN-OWNER:ADMIN, PUBLIC-OWNER:ADMIN, PRIVATE-OWNER:ADMIN)
  * ✓ POST /api/positions/{id}/image (add image to position; access: OPEN-OWNER:ADMIN, PUBLIC-OWNER:ADMIN, PRIVATE-OWNER:ADMIN)
@@ -78,6 +78,10 @@ use uLogger\Middleware\MiddlewareInterface;
  * /api/locale
  * ✓ GET /api/locales (list of languages, translated strings for current language; access: OPEN-ALL, PUBLIC-ALL, PRIVATE-ALL)
  *
+ * /api/client/
+ * ✓ POST /api/client/session (log in; access: OPEN-ALL, PUBLIC-ALL PRIVATE-ALL)
+ * ✓ POST /api/client/tracks (add track; access: OPEN-OWNER, PUBLIC-OWNER, PRIVATE-OWNER)
+ * ✓ POST /api/client/positions (add position; access: OPEN-OWNER, PUBLIC-OWNER, PRIVATE-OWNER)
  */
 class Router {
   /** @var array<string, array<string, Route>> $routes [method => [path => route]] */

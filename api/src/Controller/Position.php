@@ -83,6 +83,25 @@ class Position extends AbstractController {
   }
 
   /**
+   * POST /api/positions (add position; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
+   * @param Entity\Position $position
+   * @return Response
+   * @noinspection PhpUnused
+   */
+  #[Route(Request::METHOD_POST, '/api/positions', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
+  #[Route(Request::METHOD_POST, '/api/client/positions', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
+  public function addPosition(Entity\Position $position): Response {
+
+    try {
+      $this->mapper(Mapper\Position::class)->create($position);
+    } catch (Exception $e) {
+      return Response::exception($e);
+    }
+
+    return Response::created($position);
+  }
+
+  /**
    * DELETE /api/positions/{id} (delete position; access: OPEN-OWNER:ADMIN, PUBLIC-OWNER:ADMIN, PRIVATE-OWNER:ADMIN)
    * @param int $positionId
    * @return Response

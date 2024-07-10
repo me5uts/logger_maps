@@ -38,6 +38,7 @@ class Session extends AbstractController {
    * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_POST, '/api/session', [ Component\Session::ACCESS_ALL => [ Component\Session::ALLOW_ALL ] ])]
+  #[Route(Request::METHOD_POST, '/api/client/session', [ Component\Session::ACCESS_ALL => [ Component\Session::ALLOW_ALL ] ])]
   public function logIn(string $login, string $password): Response {
     try {
       if ($this->session->checkLogin($login, $password) === false) {
