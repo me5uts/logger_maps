@@ -199,7 +199,7 @@ class Response {
 
   public function send(): void {
     foreach ($this->extraHeaders as $key => $value) {
-      header("$key: $value");
+      self::sendHeader($key, $value);
     }
     $this->sendHttpCodeHeader();
     $responseBody = '';
@@ -215,12 +215,16 @@ class Response {
         $responseBody = $this->payload;
       }
       if (!empty($this->contentType)) {
-        header("Content-Type: $this->contentType");
+        self::sendHeader(Request::CONTENT_TYPE, $this->contentType);
       }
     }
 
-    header('Content-Length: ' . strlen($responseBody));
+    self::sendHeader(Request::CONTENT_LENGTH,  strlen($responseBody));
     echo $responseBody;
+  }
+
+  public static function sendHeader(string $key, mixed $value): void {
+    header("$key: $value");
   }
 
   /**

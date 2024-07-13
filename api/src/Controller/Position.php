@@ -85,14 +85,18 @@ class Position extends AbstractController {
   /**
    * POST /api/positions (add position; access: OPEN-OWNER|ADMIN, PUBLIC-OWNER|ADMIN, PRIVATE-OWNER|ADMIN)
    * @param Entity\Position $position
+   * @param FileUpload|null $image
    * @return Response
    * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_POST, '/api/positions', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
-  #[Route(Request::METHOD_POST, '/api/client/positions', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
-  public function addPosition(Entity\Position $position): Response {
+  #[Route(Request::METHOD_POST, '/api/client/positions', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER] ])]
+  public function addPosition(Entity\Position $position, ?FileUpload $image = null): Response {
 
     try {
+      if ($image) {
+        $position->image = $image->add($position->trackId);
+      }
       $this->mapper(Mapper\Position::class)->create($position);
     } catch (Exception $e) {
       return Response::exception($e);

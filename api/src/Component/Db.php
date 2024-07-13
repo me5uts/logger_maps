@@ -11,6 +11,7 @@ namespace uLogger\Component;
 
 use PDO;
 use PDOException;
+use uLogger\Exception\DatabaseException;
 use uLogger\Helper\Utils;
 
 /**
@@ -49,12 +50,13 @@ class Db extends PDO {
    */
   private static string $prefix = "";
 
-    /**
+  /**
    * PDO constructor
    *
    * @param string $dsn
    * @param string $user
    * @param string $pass
+   * @throws DatabaseException
    */
   public function __construct(string $dsn, string $user, string $pass) {
     try {
@@ -68,8 +70,7 @@ class Db extends PDO {
       $this->setCharset("utf8");
       $this->initTables();
     } catch (PDOException $e) {
-      header("HTTP/1.1 503 Service Unavailable");
-      die("Database connection error (" . $e->getMessage() . ")");
+      throw new DatabaseException($e->getMessage());
     }
   }
 
@@ -86,6 +87,9 @@ class Db extends PDO {
     self::$tables['ol_layers'] = $prefix . "ol_layers";
   }
 
+  /**
+   * @throws DatabaseException
+   */
   public static function createFromConfig(): Db {
     self::getConfig();
     return new self(self::$dsn, self::$user, self::$password);
@@ -94,12 +98,12 @@ class Db extends PDO {
   /**
    * Read database setup from config file
    * @noinspection IssetArgumentExistenceInspection
+   * @throws DatabaseException
    */
   private static function getConfig(): void {
     $configFile = dirname(__DIR__, 2) . "/config/config.php";
     if (!file_exists($configFile)) {
-      header("HTTP/1.1 503 Service Unavailable");
-      die("Missing config.php file!");
+      throw new DatabaseException("Missing config.php file");
     }
     include($configFile);
     if (isset($dbdsn)) {

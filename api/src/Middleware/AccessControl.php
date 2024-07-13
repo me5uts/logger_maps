@@ -50,7 +50,7 @@ class AccessControl implements MiddlewareInterface {
     $policies = null;
     if (isset($routeAuth[$accessType])) {
       $policies = $routeAuth[$accessType];
-    } else if (isset($routeAuth[Session::ACCESS_ALL])) {
+    } elseif (isset($routeAuth[Session::ACCESS_ALL])) {
       $policies = $routeAuth[Session::ACCESS_ALL];
     }
 

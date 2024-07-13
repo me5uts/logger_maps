@@ -16,7 +16,6 @@ use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Session;
 use uLogger\Entity;
-use uLogger\Entity\Position;
 use uLogger\Helper\Gpx;
 use uLogger\Helper\Kml;
 use uLogger\Mapper;

@@ -10,6 +10,8 @@ declare(strict_types = 1);
 namespace uLogger\Helper;
 
 use uLogger\Component\FileUpload;
+use uLogger\Component\Request;
+use uLogger\Component\Response;
 use uLogger\Exception\InvalidInputException;
 
 /**
@@ -122,7 +124,7 @@ class Utils {
         $output[$key] = $value;
       }
     }
-    header("Content-type: application/json");
+    Response::sendHeader(Request::CONTENT_TYPE, Response::TYPE_JSON);
     echo json_encode($output);
     exit;
   }
@@ -257,6 +259,9 @@ class Utils {
    * @throws InvalidInputException
    */
   public static function requireFile(string $name, bool $checkMime = false): FileUpload {
+    if (empty($_FILES[$name])) {
+      throw new InvalidInputException("Missing uploaded file");
+    }
     $fileUpload = new FileUpload($_FILES[$name]);
     $fileUpload->sanitizeUpload($checkMime);
     return $fileUpload;

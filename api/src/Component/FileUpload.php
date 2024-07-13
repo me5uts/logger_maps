@@ -9,6 +9,7 @@ use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
 
 class FileUpload {
+  public const SELF_UPLOADED_PREFIX = 'self_uploaded';
   private string $name;
   private string $fullPath;
   private string $type;
@@ -24,6 +25,21 @@ class FileUpload {
     $this->tmpName = $fileMeta['tmp_name'];
     $this->error = $fileMeta['error'];
     $this->size = $fileMeta['size'];
+  }
+
+  public static function fromBuffer(string $buffer, string $name, string $type): self {
+    $tempFile = tempnam(sys_get_temp_dir(), FileUpload::SELF_UPLOADED_PREFIX);
+    file_put_contents($tempFile, $buffer);
+
+    $fileMeta = [
+      'name' => $name,
+      'full_path' => '',
+      'type' => $type,
+      'tmp_name' => $tempFile,
+      'error' => 0,
+      'size' => strlen($buffer)
+    ];
+    return new self($fileMeta);
   }
 
   public function getName(): string {
@@ -90,7 +106,7 @@ class FileUpload {
   /**
    * Save file to uploads folder, basic sanitizing
    * @param int $trackId
-   * @return string Unique file name, null on error
+   * @return string Unique file name
    * @throws ServerException|InvalidInputException
    */
   public function add(int $trackId): string {
@@ -176,11 +192,29 @@ class FileUpload {
     do {
       /** @noinspection NonSecureUniqidUsageInspection */
       $fileName = uniqid("{$trackId}_") . ".$extension";
-    } while (file_exists(Utils::getUploadDir() . "/$fileName"));
-    if (!move_uploaded_file($this->tmpName, Utils::getUploadDir() . "/$fileName")) {
+      $destinationPath = Utils::getUploadDir() . "/$fileName";
+    } while (file_exists($destinationPath));
+    if (is_uploaded_file($this->tmpName) && !move_uploaded_file($this->tmpName, $destinationPath)) {
       throw new ServerException("Move uploaded file failed");
+    } elseif ($this->isSelfUploaded($this->tmpName) && !rename($this->tmpName, $destinationPath)) {
+      throw new ServerException("Move self uploaded file failed");
     }
     return $fileName;
+  }
+
+  private function isSelfUploaded(string $tmpName): bool {
+    $tempDir = realpath(sys_get_temp_dir());
+    $realTmpName = realpath($tmpName);
+    if (dirname($realTmpName) !== $tempDir) {
+      return false;
+    }
+
+    $fileName = basename($realTmpName);
+    if (!str_starts_with($fileName, self::SELF_UPLOADED_PREFIX)) {
+      return false;
+    }
+
+    return true;
   }
 
 }

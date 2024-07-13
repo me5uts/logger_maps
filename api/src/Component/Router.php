@@ -16,7 +16,6 @@ use uLogger\Component;
 use uLogger\Controller;
 use uLogger\Entity;
 use uLogger\Exception\InvalidInputException;
-use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Reflection;
 use uLogger\Mapper\MapperFactory;
@@ -109,6 +108,7 @@ class Router {
       $controller = new $controllerClass($mapperFactory, $session, $config);
       $this->setupRoute($controller);
     }
+    $this->setupRoute(new Controller\Legacy($mapperFactory, $session, $config, $this));
   }
 
   private function addRoute(Route $route): void {
@@ -123,13 +123,12 @@ class Router {
    * @param Request $request
    * @return Response
    * @throws InvalidInputException
-   * @throws NotFoundException
    * @throws ReflectionException
    * @throws ServerException
    */
   public function dispatch(Request $request): Response {
     $this->request = $request;
-    if ($request->getUriSegments()[1] !== 'api' || empty($request->getUriSegments()[2])) {
+    if (($request->getUriSegments()[1] !== 'api' && $request->getUriSegments()[1] !== 'client') || empty($request->getUriSegments()[2])) {
       return Response::notFound();
     }
     if (isset($this->routes[$this->request->getMethod()])) {

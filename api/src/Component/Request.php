@@ -15,12 +15,17 @@ use ReflectionMethod;
 use ReflectionNamedType;
 use uLogger\Entity\AbstractEntity;
 use uLogger\Exception\InvalidInputException;
-use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Reflection;
 use uLogger\Helper\Utils;
 
 class Request {
+  private const TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
+  private const TYPE_MULTIPART_FORM_DATA = 'multipart/form-data';
+  private const TYPE_MULTIPART_RELATED = 'multipart/related';
+  public const CONTENT_TYPE = 'Content-Type';
+  public const CONTENT_LENGTH = 'Content-Length';
+  private const CONTENT_DISPOSITION = 'Content-Disposition';
 
   /** @var string */
   private string $path;
@@ -29,9 +34,13 @@ class Request {
   /** @var string */
   private string $method;
   private string $contentType;
-  /** @var array */
+  /** @var array<string, mixed> $params */
   private array $params;
+
+  /** @var array<string, mixed> $payload */
   private array $payload;
+  /** @var array<string, FileUpload> $uploads */
+  private array $uploads;
   /** @var array */
   private array $filters;
   private array $preparedArguments = [];
@@ -45,16 +54,17 @@ class Request {
    * @param string $path
    * @param string $method
    * @param array $payload
+   * @param array $uploads
    * @param array $filters
    */
-  public function __construct(string $path = '', string $method = '', array $payload = [], array $filters = []) {
+  public function __construct(string $path = '', string $method = '', array $payload = [], array $uploads = [], array $filters = []) {
     $this->path = $path;
     $this->method = $method;
     $this->filters = $filters;
     $this->payload = $payload;
+    $this->uploads = $uploads;
     $this->setUriSegments();
   }
-
 
   public function getUriSegments(): array {
     return $this->uriSegments;
@@ -138,16 +148,8 @@ class Request {
    * @throws InvalidInputException
    */
   private function loadPayload(): void {
-    $this->payload = [];
     $input = file_get_contents('php://input');
-    if (!empty($input) && str_starts_with($this->contentType, Response::TYPE_JSON)) {
-      try {
-        $this->payload = (array) json_decode($input, true, 512, JSON_THROW_ON_ERROR);
-      } catch (JsonException $e) {
-        syslog(LOG_ERR, "Payload parsing failed: \"$input\" [{$e->getMessage()}]");
-        throw new InvalidInputException("Payload parsing failed: \"$input\" ({$e->getMessage()})");
-      }
-    }
+    self::parseInput($input, $_FILES, $this->payload, $this->uploads, $this->contentType);
   }
 
   public function hasPayload(): bool {
@@ -188,7 +190,6 @@ class Request {
   /**
    * @param callable $handler
    * @throws ReflectionException
-   * @throws NotFoundException
    * @throws InvalidInputException
    * @throws ServerException
    */
@@ -209,8 +210,8 @@ class Request {
       }
       $routeParamTypeName = $routeParamType->getName();
 
-      if ($routeParamTypeName === FileUpload::class) {
-        $this->preparedArguments[] = $this->handleUpload($routeParamName);
+      if ($routeParamTypeName === FileUpload::class && $this->hasUpload($routeParamName)) {
+        $this->preparedArguments[] = $this->getUpload($routeParamName);
       } elseif (array_key_exists($routeParamName, $requestParams)) {
         // params, filters
         $this->preparedArguments[] = Reflection::castArgument($requestParams[$routeParamName], $routeParamType);
@@ -221,21 +222,90 @@ class Request {
         // payload (map param to argument)
         $this->preparedArguments[] = Reflection::castArgument($requestPayload[$routeParamName], $routeParamType);
       } elseif (!$routeParam->isOptional()) {
-        throw new NotFoundException("Missing parameter $routeParamName type $routeParamTypeName");
+        throw new InvalidInputException("Missing parameter $routeParamName type $routeParamTypeName");
       }
     }
+  }
+
+  public function getUpload(string $name): ?FileUpload {
+    return $this->uploads[$name] ?? null;
+  }
+
+  public function hasUpload(string $name): bool {
+    return array_key_exists($name, $this->uploads);
   }
 
   /**
    * @throws InvalidInputException
    */
-  private function handleUpload(string $name): FileUpload {
-    try {
-      return Utils::requireFile($name);
-    } catch (InvalidInputException $e) {
-      $message = "iuploadfailure"; // $lang["iuploadfailure"];
-      $message .= ": {$e->getMessage()}";
-      throw new InvalidInputException($message);
+  private static function parseMultipart(array &$payload, array &$uploads, string $contentType): void {
+
+    $input = file_get_contents('php://input');
+
+    preg_match('/boundary=(.*)$/', $contentType, $matches);
+    $boundary = $matches[1];
+
+    $parts = explode("--$boundary", $input);
+
+    array_shift($parts); // Remove preamble
+    array_pop($parts);   // Remove epilogue
+
+    foreach ($parts as $part) {
+      $part = substr($part, 2, -2);
+      [ $header, $body ] = preg_split("/\r\n\r\n/", $part, 2);
+
+      $headers = [];
+      foreach (explode("\r\n", $header) as $headerLine) {
+        [ $headerName, $headerValue ] = explode(': ', $headerLine, 2);
+        $headers[$headerName] = $headerValue;
+      }
+
+      // Only handle json and binary
+      if (isset($headers[self::CONTENT_TYPE])) {
+        $contentType = $headers[self::CONTENT_TYPE];
+        if (str_starts_with($contentType, Response::TYPE_JSON)) {
+
+          self::parseInput($body, $_FILES, $payload, $uploads, $contentType);
+        } elseif (str_starts_with($headers[self::CONTENT_TYPE], 'image/')) {
+          $name = "image";
+          $filename = "upload";
+          if (isset($headers[self::CONTENT_DISPOSITION])) {
+            $contentDisposition = $headers[self::CONTENT_DISPOSITION];
+            if (preg_match('/name=\"([^\"]*)\"/', $contentDisposition, $matches)) {
+              $name = $matches[1];
+            }
+            if (preg_match('/filename=\"([^\"]*)\"/', $contentDisposition, $matches)) {
+              $filename = $matches[1];
+            }
+          }
+
+          $uploads[$name] = FileUpload::fromBuffer($body, $filename, $contentType);
+        }
+      }
+    }
+
+  }
+
+  /**
+   * @throws InvalidInputException
+   */
+  private static function parseInput(string $input, array $files, &$payload, &$uploads, string $contentType): void {
+    if (!empty($input) && str_starts_with($contentType, Response::TYPE_JSON)) {
+      try {
+        $payload = (array) json_decode($input, true, 512, JSON_THROW_ON_ERROR);
+      } catch (JsonException $e) {
+        syslog(LOG_ERR, "Payload parsing failed: \"$input\" [{$e->getMessage()}]");
+        throw new InvalidInputException("Payload parsing failed: \"$input\" ({$e->getMessage()})");
+      }
+    } elseif ($contentType === Request::TYPE_FORM_URLENCODED || str_starts_with($contentType, Request::TYPE_MULTIPART_FORM_DATA)) {
+      $payload = $_POST;
+      if (!empty($files)) {
+        foreach ($files as $name => $file) {
+          $uploads[$name] = Utils::requestFile($name);
+        }
+      }
+    } elseif (str_starts_with($contentType, Request::TYPE_MULTIPART_RELATED)) {
+      self::parseMultipart($payload, $uploads, $contentType);
     }
   }
 

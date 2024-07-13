@@ -9,6 +9,8 @@ declare(strict_types = 1);
 
 namespace uLogger\Component;
 
+use Exception;
+
 class ErrorHandler {
 
   public static function init(): void {
@@ -27,8 +29,12 @@ class ErrorHandler {
     self::sendErrorAndExit("Error: $error [$file:$line]", $errno);
   }
 
-  public static function exceptionHandler($e): void {
-    self::sendErrorAndExit("Exception: $e", $e->getCode());
+  /**
+   * @param Exception $exception
+   * @return no-return
+   */
+  public static function exceptionHandler(Exception $exception): void {
+    self::sendErrorAndExit("Exception: $exception", $exception->getCode());
   }
 
   public static function fatalErrorHandler(): void {
@@ -48,7 +54,7 @@ class ErrorHandler {
   private static function sendErrorAndExit(string $message, int $errno): void {
 
     http_response_code(Response::CODE_5_INTERNAL);
-    header("Content-Type: application/json");
+    Response::sendHeader(Request::CONTENT_TYPE, Response::TYPE_JSON);
 
     die(json_encode([
       'error' => true,
