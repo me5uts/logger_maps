@@ -223,7 +223,7 @@ class Response {
       }
     }
 
-    self::sendHeader(Request::CONTENT_LENGTH,  strlen($responseBody));
+    self::sendHeader(Request::CONTENT_LENGTH, strlen($responseBody));
     echo $responseBody;
   }
 

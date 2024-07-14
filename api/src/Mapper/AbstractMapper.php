@@ -18,6 +18,8 @@ abstract class AbstractMapper {
   /**
    * @param Db $db
    */
-  public function __construct(Db $db) { $this->db = $db; }
+  public function __construct(Db $db) {
+    $this->db = $db;
+  }
 
 }

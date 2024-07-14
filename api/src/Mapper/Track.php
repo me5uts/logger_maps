@@ -50,17 +50,17 @@ class Track extends AbstractMapper {
    * @throws DatabaseException
    */
   public function create(Entity\Track $track): void {
-      try {
-        $table = $this->db->table('tracks');
-        $query = "INSERT INTO $table (user_id, name, comment) VALUES (?, ?, ?)";
-        $stmt = $this->db->prepare($query);
-        $params = [ $track->userId, $track->name, $track->comment ];
-        $stmt->execute($params);
-        $track->id = (int) $this->db->lastInsertId("{$table}_id_seq");
-      } catch (PDOException $e) {
-        syslog(LOG_ERR, $e->getMessage());
-        throw new DatabaseException();
-      }
+    try {
+      $table = $this->db->table('tracks');
+      $query = "INSERT INTO $table (user_id, name, comment) VALUES (?, ?, ?)";
+      $stmt = $this->db->prepare($query);
+      $params = [ $track->userId, $track->name, $track->comment ];
+      $stmt->execute($params);
+      $track->id = (int) $this->db->lastInsertId("{$table}_id_seq");
+    } catch (PDOException $e) {
+      syslog(LOG_ERR, $e->getMessage());
+      throw new DatabaseException();
+    }
   }
 
   /**
@@ -106,7 +106,9 @@ class Track extends AbstractMapper {
     if (empty($track->name)) {
       throw new InvalidInputException("Empty track name");
     }
-    if ($track->comment === "") { $track->comment = null; }
+    if ($track->comment === "") {
+      $track->comment = null;
+    }
     try {
       $query = "UPDATE " . $this->db->table('tracks') . " SET name = ?, comment = ? WHERE id = ?";
       $stmt = $this->db->prepare($query);

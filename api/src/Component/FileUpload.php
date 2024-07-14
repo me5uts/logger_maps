@@ -18,8 +18,7 @@ class FileUpload {
   private int $error;
   private int $size;
 
-  public function __construct(array $fileMeta)
-  {
+  public function __construct(array $fileMeta) {
     $this->name = $fileMeta['name'];
     $this->fullPath = $fileMeta['full_path'];
     $this->type = $fileMeta['type'];

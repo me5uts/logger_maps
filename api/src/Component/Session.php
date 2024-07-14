@@ -61,7 +61,8 @@ class Session {
       $userId = $this->userMapper->getFromSession();
       $user = $this->userMapper->fetch($userId);
       $this->setAuthenticated($user);
-    } catch (NotFoundException) { /* ignored */ }
+    } catch (NotFoundException) { /* ignored */
+    }
   }
 
   /**
@@ -78,8 +79,7 @@ class Session {
   public function getAccessType(): string {
     if (!$this->config->requireAuthentication) {
       return self::ACCESS_OPEN;
-    }
-    elseif ($this->config->requireAuthentication && $this->config->publicTracks) {
+    } elseif ($this->config->requireAuthentication && $this->config->publicTracks) {
       return self::ACCESS_PUBLIC;
     }
     return self::ACCESS_PRIVATE;
@@ -114,7 +114,7 @@ class Session {
   }
 
   public function isSessionUser(int $userId): bool {
-      return $this->isAuthenticated && $this->user->id === $userId;
+    return $this->isAuthenticated && $this->user->id === $userId;
   }
 
   /**
@@ -189,15 +189,15 @@ class Session {
    * @throws InvalidInputException
    */
   public function checkLogin(string $login, string $password): bool {
-      try {
-        $user = $this->userMapper->fetchByLogin($login);
-        if ($user->validPassword($password)) {
-          $this->setAuthenticated($user);
-          $this->sessionCleanup();
-          $this->userMapper->storeInSession($user);
-          return true;
-        }
-      } catch (NotFoundException) { /* ignored */ }
+    try {
+      $user = $this->userMapper->fetchByLogin($login);
+      if ($user->validPassword($password)) {
+        $this->setAuthenticated($user);
+        $this->sessionCleanup();
+        $this->userMapper->storeInSession($user);
+        return true;
+      }
+    } catch (NotFoundException) { /* ignored */ }
 
     return false;
   }

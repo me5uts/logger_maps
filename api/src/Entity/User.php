@@ -29,7 +29,9 @@ class User extends AbstractEntity {
   /**
    * @param string $login
    */
-  public function __construct(string $login) { $this->login = $login; }
+  public function __construct(string $login) {
+    $this->login = $login;
+  }
 
 
   /**

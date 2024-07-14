@@ -80,25 +80,25 @@ class Position extends AbstractMapper {
    */
   public function create(Entity\Position $position): void {
 
-      try {
-        $table = $this->db->table('positions');
-        $query = "INSERT INTO $table
+    try {
+      $table = $this->db->table('positions');
+      $query = "INSERT INTO $table
                   (user_id, track_id,
                   time, latitude, longitude, altitude, speed, bearing, accuracy, provider, comment, image)
                   VALUES (?, ?, " . $this->db->from_unixtime('?') . ", ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $this->db->prepare($query);
-        $params = [
-          $position->userId, $position->trackId,
-          $position->timestamp, $position->latitude, $position->longitude,
-          $position->altitude, $position->speed, $position->bearing, $position->accuracy,
-          $position->provider, $position->comment, $position->image
-        ];
-        $stmt->execute($params);
-        $position->id = (int) $this->db->lastInsertId("{$table}_id_seq");
-      } catch (PDOException $e) {
-        syslog(LOG_ERR, $e->getMessage());
-        throw new DatabaseException($e->getMessage());
-      }
+      $stmt = $this->db->prepare($query);
+      $params = [
+        $position->userId, $position->trackId,
+        $position->timestamp, $position->latitude, $position->longitude,
+        $position->altitude, $position->speed, $position->bearing, $position->accuracy,
+        $position->provider, $position->comment, $position->image
+      ];
+      $stmt->execute($params);
+      $position->id = (int) $this->db->lastInsertId("{$table}_id_seq");
+    } catch (PDOException $e) {
+      syslog(LOG_ERR, $e->getMessage());
+      throw new DatabaseException($e->getMessage());
+    }
 
   }
 
@@ -256,14 +256,14 @@ class Position extends AbstractMapper {
    */
   public function removeImages(int $userId, ?int $trackId = null): void {
     $positions = $this->getAllWithImage($userId, $trackId);
-      foreach ($positions as $position) {
-        try {
-          $this->removeImage($position);
-        } catch (PDOException $e) {
-          syslog(LOG_ERR, $e->getMessage());
-          throw new DatabaseException($e->getMessage());
-        }
+    foreach ($positions as $position) {
+      try {
+        $this->removeImage($position);
+      } catch (PDOException $e) {
+        syslog(LOG_ERR, $e->getMessage());
+        throw new DatabaseException($e->getMessage());
       }
+    }
   }
 
   /**
@@ -281,13 +281,13 @@ class Position extends AbstractMapper {
    * @throws ServerException
    */
   private function get(
-    ?int $positionId = null,
-    ?int $userId = null,
-    ?int $trackId = null,
-    ?int $afterId = null,
+    ?int    $positionId = null,
+    ?int    $userId = null,
+    ?int    $trackId = null,
+    ?int    $afterId = null,
     ?string $orderBy = null,
-    ?bool $singleRow = false,
-    ?array $rules = []
+    ?bool   $singleRow = false,
+    ?array  $rules = []
   ): array {
     if (!empty($positionId)) {
       $rules[] = "p.id = " . $this->db->quote((string) $positionId);
@@ -337,7 +337,6 @@ class Position extends AbstractMapper {
 
     return $positions;
   }
-
 
 
 }

@@ -21,6 +21,13 @@ class Kml implements FileFormatInterface {
   private string $name;
   private int $trackId = 0;
 
+  private float $factorSpeed = 1;
+  private string $unitSpeed = "km/h";
+  private float $factorAltitude = 1;
+  private string $unitAltitude = "m";
+  private float $factorDistance = 1;
+  private string $unitDistance = "km";
+
   /**
    * @param string $name
    * @param Config $config
@@ -28,6 +35,17 @@ class Kml implements FileFormatInterface {
   public function __construct(string $name, Config $config) {
     $this->name = $name;
     $this->config = $config;
+
+    $units = $this->config->units;
+
+    if ($units === "imperial") {
+      $this->factorSpeed = 0.62; //kmh to mph
+      $this->unitSpeed = "mph";
+      $this->factorAltitude = 3.28; // meters to feet
+      $this->unitAltitude = "ft";
+      $this->factorDistance = 0.62; // km to miles
+      $this->unitDistance = "mi";
+    }
   }
 
   /**
@@ -37,7 +55,7 @@ class Kml implements FileFormatInterface {
    * @throws ServerException
    */
   public function import(int $userId, string $filePath): array {
-   throw new ServerException("Not implemented");
+    throw new ServerException("Not implemented");
   }
 
   /**
@@ -49,24 +67,6 @@ class Kml implements FileFormatInterface {
 
     $this->trackId = $positions[0]->trackId;
 
-    $units = $this->config->units;
-
-    if ($units === "imperial") {
-      $factor_kmh = 0.62; //to mph
-      $unit_kmh = "mph";
-      $factor_m = 3.28; // to feet
-      $unit_m = "ft";
-      $factor_km = 0.62; // to miles
-      $unit_km = "mi";
-    } else {
-      $factor_kmh = 1;
-      $unit_kmh = "km/h";
-      $factor_m = 1;
-      $unit_m = "m";
-      $factor_km = 1;
-      $unit_km = "km";
-    }
-
     $xml = new XMLWriter();
     $xml->openMemory();
     $xml->setIndent(true);
@@ -77,106 +77,34 @@ class Kml implements FileFormatInterface {
     $xml->writeAttribute("xmlns", "http://www.opengis.net/kml/2.2");
     $xml->startElement("Document");
     $xml->writeElement("name", $this->name);
-    // line style
-    $xml->startElement("Style");
-    $xml->writeAttribute("id", "lineStyle");
-    $xml->startElement("LineStyle");
-    $xml->writeElement("color", "7f0000ff");
-    $xml->writeElement("width", "4");
-    $xml->endElement();
-    $xml->endElement();
-    // marker styles
-    $this->addStyle($xml, "red", "http://maps.google.com/mapfiles/markerA.png");
-    $this->addStyle($xml, "green", "http://maps.google.com/mapfiles/marker_greenB.png");
-    $this->addStyle($xml, "gray", "http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_gray.png");
+    $this->setStyles($xml);
     $style = "#redStyle"; // for first element
-    $i = 0;
+    $currentCount = 0;
     $totalMeters = 0;
     $totalSeconds = 0;
-    $coordinate = [];
+    $totalCount = count($positions);
+    $coordinates = [];
     foreach ($positions as $position) {
       $distance = isset($prevPosition) ? $position->distanceTo($prevPosition) : 0;
       $seconds = isset($prevPosition) ? $position->secondsTo($prevPosition) : 0;
       $prevPosition = $position;
       $totalMeters += $distance;
       $totalSeconds += $seconds;
+      $coordinate = "$position->longitude,$position->latitude" . (!is_null($position->altitude) ? ",$position->altitude" : "");
 
-      if(++$i === count($positions)) { $style = "#greenStyle"; } // last element
-      $xml->startElement("Placemark");
-      $xml->writeAttribute("id", "point_$position->id");
-//      $description =
-//        "<div style=\"font-weight: bolder; padding-bottom: 10px; border-bottom: 1px solid gray;\">" .
-//        "{$lang["user"]}: " . htmlspecialchars($position->userLogin) . "<br>{$lang["track"]}: " . htmlspecialchars($position->trackName) .
-//        "</div>" .
-//        "<div>" .
-//        "<div style=\"padding-top: 10px;\"><b>{$lang["time"]}:</b> " . date("Y-m-d H:i:s (e)", $position->timestamp) . "<br>" .
-//        (!is_null($position->comment) ? "<b>$position->comment</b><br>" : "") .
-//        (!is_null($position->speed) ? "<b>{$lang["speed"]}:</b> " . round($position->speed * 3.6 * $factor_kmh, 2) . " $unit_kmh<br>" : "") .
-//        (!is_null($position->altitude) ? "<b>{$lang["altitude"]}:</b> " . round($position->altitude * $factor_m) . " $unit_m<br>" : "") .
-//        "<b>{$lang["ttime"]}:</b> " . $this->toHMS($totalSeconds) . "<br>" .
-//        "<b>{$lang["aspeed"]}:</b> " . (($totalSeconds !== 0) ? round($totalMeters / $totalSeconds * 3.6 * $factor_kmh, 2) : 0) . " $unit_kmh<br>" .
-//        "<b>{$lang["tdistance"]}:</b> " . round($totalMeters / 1000 * $factor_km, 2) . " " . $unit_km . "<br></div>" .
-//        "<div style=\"font-size: smaller; padding-top: 10px;\">" . sprintf($lang["pointof"], $i, count($positionsArr)) . "</div>" .
-//        "</div>";
-      $description =
-        "<div style=\"font-weight: bolder; padding-bottom: 10px; border-bottom: 1px solid gray;\">" .
-          htmlspecialchars($position->userName) . "@" . htmlspecialchars($position->trackName) .
-        "</div>" .
-        "<div>" .
-          "<div style=\"padding-top: 10px;\">" . date("Y-m-d H:i:s (e)", $position->timestamp) . "<br>" .
-          (!is_null($position->comment) ? "<b>$position->comment</b><br>" : "") .
-          (!is_null($position->speed) ? round($position->speed * 3.6 * $factor_kmh, 2) . " $unit_kmh<br>" : "") .
-          (!is_null($position->altitude) ? "&#8597; " . round($position->altitude * $factor_m) . " $unit_m<br>" : "") .
-          "Σ " . $this->toHMS($totalSeconds) . "<br>" .
-          "&#8596; " . round($totalMeters / 1000 * $factor_km, 2) . " $unit_km<br>" .
-          "~ " . (($totalSeconds !== 0) ? round($totalMeters / $totalSeconds * 3.6 * $factor_kmh, 2) : 0) . " $unit_kmh<br>" .
-          "</div>" .
-          "<div style=\"font-size: smaller; padding-top: 10px;\">$i&#47;" . count($positions) . "</div>" .
-        "</div>";
-      $xml->startElement("description");
-      $xml->writeCData($description);
-      $xml->endElement();
-      $xml->writeElement("styleUrl", $style);
-      $xml->startElement("Point");
-      $coordinate[$i] = "$position->longitude,$position->latitude" . (!is_null($position->altitude) ? ",$position->altitude" : "");
-      $xml->writeElement("coordinates", $coordinate[$i]);
-      $xml->endElement();
-      $xml->endElement();
+      if(++$currentCount === $totalCount) { $style = "#greenStyle"; } // last element
+      $description = $this->getDescription($position, $totalSeconds, $totalMeters, $currentCount, $totalCount);
+      $this->addPoint($xml, $position, $description, $style, $coordinate);
       $style = "#grayStyle"; // other elements
+      $coordinates[] = $coordinate;
     }
-    $coordinates = implode("\n", $coordinate);
-    $xml->startElement("Placemark");
-    $xml->writeAttribute("id", "lineString");
-    $xml->writeElement("styleUrl", "#lineStyle");
-    $xml->startElement("LineString");
-    $xml->writeElement("coordinates", $coordinates);
-    $xml->endElement();
-    $xml->endElement();
+    $this->addLine($xml, $coordinates);
 
     $xml->endElement();
     $xml->endElement();
     $xml->endDocument();
 
     return $xml->outputMemory();
-  }
-
-  /**
-   * Add kml marker style element
-   *
-   * @param XMLWriter $xml Writer object
-   * @param string $name Color name
-   * @param string $url Url
-   */
-  private function addStyle(XMLWriter $xml, string $name, string $url): void {
-    $xml->startElement("Style");
-    $xml->writeAttribute("id", "{$name}Style");
-    $xml->startElement("IconStyle");
-    $xml->writeAttribute("id", "{$name}Icon");
-    $xml->startElement("Icon");
-    $xml->writeElement("href", $url);
-    $xml->endElement();
-    $xml->endElement();
-    $xml->endElement();
   }
 
   /**
@@ -199,5 +127,105 @@ class Kml implements FileFormatInterface {
 
   public function getMimeType(): string {
     return Response::TYPE_KML;
+  }
+
+  /**
+   * @param Position $position
+   * @param int $totalSeconds
+   * @param int $totalMeters
+   * @param int $currentCount
+   * @param int $totalCount
+   * @return string
+   */
+  private function getDescription(Position $position, int $totalSeconds, int $totalMeters, int $currentCount, int $totalCount): string {
+    return "<div style=\"font-weight: bolder; padding-bottom: 10px; border-bottom: 1px solid gray;\">" .
+      htmlspecialchars($position->userName) . "@" . htmlspecialchars($position->trackName) .
+      "</div>" .
+      "<div>" .
+      "<div style=\"padding-top: 10px;\">" . date("Y-m-d H:i:s (e)", $position->timestamp) . "<br>" .
+      (!is_null($position->comment) ? "<b>$position->comment</b><br>" : "") .
+      (!is_null($position->speed) ? round($position->speed * 3.6 * $this->factorSpeed, 2) . " $this->unitSpeed<br>" : "") .
+      (!is_null($position->altitude) ? "&#8597; " . round($position->altitude * $this->factorAltitude) . " $this->unitAltitude<br>" : "") .
+      "Σ " . $this->toHMS($totalSeconds) . "<br>" .
+      "&#8596; " . round($totalMeters / 1000 * $this->factorDistance, 2) . " $this->unitDistance<br>" .
+      "~ " . (($totalSeconds !== 0) ? round($totalMeters / $totalSeconds * 3.6 * $this->factorSpeed, 2) : 0) . " $this->unitSpeed<br>" .
+      "</div>" .
+      "<div style=\"font-size: smaller; padding-top: 10px;\">$currentCount&#47;" . $totalCount . "</div>" .
+      "</div>";
+  }
+
+  /**
+   * Add kml marker style element
+   *
+   * @param XMLWriter $xml Writer object
+   * @param string $name Color name
+   * @param string $url Url
+   */
+  private function addStyle(XMLWriter $xml, string $name, string $url): void {
+    $xml->startElement("Style");
+    $xml->writeAttribute("id", "{$name}Style");
+    $xml->startElement("IconStyle");
+    $xml->writeAttribute("id", "{$name}Icon");
+    $xml->startElement("Icon");
+    $xml->writeElement("href", $url);
+    $xml->endElement();
+    $xml->endElement();
+    $xml->endElement();
+  }
+
+  /**
+   * @param XMLWriter $xml
+   * @return void
+   */
+  private function setStyles(XMLWriter $xml): void {
+    // line style
+    $xml->startElement("Style");
+    $xml->writeAttribute("id", "lineStyle");
+    $xml->startElement("LineStyle");
+    $xml->writeElement("color", "7f0000ff");
+    $xml->writeElement("width", "4");
+    $xml->endElement();
+    $xml->endElement();
+    // marker styles
+    $this->addStyle($xml, "red", "http://maps.google.com/mapfiles/markerA.png");
+    $this->addStyle($xml, "green", "http://maps.google.com/mapfiles/marker_greenB.png");
+    $this->addStyle($xml, "gray", "http://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_gray.png");
+  }
+
+  /**
+   * @param XMLWriter $xml
+   * @param array $coordinates
+   * @return void
+   */
+  private function addLine(XMLWriter $xml, array $coordinates): void {
+    $xml->startElement("Placemark");
+    $xml->writeAttribute("id", "lineString");
+    $xml->writeElement("styleUrl", "#lineStyle");
+    $xml->startElement("LineString");
+    $xml->writeElement("coordinates", implode("\n", $coordinates));
+    $xml->endElement();
+    $xml->endElement();
+  }
+
+  /**
+   * @param XMLWriter $xml
+   * @param Position $position
+   * @param string $description
+   * @param string $style
+   * @param string $coordinate
+   * @return void
+   */
+  private function addPoint(XMLWriter $xml, Position $position, string $description, string $style, string $coordinate): void {
+    $xml->startElement("Placemark");
+    $xml->writeAttribute("id", "point_$position->id");
+
+    $xml->startElement("description");
+    $xml->writeCData($description);
+    $xml->endElement();
+    $xml->writeElement("styleUrl", $style);
+    $xml->startElement("Point");
+    $xml->writeElement("coordinates", $coordinate);
+    $xml->endElement();
+    $xml->endElement();
   }
 }

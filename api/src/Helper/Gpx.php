@@ -9,6 +9,7 @@ declare(strict_types = 1);
 
 namespace uLogger\Helper;
 
+use SimpleXMLElement;
 use uLogger\Component\Response;
 use uLogger\Entity;
 use uLogger\Exception\DatabaseException;
@@ -52,26 +53,7 @@ class Gpx implements FileFormatInterface {
    */
   public function import(int $userId, string $filePath): array {
 
-    libxml_use_internal_errors(true);
-    /** @noinspection SimpleXmlLoadFileUsageInspection */
-    $gpx = simplexml_load_file($filePath);
-
-    if ($gpx === false) {
-      $message = "iparsefailure";
-      $parserMessages = [];
-      foreach (libxml_get_errors() as $parseError) {
-        $parserMessages[] = $parseError->message;
-      }
-      $parserMessage = implode(", ", $parserMessages);
-      if (!empty($parserMessage)) {
-        $message .= ": $parserMessage";
-      }
-      throw new GpxParseException($message);
-    } elseif ($gpx->getName() !== "gpx") {
-      throw new GpxParseException("iparsefailure");
-    } elseif (empty($gpx->trk)) {
-      throw new GpxParseException("idatafailure");
-    }
+    $gpx = $this->parseGpxFile($filePath);
 
     $tracks = [];
     foreach ($gpx->trk as $trk) {
@@ -86,47 +68,7 @@ class Gpx implements FileFormatInterface {
         $posCnt = 0;
         foreach ($trk->trkseg as $segment) {
           foreach ($segment->trkpt as $point) {
-            if (!isset($point["lat"], $point["lon"])) {
-              $this->deleteTrack($track);
-              throw new GpxParseException("iparsefailure");
-            }
-            $time = isset($point->time) ? strtotime((string) $point->time) : 1;
-            $altitude = isset($point->ele) ? (double) $point->ele : null;
-            $comment = !empty($point->desc) ? (string) $point->desc : null;
-            $speed = null;
-            $bearing = null;
-            $accuracy = null;
-            $provider = "gps";
-            if (!empty($point->extensions)) {
-              // parse ulogger extensions
-              $ext = $point->extensions->children('ulogger', true);
-              if (count($ext->speed)) {
-                $speed = (double) $ext->speed;
-              }
-              if (count($ext->bearing)) {
-                $bearing = (double) $ext->bearing;
-              }
-              if (count($ext->accuracy)) {
-                $accuracy = (int) $ext->accuracy;
-              }
-              if (count($ext->provider)) {
-                $provider = (string) $ext->provider;
-              }
-            }
-            $position = new Entity\Position(
-              timestamp: $time,
-              userId: $userId,
-              trackId: $track->id,
-              latitude: (double) $point["lat"],
-              longitude: (double) $point["lon"]
-            );
-            $position->altitude = $altitude;
-            $position->speed = $speed;
-            $position->bearing = $bearing;
-            $position->accuracy = $accuracy;
-            $position->provider = $provider;
-            $position->comment = $comment;
-            $this->mapperPosition->create($position);
+            $this->savePosition($point, $track, $userId);
             $posCnt++;
           }
         }
@@ -142,7 +84,6 @@ class Gpx implements FileFormatInterface {
         throw new DatabaseException($e->getMessage());
       }
     }
-
 
     return $tracks;
   }
@@ -161,60 +102,24 @@ class Gpx implements FileFormatInterface {
     $xml->openMemory();
     $xml->setIndent(true);
     $xml->startDocument("1.0", "utf-8");
-    $xml->startElement("gpx");
-    $xml->writeAttribute("xmlns", "http://www.topografix.com/GPX/1/1");
-    $xml->writeAttributeNs("xsi", "schemaLocation", null, "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd https://github.com/bfabiszewski/ulogger-android/1 https://raw.githubusercontent.com/bfabiszewski/ulogger-server/master/scripts/gpx_extensions1.xsd");
-    $xml->writeAttributeNs("xmlns", "xsi", null, "http://www.w3.org/2001/XMLSchema-instance");
-    $xml->writeAttributeNs("xmlns", "ulogger", null, "https://github.com/bfabiszewski/ulogger-android/1");
-    $xml->writeAttribute("creator", "μlogger-server " . $creatorVersion);
-    $xml->writeAttribute("version", "1.1");
-    $xml->startElement("metadata");
-    $xml->writeElement("name", $this->name);
-    $xml->writeElement("time", gmdate("Y-m-d\TH:i:s\Z", $positions[0]->timestamp));
-    $xml->endElement();
-    $xml->startElement("trk");
-    $xml->writeElement("name", $this->name);
-    $xml->startElement("trkseg");
-    $positionNumber = 0;
-
-    foreach ($positions as $position) {
-      $xml->startElement("trkpt");
-      $xml->writeAttribute("lat", (string) $position->latitude);
-      $xml->writeAttribute("lon", (string) $position->longitude);
-      if (!is_null($position->altitude)) {
-        $xml->writeElement("ele", (string) $position->altitude);
-      }
-      $xml->writeElement("time", gmdate("Y-m-d\TH:i:s\Z", $position->timestamp));
-      $xml->writeElement("name", (string) ++$positionNumber);
-      if (!is_null($position->comment)) {
-        $xml->startElement("desc");
-        $xml->writeCData($position->comment);
+    {
+      $xml->startElement("gpx");
+      $xml->writeAttribute("xmlns", "http://www.topografix.com/GPX/1/1");
+      $xml->writeAttributeNs("xsi", "schemaLocation", null, "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd https://github.com/bfabiszewski/ulogger-android/1 https://raw.githubusercontent.com/bfabiszewski/ulogger-server/master/scripts/gpx_extensions1.xsd");
+      $xml->writeAttributeNs("xmlns", "xsi", null, "http://www.w3.org/2001/XMLSchema-instance");
+      $xml->writeAttributeNs("xmlns", "ulogger", null, "https://github.com/bfabiszewski/ulogger-android/1");
+      $xml->writeAttribute("creator", "μlogger-server " . $creatorVersion);
+      $xml->writeAttribute("version", "1.1");
+      {
+        $xml->startElement("metadata");
+        $xml->writeElement("name", $this->name);
+        $xml->writeElement("time", gmdate("Y-m-d\TH:i:s\Z", $positions[0]->timestamp));
         $xml->endElement();
       }
-      if (!is_null($position->speed) || !is_null($position->bearing) || !is_null($position->accuracy) || !is_null($position->provider)) {
-        $xml->startElement("extensions");
-
-        if (!is_null($position->speed)) {
-          $xml->writeElementNS("ulogger", "speed", null, (string) round($position->speed, 2));
-        }
-        if (!is_null($position->bearing)) {
-          $xml->writeElementNS("ulogger", "bearing", null, (string) round($position->bearing, 2));
-        }
-        if (!is_null($position->accuracy)) {
-          $xml->writeElementNS("ulogger", "accuracy", null, (string) $position->accuracy);
-        }
-        if (!is_null($position->provider)) {
-          $xml->writeElementNS("ulogger", "provider", null, (string) $position->provider);
-        }
-        $xml->endElement();
-      }
+      $this->trackToGpx($xml, $positions);
       $xml->endElement();
     }
-    $xml->endElement();
-    $xml->endElement();
-    $xml->endElement();
     $xml->endDocument();
-
     return $xml->outputMemory();
   }
 
@@ -237,5 +142,146 @@ class Gpx implements FileFormatInterface {
       $this->mapperPosition->deleteAll($track->userId, $track->id);
       $this->mapperTrack->delete($track);
     }
+  }
+
+  /**
+   * @param SimpleXMLElement|null $point
+   * @param Entity\Track $track
+   * @param int $userId
+   * @return void
+   * @throws DatabaseException
+   * @throws GpxParseException
+   * @throws ServerException
+   */
+  private function savePosition(?SimpleXMLElement $point, Entity\Track $track, int $userId): void {
+    if (!isset($point["lat"], $point["lon"])) {
+      $this->deleteTrack($track);
+      throw new GpxParseException("iparsefailure");
+    }
+    $time = isset($point->time) ? strtotime((string) $point->time) : 1;
+    $altitude = isset($point->ele) ? (double) $point->ele : null;
+    $comment = !empty($point->desc) ? (string) $point->desc : null;
+    $speed = null;
+    $bearing = null;
+    $accuracy = null;
+    $provider = "gps";
+    if (!empty($point->extensions)) {
+      // parse ulogger extensions
+      $ext = $point->extensions->children('ulogger', true);
+      if (count($ext->speed)) {
+        $speed = (double) $ext->speed;
+      }
+      if (count($ext->bearing)) {
+        $bearing = (double) $ext->bearing;
+      }
+      if (count($ext->accuracy)) {
+        $accuracy = (int) $ext->accuracy;
+      }
+      if (count($ext->provider)) {
+        $provider = (string) $ext->provider;
+      }
+    }
+    $position = new Entity\Position(
+      timestamp: $time,
+      userId: $userId,
+      trackId: $track->id,
+      latitude: (double) $point["lat"],
+      longitude: (double) $point["lon"]
+    );
+    $position->altitude = $altitude;
+    $position->speed = $speed;
+    $position->bearing = $bearing;
+    $position->accuracy = $accuracy;
+    $position->provider = $provider;
+    $position->comment = $comment;
+    $this->mapperPosition->create($position);
+  }
+
+  /**
+   * @param string $filePath
+   * @return SimpleXMLElement
+   * @throws GpxParseException
+   */
+  private function parseGpxFile(string $filePath): SimpleXMLElement {
+    libxml_use_internal_errors(true);
+    /** @noinspection SimpleXmlLoadFileUsageInspection */
+    $gpx = simplexml_load_file($filePath);
+
+    if ($gpx === false) {
+      $message = "iparsefailure";
+      $parserMessages = [];
+      foreach (libxml_get_errors() as $parseError) {
+        $parserMessages[] = $parseError->message;
+      }
+      $parserMessage = implode(", ", $parserMessages);
+      if (!empty($parserMessage)) {
+        $message .= ": $parserMessage";
+      }
+      throw new GpxParseException($message);
+    } elseif ($gpx->getName() !== "gpx") {
+      throw new GpxParseException("iparsefailure");
+    } elseif (empty($gpx->trk)) {
+      throw new GpxParseException("idatafailure");
+    }
+    return $gpx;
+  }
+
+  /**
+   * @param XMLWriter $xml
+   * @param Entity\Position $position
+   * @param int $positionNumber
+   * @return void
+   */
+  private function positionToGpx(XMLWriter $xml, Entity\Position $position, int $positionNumber): void {
+    $xml->startElement("trkpt");
+    $xml->writeAttribute("lat", (string) $position->latitude);
+    $xml->writeAttribute("lon", (string) $position->longitude);
+    if (!is_null($position->altitude)) {
+      $xml->writeElement("ele", (string) $position->altitude);
+    }
+    $xml->writeElement("time", gmdate("Y-m-d\TH:i:s\Z", $position->timestamp));
+    $xml->writeElement("name", (string) $positionNumber);
+    if (!is_null($position->comment)) {
+      $xml->startElement("desc");
+      $xml->writeCData($position->comment);
+      $xml->endElement();
+    }
+    if (!is_null($position->speed) || !is_null($position->bearing) || !is_null($position->accuracy) || !is_null($position->provider)) {
+      $xml->startElement("extensions");
+
+      if (!is_null($position->speed)) {
+        $xml->writeElementNS("ulogger", "speed", null, (string) round($position->speed, 2));
+      }
+      if (!is_null($position->bearing)) {
+        $xml->writeElementNS("ulogger", "bearing", null, (string) round($position->bearing, 2));
+      }
+      if (!is_null($position->accuracy)) {
+        $xml->writeElementNS("ulogger", "accuracy", null, (string) $position->accuracy);
+      }
+      if (!is_null($position->provider)) {
+        $xml->writeElementNS("ulogger", "provider", null, (string) $position->provider);
+      }
+      $xml->endElement();
+    }
+    $xml->endElement();
+  }
+
+  /**
+   * @param XMLWriter $xml
+   * @param array $positions
+   * @return void
+   */
+  private function trackToGpx(XMLWriter $xml, array $positions): void {
+    $xml->startElement("trk");
+    $xml->writeElement("name", $this->name);
+
+    $xml->startElement("trkseg");
+    $positionNumber = 0;
+    foreach ($positions as $position) {
+      $this->positionToGpx($xml, $position, ++$positionNumber);
+    }
+    $xml->endElement();
+
+    $xml->endElement();
   }
 }
