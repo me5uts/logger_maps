@@ -71,8 +71,11 @@ class Position extends AbstractEntity {
   public ?string $comment = null;
   /** @var ?string Image path */
   #[Column]
-  #[JsonField]
   public ?string $image = null;
+  /** @var bool Has image */
+  #[Column(name: 'has_image')]
+  #[JsonField]
+  public bool $hasImage = false;
   /** @var int|null Distance from track beginning */
   #[JsonField]
   public ?int $meters = 0;

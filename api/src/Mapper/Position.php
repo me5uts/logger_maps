@@ -314,7 +314,11 @@ class Position extends AbstractMapper {
     $limit = $singleRow ? "LIMIT 1" : "";
     $query = "SELECT p.id, " . $this->db->unix_timestamp('p.time') . " AS tstamp, p.user_id, p.track_id,
               p.latitude, p.longitude, p.altitude, p.speed, p.bearing, p.accuracy, p.provider,
-              p.comment, p.image, u.login, t.name
+              p.comment, p.image, u.login, t.name,
+              CASE 
+                  WHEN p.image IS NOT NULL THEN 1 
+                  ELSE 0 
+              END AS has_image
               FROM " . $this->db->table('positions') . " p
               LEFT JOIN " . $this->db->table('users') . " u ON (p.user_id = u.id)
               LEFT JOIN " . $this->db->table('tracks') . " t ON (p.track_id = t.id)

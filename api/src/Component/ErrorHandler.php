@@ -9,7 +9,7 @@ declare(strict_types = 1);
 
 namespace uLogger\Component;
 
-use Exception;
+use Throwable;
 
 class ErrorHandler {
 
@@ -30,10 +30,10 @@ class ErrorHandler {
   }
 
   /**
-   * @param Exception $exception
+   * @param Throwable $exception
    * @return no-return
    */
-  public static function exceptionHandler(Exception $exception): void {
+  public static function exceptionHandler(Throwable $exception): void {
     self::sendErrorAndExit("Exception: $exception", $exception->getCode());
   }
 

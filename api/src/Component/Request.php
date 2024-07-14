@@ -25,7 +25,7 @@ class Request {
   private const TYPE_MULTIPART_RELATED = 'multipart/related';
   public const CONTENT_TYPE = 'Content-Type';
   public const CONTENT_LENGTH = 'Content-Length';
-  private const CONTENT_DISPOSITION = 'Content-Disposition';
+  public const CONTENT_DISPOSITION = 'Content-Disposition';
 
   /** @var string */
   private string $path;

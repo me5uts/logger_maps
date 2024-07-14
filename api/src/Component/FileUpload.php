@@ -5,6 +5,7 @@ namespace uLogger\Component;
 
 use Exception;
 use uLogger\Exception\InvalidInputException;
+use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
 
@@ -93,14 +94,45 @@ class FileUpload {
 
   /**
    * Get file extension for given mime
-   * @param $mime
+   * @param string $mime
    * @return string|null Extension or null if not found
    */
-  private static function getExtension($mime): ?string {
+  private static function getExtension(string $mime): ?string {
     if (self::isKnownMime($mime)) {
       return self::getMimeMap()[$mime];
     }
     return null;
+  }
+
+  private static function getMime(string $extension): ?string {
+    foreach(self::getMimeMap() as $mime => $ext) {
+      if ($extension === $ext) {
+        return $mime;
+      }
+    }
+    return null;
+  }
+
+  public static function getUploadedPath(string $fileName): string {
+    return Utils::getUploadDir() . "/$fileName";
+  }
+
+  /**
+   * @throws NotFoundException
+   */
+  public static function getUploadedFile(string $fileName): string {
+    $fileContent = file_get_contents(self::getUploadedPath($fileName));
+
+    if ($fileContent === false) {
+      throw new NotFoundException();
+    } else {
+      return $fileContent;
+    }
+  }
+
+  public static function getMimeType(string $fileName): ?string {
+    $pathInfo = pathinfo($fileName);
+    return self::getMime($pathInfo['extension']);
   }
 
   /**

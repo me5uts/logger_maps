@@ -131,10 +131,14 @@ class Response {
     return new Response($payload, $code, $contentType);
   }
 
-  public static function file(string $fileContent, string $filename, string $contentType): Response {
-    $response = new Response($fileContent, self::CODE_2_OK, $contentType);
-    $response->extraHeaders['Content-Disposition'] = "attachment; filename=\"$filename\"";
+  public static function fileAttachment(string $fileContent, string $filename, string $contentType): Response {
+    $response = self::file($fileContent, $contentType);
+    $response->extraHeaders[Request::CONTENT_DISPOSITION] = "attachment; filename=\"$filename\"";
     return $response;
+  }
+
+  public static function file(string $fileContent, string $contentType): Response {
+    return new Response($fileContent, self::CODE_2_OK, $contentType);
   }
 
   public static function internalServerError(string $message): Response {

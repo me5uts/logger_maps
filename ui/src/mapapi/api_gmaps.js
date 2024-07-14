@@ -239,7 +239,7 @@ export default class GoogleMapsApi {
       title: (new Date(position.timestamp * 1000)).toLocaleString(),
       map: this.map
     });
-    const isExtra = position.hasComment() || position.hasImage();
+    const isExtra = position.hasComment() || position.hasImage;
     let icon;
     if (track.isLastPosition(id)) {
       icon = GoogleMapsApi.getMarkerIcon(config.colorStop, true, isExtra);

@@ -160,7 +160,7 @@ class Track extends AbstractController {
     } catch (Exception $e) {
       return Response::exception($e);
     }
-    return Response::file($file->export($positions), $file->getExportedName(), $file->getMimeType());
+    return Response::fileAttachment($file->export($positions), $file->getExportedName(), $file->getMimeType());
   }
 
 }

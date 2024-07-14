@@ -301,7 +301,7 @@ export default class MapViewModel extends ViewModel {
         </div>
         <div id="pbody">
         ${(pos.hasComment()) ? `<div id="pcomments">${Utils.htmlEncode(pos.comment).replace(/\n/, '<br>')}</div>` : ''}
-        ${(pos.hasImage()) ? `<div id="pimage"><img src="uploads/${pos.image}" alt="image"></div>` : ''}
+        ${(pos.hasImage) ? `<div id="pimage"><img src="${pos.getImagePath()}" alt="image"></div>` : ''}
         <div id="pleft">
         <img class="icon" alt="${$._('time')}" title="${$._('time')}" src="images/calendar_dark.svg"> ${date}<br>
         <img class="icon" alt="${$._('time')}" title="${$._('time')}" src="images/clock_dark.svg"> ${time}<br>
@@ -315,7 +315,7 @@ export default class MapViewModel extends ViewModel {
     const node = document.createElement('div');
     node.setAttribute('id', 'popup');
     node.innerHTML = html;
-    if (pos.hasImage()) {
+    if (pos.hasImage) {
       const image = node.querySelector('#pimage img');
       image.onclick = () => {
         const modal = new Dialog(`<img src="${pos.getImagePath()}" alt="image">`);

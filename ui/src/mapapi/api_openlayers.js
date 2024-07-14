@@ -639,7 +639,7 @@ export default class OpenLayersApi {
   getMarkerStyle(id, track) {
     const position = track.positions[id];
     let iconStyle = this.markerStyles.normal;
-    if (position.hasComment() || position.hasImage()) {
+    if (position.hasComment() || position.hasImage) {
       if (track.isLastPosition(id)) {
         iconStyle = this.markerStyles.stopExtra;
       } else if (track.isFirstPosition(id)) {

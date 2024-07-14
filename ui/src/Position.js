@@ -18,7 +18,7 @@ import Utils from './Utils.js';
  * @property {?number} accuracy
  * @property {?string} provider
  * @property {?string} comment
- * @property {?string} image
+ * @property {boolean} hasImage
  * @property {string} userName
  * @property {string} trackName
  * @property {number} trackId
@@ -46,7 +46,7 @@ export default class Position {
     position.accuracy = Utils.getInteger(pos.accuracy, true); // may be null
     position.provider = Utils.getString(pos.provider, true); // may be null
     position.comment = Utils.getString(pos.comment, true); // may be null
-    position.image = Utils.getString(pos.image, true); // may be null
+    position.hasImage = pos.hasImage;
     position.userName = Utils.getString(pos.userName);
     position.trackName = Utils.getString(pos.trackName);
     position.trackId = Utils.getInteger(pos.trackId);
@@ -68,13 +68,6 @@ export default class Position {
   /**
    * @return {boolean}
    */
-  hasImage() {
-    return (this.image != null && this.image.length > 0);
-  }
-
-  /**
-   * @return {boolean}
-   */
   hasSpeed() {
     return this.speed != null;
   }
@@ -90,7 +83,7 @@ export default class Position {
    * @return {?string}
    */
   getImagePath() {
-    return this.hasImage() ? `uploads/${this.image}` : null;
+    return this.hasImage ? `api/positions/${this.id}/image` : null;
   }
 
   /**

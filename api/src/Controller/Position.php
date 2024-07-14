@@ -161,4 +161,32 @@ class Position extends AbstractController {
 
     return Response::success();
   }
+
+  /**
+   * GET /api/positions/{id}/image (get image from position; access: OPEN-ALL, PUBLIC-AUTHORIZED, PRIVATE-OWNER|ADMIN)
+   * @param int $positionId
+   * @return Response
+   * @noinspection PhpUnused
+   */
+  #[Route(Request::METHOD_GET, '/api/positions/{positionId}/image', [
+    Session::ACCESS_OPEN => [ Session::ALLOW_ALL ],
+    Session::ACCESS_PUBLIC => [ Session::ALLOW_AUTHORIZED ],
+    Session::ACCESS_PRIVATE => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ]
+  ])]
+  public function getImage(int $positionId): Response {
+
+    try {
+      $position = $this->mapper(Mapper\Position::class)->fetch($positionId);
+      if (!$position->image) {
+        throw new NotFoundException();
+      }
+      $file = FileUpload::getUploadedFile($position->image);
+      $mimeType = FileUpload::getMimeType($position->image);
+      return Response::file($file, $mimeType);
+
+    } catch (Exception $e) {
+      return Response::exception($e);
+    }
+
+  }
 }

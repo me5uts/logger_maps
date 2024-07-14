@@ -120,9 +120,9 @@ export default class PositionDialogModel extends ViewModel {
         data-bind="comment" autofocus>${Utils.htmlEncode(this.model.comment)}</textarea>
         <br><br>
         <label><b>${$._('image')}</b></label><br>
-        <input type="file" name="image" data-bind="image" accept="image/png, image/jpeg, image/gif, image/bmp"${this.position.hasImage() ? ' class="hidden"' : ''}>
-        <img alt="${$._('image')}" style="max-width:50px; max-height:50px;" data-bind="imagePreview" ${this.position.hasImage() ? `src="${this.position.getImagePath()}"` : 'class="hidden"'}>
-        <a data-bind="onImageDelete" ${this.position.hasImage() ? '' : ' class="hidden"'}>${$._('delimage')}</a>
+        <input type="file" name="image" data-bind="image" accept="image/png, image/jpeg, image/gif, image/bmp"${this.position.hasImage ? ' class="hidden"' : ''}>
+        <img alt="${$._('image')}" style="max-width:50px; max-height:50px;" data-bind="imagePreview" ${this.position.hasImage ? `src="${this.position.getImagePath()}"` : 'class="hidden"'}>
+        <a data-bind="onImageDelete" ${this.position.hasImage ? '' : ' class="hidden"'}>${$._('delimage')}</a>
         <div class="buttons">
           <button class="button-reject" data-bind="onCancel" type="button">${$._('cancel')}</button>
           <button class="button-resolve" data-bind="onPositionUpdate" type="submit">${$._('submit')}</button>
