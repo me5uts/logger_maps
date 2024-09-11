@@ -28,9 +28,9 @@ class Migration {
   public static function verifyVersion(): bool {
     $config = new Config();
     if (!class_exists("uLogger\\Controller\\Config") || !class_exists("uLogger\\Controller\\Db") ||
-      !method_exists("uLogger\\Controller\\Config", "getOfflineInstance") ||
+      !method_exists("uLogger\\Controller\\Config", 'getOfflineInstance') ||
       !str_starts_with($config->version, '1.')) {
-      echo "You need μlogger version 1.x to run this script" . PHP_EOL;
+      echo 'You need μlogger version 1.x to run this script' . PHP_EOL;
       return false;
     }
     return true;
@@ -41,19 +41,19 @@ class Migration {
    * @param string $input Optional path to read from (for tests)
    * @return bool True if confirmed
    */
-  public static function waitForUser(string $input = "php://stdin"): bool {
-    echo "This script will update database from version 0.6 to 1.x." . PHP_EOL;
-    echo "Creating database backup is recommended before proceeding" . PHP_EOL;
+  public static function waitForUser(string $input = 'php://stdin'): bool {
+    echo 'This script will update database from version 0.6 to 1.x.' . PHP_EOL;
+    echo 'Creating database backup is recommended before proceeding' . PHP_EOL;
     echo "Type 'yes' to continue, anything else to abort" . PHP_EOL;
     $handle = fopen($input, 'rb');
     $input = fgets($handle);
     fclose($handle);
-    if (trim($input) !== "yes") {
-      echo "Cancelled by user" . PHP_EOL;
+    if (trim($input) !== 'yes') {
+      echo 'Cancelled by user' . PHP_EOL;
       return false;
     }
     echo PHP_EOL;
-    echo "Starting migration..." . PHP_EOL;
+    echo 'Starting migration...' . PHP_EOL;
     return true;
   }
 
@@ -62,7 +62,7 @@ class Migration {
    * @return bool True on success
    */
   public static function updateSchemas(): bool {
-    echo "Migrating database schemas..." . PHP_EOL;
+    echo 'Migrating database schemas...' . PHP_EOL;
     try {
       $queries = self::getQueries();
       Db::getInstance()->beginTransaction();
@@ -76,13 +76,13 @@ class Migration {
     } catch (PDOException $e) {
       echo "Database query failed: {$e->getMessage()}" . PHP_EOL;
       if (Db::getInstance()->inTransaction()) {
-        echo "Reverting changes..." . PHP_EOL;
+        echo 'Reverting changes...' . PHP_EOL;
         Db::getInstance()->rollBack();
       }
       return false;
     }
     echo PHP_EOL;
-    echo "Database schemas updated successfully" . PHP_EOL;
+    echo 'Database schemas updated successfully' . PHP_EOL;
     return true;
   }
 
@@ -94,23 +94,23 @@ class Migration {
   /** @noinspection IssetArgumentExistenceInspection */
   public static function updateConfig(string $path = null): bool {
     if ($path === null) {
-      $path = Utils::getRootDir() . "/config.php";
+      $path = Utils::getRootDir() . '/config.php';
     }
-    echo "Migrating config to database..." . PHP_EOL;
+    echo 'Migrating config to database...' . PHP_EOL;
     require_once($path);
     if (!empty($admin_user)) {
       try {
         echo "Setting user $admin_user as admin" . PHP_EOL;
-        $query = "UPDATE " . Db::getInstance()->table('users') . " SET admin = ? WHERE login = ?";
+        $query = 'UPDATE ' . Db::getInstance()->table('users') . ' SET admin = ? WHERE login = ?';
         $stmt = Db::getInstance()->prepare($query);
         $stmt->execute([ 1, $admin_user ]);
         if ($stmt->rowCount() === 0) {
           echo "User $admin_user not found in database table" . PHP_EOL;
-          echo "Set your admin user manually in users table" . PHP_EOL;
+          echo 'Set your admin user manually in users table' . PHP_EOL;
         }
       } catch (PDOException $e) {
-        echo "Setting admin user failed: " . $e->getMessage() . PHP_EOL;
-        echo "Set your admin user manually in users table" . PHP_EOL;
+        echo 'Setting admin user failed: ' . $e->getMessage() . PHP_EOL;
+        echo 'Set your admin user manually in users table' . PHP_EOL;
       }
     }
     $config = Config::getOfflineInstance();
@@ -163,10 +163,10 @@ class Migration {
       $config->strokeOpacity = $strokeOpacity;
     }
     if ($config->save() !== true) {
-      echo "Configuration migration failed. Please update your settings manually from web interface" . PHP_EOL;
+      echo 'Configuration migration failed. Please update your settings manually from web interface' . PHP_EOL;
       return false;
     }
-    echo "Configuration successfully migrated to database" . PHP_EOL;
+    echo 'Configuration successfully migrated to database' . PHP_EOL;
     return true;
   }
 
@@ -185,7 +185,7 @@ class Migration {
 
     $queries = [];
     switch ($dbDriver) {
-      case "mysql":
+      case 'mysql':
         $queries[] = "CREATE TABLE `$tConfig` (
           `name` varchar(20) PRIMARY KEY,
           `value` tinyblob NOT NULL
@@ -235,7 +235,7 @@ class Migration {
 
         break;
 
-      case "pgsql":
+      case 'pgsql':
         $queries[] = "CREATE TABLE $tConfig (
           name varchar(20) PRIMARY KEY,
           value bytea NOT NULL
@@ -285,7 +285,7 @@ class Migration {
 
         break;
 
-      case "sqlite":
+      case 'sqlite':
         $queries[] = "CREATE TABLE `$tConfig` (
           `name` varchar(20) PRIMARY KEY,
           `value` tinyblob NOT NULL
@@ -331,7 +331,7 @@ class Migration {
 
         $queries[] = "ALTER TABLE `$tUsers` ADD `admin` boolean NOT NULL DEFAULT FALSE";
 
-        $queries[] = "PRAGMA foreign_keys=OFF";
+        $queries[] = 'PRAGMA foreign_keys=OFF';
         $queries[] = "CREATE TABLE `$tPositionsBackup` (
           `id` integer PRIMARY KEY AUTOINCREMENT,
           `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -354,12 +354,12 @@ class Migration {
         $queries[] = "ALTER TABLE `$tPositionsBackup` RENAME TO `$tPositions`";
         $queries[] = "CREATE INDEX `idx_ptrack_id` ON `$tPositions`(`track_id`)";
         $queries[] = "CREATE INDEX `idx_puser_id` ON `$tPositions`(`user_id`)";
-        $queries[] = "PRAGMA foreign_keys=ON";
+        $queries[] = 'PRAGMA foreign_keys=ON';
 
         break;
 
       default:
-        throw new InvalidArgumentException("Driver not supported");
+        throw new InvalidArgumentException('Driver not supported');
     }
     return $queries;
   }

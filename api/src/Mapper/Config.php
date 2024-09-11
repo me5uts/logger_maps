@@ -25,7 +25,7 @@ class Config extends AbstractMapper {
    */
   public function fetch(): Entity\Config {
     try {
-      $query = "SELECT name, value FROM " . $this->db->table("config");
+      $query = 'SELECT name, value FROM ' . $this->db->table('config');
       $result = $this->db->query($query);
       $configArray = $result->fetchAll(PDO::FETCH_KEY_PAIR);
       $config = $this->mapRowToObject($configArray);
@@ -92,9 +92,9 @@ class Config extends AbstractMapper {
     ];
 
     try {
-      $query = $this->db->insertOrReplace("config", [ "name", "value" ], $values, "name", "value");
+      $query = $this->db->insertOrReplace('config', [ 'name', 'value' ], $values, 'name', 'value');
       $stmt = $this->db->prepare($query);
-      $stmt->execute(array_map("serialize", $params));
+      $stmt->execute(array_map('serialize', $params));
       $this->saveLayers($config);
     } catch (PDOException $e) {
       syslog(LOG_ERR, $e->getMessage());
@@ -107,7 +107,7 @@ class Config extends AbstractMapper {
    * @throws PDOException
    */
   private function deleteLayers(): void {
-    $query = "DELETE FROM " . $this->db->table("ol_layers");
+    $query = 'DELETE FROM ' . $this->db->table('ol_layers');
     $this->db->exec($query);
   }
 
@@ -118,7 +118,7 @@ class Config extends AbstractMapper {
   private function saveLayers(Entity\Config $config): void {
     $this->deleteLayers();
     if (!empty($config->olLayers)) {
-      $query = "INSERT INTO " . $this->db->table("ol_layers") . " (id, name, url, priority) VALUES (?, ?, ?, ?)";
+      $query = 'INSERT INTO ' . $this->db->table('ol_layers') . ' (id, name, url, priority) VALUES (?, ?, ?, ?)';
       $stmt = $this->db->prepare($query);
       foreach ($config->olLayers as $layer) {
         $stmt->execute([ $layer->id, $layer->name, $layer->url, $layer->priority ]);
@@ -132,10 +132,10 @@ class Config extends AbstractMapper {
    */
   private function setLayersFromDatabase(Entity\Config $config): void {
     $config->olLayers = [];
-    $query = "SELECT id, name, url, priority FROM " . $this->db->table('ol_layers');
+    $query = 'SELECT id, name, url, priority FROM ' . $this->db->table('ol_layers');
     $result = $this->db->query($query);
     while ($row = $result->fetch()) {
-      $config->olLayers[] = new Entity\Layer((int) $row["id"], $row["name"], $row["url"], (int) $row["priority"]);
+      $config->olLayers[] = new Entity\Layer((int) $row['id'], $row['name'], $row['url'], (int) $row['priority']);
     }
   }
 
@@ -231,7 +231,7 @@ class Config extends AbstractMapper {
    * @throws ServerException
    */
   public function mapRowToObject(array $row): Entity\Config {
-    $row = array_map([ $this, "unserialize" ], $row);
+    $row = array_map([ $this, 'unserialize' ], $row);
     return Entity\Config::fromDatabaseRow($row);
   }
 
