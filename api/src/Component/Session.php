@@ -61,8 +61,7 @@ class Session {
       $userId = $this->userMapper->getFromSession();
       $user = $this->userMapper->fetch($userId);
       $this->setAuthenticated($user);
-    } catch (NotFoundException) { /* ignored */
-    }
+    } catch (NotFoundException) { /* ignored */ }
   }
 
   /**
