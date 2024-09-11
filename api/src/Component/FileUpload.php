@@ -130,8 +130,8 @@ class FileUpload {
   }
 
   public static function getMimeType(string $fileName): ?string {
-    $pathInfo = pathinfo($fileName);
-    return self::getMime($pathInfo['extension']);
+    $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+    return self::getMime($extension);
   }
 
   /**
