@@ -43,14 +43,14 @@ class Utils {
    * @return int Number of bytes
    */
   public static function getSystemUploadLimit(): int {
-    $upload_max_filesize = self::iniGetBytes('upload_max_filesize');
-    $post_max_size = self::iniGetBytes('post_max_size');
+    $uploadMaxFilesize = self::iniGetBytes('upload_max_filesize');
+    $postMaxSize = self::iniGetBytes('post_max_size');
     // post_max_size = 0 means unlimited size
-    if ($post_max_size === 0) { $post_max_size = $upload_max_filesize; }
-    $memory_limit = self::iniGetBytes('memory_limit');
+    if ($postMaxSize === 0) { $postMaxSize = $uploadMaxFilesize; }
+    $memoryLimit = self::iniGetBytes('memory_limit');
     // memory_limit = -1 means no limit
-    if ($memory_limit < 0) { $memory_limit = $post_max_size; }
-    return min($upload_max_filesize, $post_max_size, $memory_limit);
+    if ($memoryLimit < 0) { $memoryLimit = $postMaxSize; }
+    return min($uploadMaxFilesize, $postMaxSize, $memoryLimit);
   }
 
   /**

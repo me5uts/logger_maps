@@ -85,7 +85,7 @@ class Position extends AbstractMapper {
       $query = "INSERT INTO $table
                   (user_id, track_id,
                   time, latitude, longitude, altitude, speed, bearing, accuracy, provider, comment, image)
-                  VALUES (?, ?, " . $this->db->from_unixtime('?') . ', ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+                  VALUES (?, ?, " . $this->db->fromUnixTime('?') . ', ?, ?, ?, ?, ?, ?, ?, ?, ?)';
       $stmt = $this->db->prepare($query);
       $params = [
         $position->userId, $position->trackId,
@@ -112,7 +112,7 @@ class Position extends AbstractMapper {
   public function update(Entity\Position $position): void {
     try {
       $query = 'UPDATE ' . $this->db->table('positions') . ' SET 
-                time = ' . $this->db->from_unixtime('?') . ', user_id = ?, track_id = ?, latitude = ?, longitude = ?, altitude = ?, 
+                time = ' . $this->db->fromUnixTime('?') . ', user_id = ?, track_id = ?, latitude = ?, longitude = ?, altitude = ?, 
                 speed = ?, bearing = ?, accuracy = ?, provider = ?, comment = ?, image = ? WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $params = [
@@ -312,7 +312,7 @@ class Position extends AbstractMapper {
       $orderBy = 'ORDER BY p.time, p.id';
     }
     $limit = $singleRow ? 'LIMIT 1' : '';
-    $query = 'SELECT p.id, ' . $this->db->unix_timestamp('p.time') . ' AS tstamp, p.user_id, p.track_id,
+    $query = 'SELECT p.id, ' . $this->db->unixTimestamp('p.time') . ' AS tstamp, p.user_id, p.track_id,
               p.latitude, p.longitude, p.altitude, p.speed, p.bearing, p.accuracy, p.provider,
               p.comment, p.image, u.login, t.name,
               CASE 

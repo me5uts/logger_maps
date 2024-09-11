@@ -135,7 +135,7 @@ class Db extends PDO {
    * @param string $column
    * @return string
    */
-  public function unix_timestamp(string $column): string {
+  public function unixTimestamp(string $column): string {
     switch (self::$driver) {
       default:
       case 'mysql':
@@ -167,7 +167,7 @@ class Db extends PDO {
    * @param string $column Column name
    * @return string
    */
-  public function from_lob(string $column): string {
+  public function fromLob(string $column): string {
     switch (self::$driver) {
       default:
       case 'mysql':
@@ -183,7 +183,7 @@ class Db extends PDO {
    * @param string $column
    * @return string
    */
-  public function from_unixtime(string $column): string {
+  public function fromUnixTime(string $column): string {
     switch (self::$driver) {
       default:
       case 'mysql':
