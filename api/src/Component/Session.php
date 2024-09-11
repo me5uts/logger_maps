@@ -14,7 +14,6 @@ use uLogger\Exception\DatabaseException;
 use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
-use uLogger\Helper\Utils;
 use uLogger\Mapper\MapperFactory;
 use uLogger\Mapper;
 
@@ -208,29 +207,6 @@ class Session {
    */
   public function logOut(): void {
     $this->sessionEnd();
-  }
-
-  /**
-   * Send 401 headers
-   *
-   * @return void
-   * @deprecated
-   */
-  public function sendUnauthorizedHeader(): void {
-    header('WWW-Authenticate: OAuth realm="users@ulogger"');
-    header('HTTP/1.1 401 Unauthorized', true, 401);
-  }
-
-  /**
-   * Send 401 headers and exit
-   *
-   * @param string $message
-   * @return no-return
-   * @deprecated
-   */
-  public function exitWithUnauthorized(string $message = 'Unauthorized'): void {
-    $this->sendUnauthorizedHeader();
-    Utils::exitWithError($message);
   }
 
 }
