@@ -26,7 +26,7 @@ class Locale extends AbstractController {
   public function get(): Response {
     $langStrings = (new Lang($this->config))->getStrings();
     $result = [
-      "langArr" => Lang::getLanguages()
+      'langArr' => Lang::getLanguages()
     ];
     foreach ($langStrings as $key => $val) {
       $result[$key] = $val;

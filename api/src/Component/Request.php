@@ -92,7 +92,7 @@ class Request {
   public function loadFromServer(): void {
     $this->path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $this->method = $_SERVER['REQUEST_METHOD'];
-    $this->contentType = $_SERVER["CONTENT_TYPE"];
+    $this->contentType = $_SERVER['CONTENT_TYPE'];
     $this->filters = is_array($_GET) ? $_GET : [];
     $this->loadPayload();
     $this->setUriSegments();
@@ -132,7 +132,7 @@ class Request {
   private function extractParams($routePath): void {
     $this->params = [];
     // Extract parameter values from the request path
-    preg_match_all("/{([a-zA-Z0-9]+)}/", $routePath, $matches);
+    preg_match_all('/{([a-zA-Z0-9]+)}/', $routePath, $matches);
     $keys = $matches[1];
     $quoted = preg_quote($routePath);
     $pattern = preg_replace('/\\\{[a-zA-Z0-9]+\\\}/', '(\\w+)', $quoted);
@@ -267,8 +267,8 @@ class Request {
 
           self::parseInput($body, $_FILES, $payload, $uploads, $contentType);
         } elseif (str_starts_with($headers[self::CONTENT_TYPE], 'image/')) {
-          $name = "image";
-          $filename = "upload";
+          $name = 'image';
+          $filename = 'upload';
           if (isset($headers[self::CONTENT_DISPOSITION])) {
             $contentDisposition = $headers[self::CONTENT_DISPOSITION];
             if (preg_match('/name=\"([^\"]*)\"/', $contentDisposition, $matches)) {

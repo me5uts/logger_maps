@@ -117,7 +117,7 @@ class Utils {
   private static function exitWithStatus(bool $isError, ?array $extra = null): void {
     $output = [];
     if ($isError) {
-      $output["error"] = true;
+      $output['error'] = true;
     }
     if (!empty($extra)) {
       foreach ($extra as $key => $value) {
@@ -136,22 +136,22 @@ class Utils {
    * @return string URL
    */
   public static function getBaseUrl(): string {
-    $proto = (!isset($_SERVER["HTTPS"]) || $_SERVER["HTTPS"] === "" || $_SERVER["HTTPS"] === "off") ? "http://" : "https://";
+    $proto = (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] === '' || $_SERVER['HTTPS'] === 'off') ? 'http://' : 'https://';
     // Check if we are behind an HTTPS proxy
-    if (isset($_SERVER["HTTP_X_FORWARDED_PROTO"]) && $_SERVER["HTTP_X_FORWARDED_PROTO"] === "https") {
-      $proto = "https://";
+    if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+      $proto = 'https://';
     }
-    $host = $_SERVER["HTTP_HOST"] ?? "";
-    if (realpath($_SERVER["SCRIPT_FILENAME"])) {
-      $scriptPath = substr(dirname(realpath($_SERVER["SCRIPT_FILENAME"])), strlen(self::getRootDir()));
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    if (realpath($_SERVER['SCRIPT_FILENAME'])) {
+      $scriptPath = substr(dirname(realpath($_SERVER['SCRIPT_FILENAME'])), strlen(self::getRootDir()));
     } else {
       // for phpunit
-      $scriptPath = substr(dirname($_SERVER["SCRIPT_FILENAME"]), strlen(self::getRootDir()));
+      $scriptPath = substr(dirname($_SERVER['SCRIPT_FILENAME']), strlen(self::getRootDir()));
     }
-    $self = dirname($_SERVER["PHP_SELF"]);
-    $path = str_replace("\\", "/", substr($self, 0, strlen($self) - strlen($scriptPath)));
+    $self = dirname($_SERVER['PHP_SELF']);
+    $path = str_replace("\\", '/', substr($self, 0, strlen($self) - strlen($scriptPath)));
 
-    return $proto . str_replace("//", "/", $host . $path . "/");
+    return $proto . str_replace('//', '/', $host . $path . '/');
   }
 
   /**
@@ -236,7 +236,7 @@ class Utils {
   public static function requestFile(string $name, mixed $default = null): mixed {
     if (isset($_FILES[$name])) {
       $files = $_FILES[$name];
-      if (isset($files["name"], $files["type"], $files["size"], $files["tmp_name"])) {
+      if (isset($files['name'], $files['type'], $files['size'], $files['tmp_name'])) {
         return new FileUpload($_FILES[$name]);
       }
     }
@@ -260,7 +260,7 @@ class Utils {
    */
   public static function requireFile(string $name, bool $checkMime = false): FileUpload {
     if (empty($_FILES[$name])) {
-      throw new InvalidInputException("Missing uploaded file");
+      throw new InvalidInputException('Missing uploaded file');
     }
     $fileUpload = new FileUpload($_FILES[$name]);
     $fileUpload->sanitizeUpload($checkMime);

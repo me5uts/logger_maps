@@ -65,7 +65,7 @@ class User extends AbstractMapper {
    */
   public function create(Entity\User $user): void {
     if (empty($user->password)) {
-      throw new InvalidInputException("User password is required");
+      throw new InvalidInputException('User password is required');
     }
     $user->hash = password_hash($user->password, PASSWORD_DEFAULT);
     $table = $this->db->table('users');
@@ -89,7 +89,7 @@ class User extends AbstractMapper {
    */
   public function updateIsAdmin(Entity\User $user): void {
     try {
-      $query = "UPDATE " . $this->db->table('users') . " SET admin = ? WHERE id = ?";
+      $query = 'UPDATE ' . $this->db->table('users') . ' SET admin = ? WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ (int) $user->isAdmin, $user->id ]);
     } catch (PDOException $e) {
@@ -107,12 +107,12 @@ class User extends AbstractMapper {
    */
   public function updatePassword(Entity\User $user): void {
     if (empty($user->password)) {
-      throw new InvalidInputException("Missing password");
+      throw new InvalidInputException('Missing password');
     }
 
     $hash = password_hash($user->password, PASSWORD_DEFAULT);
     try {
-      $query = "UPDATE " . $this->db->table('users') . " SET password = ? WHERE id = ?";
+      $query = 'UPDATE ' . $this->db->table('users') . ' SET password = ? WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $hash, $user->id ]);
 
@@ -136,7 +136,7 @@ class User extends AbstractMapper {
 //    }
     // remove user
     try {
-      $query = "DELETE FROM " . $this->db->table('users') . " WHERE id = ?";
+      $query = 'DELETE FROM ' . $this->db->table('users') . ' WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $userId ]);
 
@@ -157,13 +157,13 @@ class User extends AbstractMapper {
   public function get(?int $userId = null, ?string $login = null): array {
 
     try {
-      $query = "SELECT id, login, password, admin FROM " . $this->db->table('users');
+      $query = 'SELECT id, login, password, admin FROM ' . $this->db->table('users');
       $params = null;
       if ($userId) {
-        $query .= " WHERE id = ? LIMIT 1";
+        $query .= ' WHERE id = ? LIMIT 1';
         $params[] = $userId;
       } elseif ($login) {
-        $query .= " WHERE login = ? LIMIT 1";
+        $query .= ' WHERE login = ? LIMIT 1';
         $params[] = $login;
       }
       $stmt = $this->db->prepare($query);
@@ -188,7 +188,7 @@ class User extends AbstractMapper {
    */
   public function storeInSession(Entity\User $user): void {
     if (!$user->id) {
-      throw new InvalidInputException("User not valid");
+      throw new InvalidInputException('User not valid');
     }
     $_SESSION['user_id'] = $user->id;
 

@@ -66,10 +66,10 @@ class Session extends AbstractController {
 
   private function sessionDataResult(): array {
     $result = [
-      "isAuthenticated" => $this->session->isAuthenticated()
+      'isAuthenticated' => $this->session->isAuthenticated()
     ];
     if ($this->session->isAuthenticated()) {
-      $result["user"] = $this->session->user;
+      $result['user'] = $this->session->user;
     }
     return $result;
   }

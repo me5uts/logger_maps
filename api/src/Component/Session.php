@@ -23,14 +23,14 @@ use uLogger\Mapper;
  */
 class Session {
 
-  public const ACCESS_OPEN = "access open";
-  public const ACCESS_PUBLIC = "access public";
-  public const ACCESS_PRIVATE = "access private";
-  public const ACCESS_ALL = "access all";
-  public const ALLOW_ALL = "allow all";
-  public const ALLOW_AUTHORIZED = "allow authorized";
-  public const ALLOW_OWNER = "allow owner";
-  public const ALLOW_ADMIN = "allow admin";
+  public const ACCESS_OPEN = 'access open';
+  public const ACCESS_PUBLIC = 'access public';
+  public const ACCESS_PRIVATE = 'access private';
+  public const ACCESS_ALL = 'access all';
+  public const ALLOW_ALL = 'allow all';
+  public const ALLOW_AUTHORIZED = 'allow authorized';
+  public const ALLOW_OWNER = 'allow owner';
+  public const ALLOW_ADMIN = 'allow admin';
 
   /** @var Mapper\User */
   private Mapper\User $userMapper;
@@ -137,7 +137,7 @@ class Session {
       'samesite' => 'Lax',
       'secure' => $isHttps
     ]);
-    session_name("ulogger");
+    session_name('ulogger');
     session_start();
   }
 
@@ -148,11 +148,11 @@ class Session {
    */
   private function sessionEnd(): void {
     $_SESSION = [];
-    if (ini_get("session.use_cookies") && isset($_COOKIE[session_name()])) {
+    if (ini_get('session.use_cookies') && isset($_COOKIE[session_name()])) {
       $params = session_get_cookie_params();
       setcookie(session_name(), '', time() - 42000,
-        $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
+        $params['path'], $params['domain'],
+        $params['secure'], $params['httponly']
       );
     }
     session_destroy();
@@ -229,7 +229,7 @@ class Session {
    * @return no-return
    * @deprecated
    */
-  public function exitWithUnauthorized(string $message = "Unauthorized"): void {
+  public function exitWithUnauthorized(string $message = 'Unauthorized'): void {
     $this->sendUnauthorizedHeader();
     Utils::exitWithError($message);
   }

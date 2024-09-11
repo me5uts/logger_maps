@@ -30,7 +30,7 @@ class Reflection {
    */
   public static function castArgument(mixed $value, ReflectionNamedType $type): mixed {
     if (is_null($value) && !$type->allowsNull()) {
-      throw new ServerException("Unexpected null value in route parameter");
+      throw new ServerException('Unexpected null value in route parameter');
     }
     $typeName = $type->getName();
     return match ($typeName) {

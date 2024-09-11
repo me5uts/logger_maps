@@ -47,7 +47,7 @@ class Config extends AbstractController {
     }
     try {
       if ($this->mapper(Mapper\Config::class)->update($config) === false) {
-        return Response::internalServerError("servererror");
+        return Response::internalServerError('servererror');
       }
       $this->config->setFromConfig($config);
     } catch (Exception $e) {

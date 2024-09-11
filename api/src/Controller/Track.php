@@ -53,7 +53,7 @@ class Track extends AbstractController {
   #[Route(Request::METHOD_PUT, '/api/tracks/{trackId}', [ Session::ACCESS_ALL => [ Session::ALLOW_OWNER, Session::ALLOW_ADMIN ] ])]
   public function update(int $trackId, Entity\Track $track): Response {
     if ($trackId !== $track->id) {
-      return Response::unprocessableError("Wrong track id");
+      return Response::unprocessableError('Wrong track id');
     }
     try {
       $this->mapper(Mapper\Track::class)->update($track);

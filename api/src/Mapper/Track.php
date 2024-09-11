@@ -74,14 +74,14 @@ class Track extends AbstractMapper {
    */
   public function get(?int $userId = null, ?int $trackId = null): array {
 
-    $where = "";
+    $where = '';
 
     if (!empty($userId)) {
-      $where = "WHERE user_id = " . $this->db->quote((string) $userId);
+      $where = 'WHERE user_id = ' . $this->db->quote((string) $userId);
     } elseif (!empty($trackId)) {
-      $where = "WHERE id = " . $this->db->quote((string) $trackId);
+      $where = 'WHERE id = ' . $this->db->quote((string) $trackId);
     }
-    $query = "SELECT id, user_id, name, comment FROM " . $this->db->table('tracks') . " $where ORDER BY id DESC";
+    $query = 'SELECT id, user_id, name, comment FROM ' . $this->db->table('tracks') . " $where ORDER BY id DESC";
     try {
       $result = $this->db->query($query);
       $tracks = [];
@@ -104,13 +104,13 @@ class Track extends AbstractMapper {
    */
   public function update(Entity\Track $track): void {
     if (empty($track->name)) {
-      throw new InvalidInputException("Empty track name");
+      throw new InvalidInputException('Empty track name');
     }
-    if ($track->comment === "") {
+    if ($track->comment === '') {
       $track->comment = null;
     }
     try {
-      $query = "UPDATE " . $this->db->table('tracks') . " SET name = ?, comment = ? WHERE id = ?";
+      $query = 'UPDATE ' . $this->db->table('tracks') . ' SET name = ?, comment = ? WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $params = [ $track->name, $track->comment, $track->id ];
       $stmt->execute($params);
@@ -132,7 +132,7 @@ class Track extends AbstractMapper {
   public function delete(Entity\Track $track): void {
 
     try {
-      $query = "DELETE FROM " . $this->db->table('tracks') . " WHERE id = ?";
+      $query = 'DELETE FROM ' . $this->db->table('tracks') . ' WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $track->id ]);
 
@@ -151,7 +151,7 @@ class Track extends AbstractMapper {
   public function deleteAll(int $userId): void {
 
     try {
-      $query = "DELETE FROM " . $this->db->table('tracks') . " WHERE user_id = ?";
+      $query = 'DELETE FROM ' . $this->db->table('tracks') . ' WHERE user_id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $userId ]);
     } catch (PDOException $e) {

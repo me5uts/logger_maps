@@ -73,11 +73,11 @@ class FileUpload {
    */
   private static function getMimeMap(): array {
     if (empty(self::$mimeMap)) {
-      self::$mimeMap["image/jpeg"] = "jpg";
-      self::$mimeMap["image/jpg"] = "jpg";
-      self::$mimeMap["image/x-ms-bmp"] = "bmp";
-      self::$mimeMap["image/gif"] = "gif";
-      self::$mimeMap["image/png"] = "png";
+      self::$mimeMap['image/jpeg'] = 'jpg';
+      self::$mimeMap['image/jpg'] = 'jpg';
+      self::$mimeMap['image/x-ms-bmp'] = 'bmp';
+      self::$mimeMap['image/gif'] = 'gif';
+      self::$mimeMap['image/png'] = 'png';
     }
     return self::$mimeMap;
   }
@@ -157,7 +157,7 @@ class FileUpload {
    */
   public static function delete(string $path): bool {
     $ret = true;
-    $filePattern = "/[a-z0-9_.]{20,}/";
+    $filePattern = '/[a-z0-9_.]{20,}/';
     if (preg_match($filePattern, $path)) {
       $path = Utils::getUploadDir() . "/$path";
       if (file_exists($path)) {
@@ -174,22 +174,22 @@ class FileUpload {
    */
   public function sanitizeUpload(bool $checkMime = true): void {
     if (!isset($this->name, $this->type, $this->size, $this->tmpName)) {
-      $message = "no uploaded file";
+      $message = 'no uploaded file';
       $lastErr = error_get_last();
       if (!empty($lastErr)) {
-        $message = $lastErr["message"];
+        $message = $lastErr['message'];
       }
       throw new InvalidInputException($message);
     }
 
     $uploadErrors = [];
-    $uploadErrors[UPLOAD_ERR_INI_SIZE] = "Uploaded file exceeds the upload_max_filesize directive in php.ini";
-    $uploadErrors[UPLOAD_ERR_FORM_SIZE] = "Uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form";
-    $uploadErrors[UPLOAD_ERR_PARTIAL] = "File was only partially uploaded";
-    $uploadErrors[UPLOAD_ERR_NO_FILE] = "No file was uploaded";
-    $uploadErrors[UPLOAD_ERR_NO_TMP_DIR] = "Missing a temporary folder";
-    $uploadErrors[UPLOAD_ERR_CANT_WRITE] = "Failed to write file to disk";
-    $uploadErrors[UPLOAD_ERR_EXTENSION] = "A PHP extension stopped file upload";
+    $uploadErrors[UPLOAD_ERR_INI_SIZE] = 'Uploaded file exceeds the upload_max_filesize directive in php.ini';
+    $uploadErrors[UPLOAD_ERR_FORM_SIZE] = 'Uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form';
+    $uploadErrors[UPLOAD_ERR_PARTIAL] = 'File was only partially uploaded';
+    $uploadErrors[UPLOAD_ERR_NO_FILE] = 'No file was uploaded';
+    $uploadErrors[UPLOAD_ERR_NO_TMP_DIR] = 'Missing a temporary folder';
+    $uploadErrors[UPLOAD_ERR_CANT_WRITE] = 'Failed to write file to disk';
+    $uploadErrors[UPLOAD_ERR_EXTENSION] = 'A PHP extension stopped file upload';
 
     $fileError = $this->error ?? UPLOAD_ERR_OK;
     if ($fileError === UPLOAD_ERR_OK && $this->size > Utils::getSystemUploadLimit()) {
@@ -198,16 +198,16 @@ class FileUpload {
     if ($fileError === UPLOAD_ERR_OK) {
       $file = $this->tmpName;
     } else {
-      $message = $uploadErrors[$fileError] ?? "Unknown error";
+      $message = $uploadErrors[$fileError] ?? 'Unknown error';
       $message .= " ($fileError)";
       throw new InvalidInputException($message);
     }
 
     if (!$file || !file_exists($file)) {
-      throw new InvalidInputException("File not found");
+      throw new InvalidInputException('File not found');
     }
     if ($checkMime && !self::isKnownMime($this->type)) {
-      throw new InvalidInputException("Unsupported mime type");
+      throw new InvalidInputException('Unsupported mime type');
     }
   }
 
@@ -226,9 +226,9 @@ class FileUpload {
       $destinationPath = Utils::getUploadDir() . "/$fileName";
     } while (file_exists($destinationPath));
     if (is_uploaded_file($this->tmpName) && !move_uploaded_file($this->tmpName, $destinationPath)) {
-      throw new ServerException("Move uploaded file failed");
+      throw new ServerException('Move uploaded file failed');
     } elseif ($this->isSelfUploaded($this->tmpName) && !rename($this->tmpName, $destinationPath)) {
-      throw new ServerException("Move self uploaded file failed");
+      throw new ServerException('Move self uploaded file failed');
     }
     return $fileName;
   }

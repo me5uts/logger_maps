@@ -38,7 +38,7 @@ class Position extends AbstractMapper {
    * @throws NotFoundException
    */
   public function fetchLast(int $userId): Entity\Position {
-    $positions = $this->get(userId: $userId, orderBy: "p.time DESC, p.id DESC", singleRow: true);
+    $positions = $this->get(userId: $userId, orderBy: 'p.time DESC, p.id DESC', singleRow: true);
     if (empty($positions)) {
       throw new NotFoundException();
     }
@@ -51,12 +51,12 @@ class Position extends AbstractMapper {
    * @throws NotFoundException
    */
   public function fetchLastAllUsers(): Entity\Position {
-    $rules['p.id'] = "(
-    SELECT p2.id FROM " . $this->db->table('positions') . " p2
+    $rules['p.id'] = '(
+    SELECT p2.id FROM ' . $this->db->table('positions') . ' p2
           WHERE p2.user_id = p.user_id
           ORDER BY p2.time DESC, p2.id DESC
           LIMIT 1
-    )";
+    )';
     $positions = $this->get(rules: $rules);
     if (empty($positions)) {
       throw new NotFoundException();
@@ -85,7 +85,7 @@ class Position extends AbstractMapper {
       $query = "INSERT INTO $table
                   (user_id, track_id,
                   time, latitude, longitude, altitude, speed, bearing, accuracy, provider, comment, image)
-                  VALUES (?, ?, " . $this->db->from_unixtime('?') . ", ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                  VALUES (?, ?, " . $this->db->from_unixtime('?') . ', ?, ?, ?, ?, ?, ?, ?, ?, ?)';
       $stmt = $this->db->prepare($query);
       $params = [
         $position->userId, $position->trackId,
@@ -111,9 +111,9 @@ class Position extends AbstractMapper {
    */
   public function update(Entity\Position $position): void {
     try {
-      $query = "UPDATE " . $this->db->table('positions') . " SET 
-                time = " . $this->db->from_unixtime('?') . ", user_id = ?, track_id = ?, latitude = ?, longitude = ?, altitude = ?, 
-                speed = ?, bearing = ?, accuracy = ?, provider = ?, comment = ?, image = ? WHERE id = ?";
+      $query = 'UPDATE ' . $this->db->table('positions') . ' SET 
+                time = ' . $this->db->from_unixtime('?') . ', user_id = ?, track_id = ?, latitude = ?, longitude = ?, altitude = ?, 
+                speed = ?, bearing = ?, accuracy = ?, provider = ?, comment = ?, image = ? WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $params = [
         $position->timestamp,
@@ -149,7 +149,7 @@ class Position extends AbstractMapper {
   public function delete(Entity\Position $position): void {
 
     try {
-      $query = "DELETE FROM " . $this->db->table('positions') . " WHERE id = ?";
+      $query = 'DELETE FROM ' . $this->db->table('positions') . ' WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $position->id ]);
       $this->removeImage($position);
@@ -173,8 +173,8 @@ class Position extends AbstractMapper {
       $this->removeImage($position);
     }
     $position->image = $imageMeta->add($position->trackId);
-    $query = "UPDATE " . $this->db->table('positions') . "
-              SET image = ? WHERE id = ?";
+    $query = 'UPDATE ' . $this->db->table('positions') . '
+              SET image = ? WHERE id = ?';
     $stmt = $this->db->prepare($query);
     $stmt->execute([ $position->image, $position->id ]);
   }
@@ -186,13 +186,13 @@ class Position extends AbstractMapper {
   public function removeImage(Entity\Position $position): void {
 
     if ($position->hasImage()) {
-      $query = "UPDATE " . $this->db->table('positions') . "
-                SET image = NULL WHERE id = ?";
+      $query = 'UPDATE ' . $this->db->table('positions') . '
+                SET image = NULL WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $position->id ]);
 
       if (FileUpload::delete($position->image) === false) {
-        throw new ServerException("Unable to delete image from filesystem");
+        throw new ServerException('Unable to delete image from filesystem');
       }
       $position->image = null;
     }
@@ -211,15 +211,15 @@ class Position extends AbstractMapper {
     $ret = false;
     if (!empty($userId)) {
       $args = [];
-      $where = "WHERE user_id = ?";
+      $where = 'WHERE user_id = ?';
       $args[] = $userId;
       if (!empty($trackId)) {
-        $where .= " AND track_id = ?";
+        $where .= ' AND track_id = ?';
         $args[] = $trackId;
       }
       self::removeImages($userId, $trackId);
       try {
-        $query = "DELETE FROM " . $this->db->table('positions') . " $where";
+        $query = 'DELETE FROM ' . $this->db->table('positions') . " $where";
         $stmt = $this->db->prepare($query);
         $stmt->execute($args);
         $ret = true;
@@ -241,7 +241,7 @@ class Position extends AbstractMapper {
    * @throws ServerException
    */
   public function getAllWithImage(?int $userId = null, ?int $trackId = null): array {
-    $rules[] = "p.image IS NOT NULL";
+    $rules[] = 'p.image IS NOT NULL';
     return $this->get(userId: $userId, trackId: $trackId, rules: $rules);
   }
 
@@ -290,38 +290,38 @@ class Position extends AbstractMapper {
     ?array  $rules = []
   ): array {
     if (!empty($positionId)) {
-      $rules[] = "p.id = " . $this->db->quote((string) $positionId);
+      $rules[] = 'p.id = ' . $this->db->quote((string) $positionId);
     }
     if (!empty($userId)) {
-      $rules[] = "p.user_id = " . $this->db->quote((string) $userId);
+      $rules[] = 'p.user_id = ' . $this->db->quote((string) $userId);
     }
     if (!empty($trackId)) {
-      $rules[] = "p.track_id = " . $this->db->quote((string) $trackId);
+      $rules[] = 'p.track_id = ' . $this->db->quote((string) $trackId);
     }
     if (!empty($afterId)) {
-      $rules[] = "p.id > " . $this->db->quote((string) $afterId);
+      $rules[] = 'p.id > ' . $this->db->quote((string) $afterId);
     }
     if (!empty($rules)) {
-      $where = "WHERE " . implode(" AND ", $rules);
+      $where = 'WHERE ' . implode(' AND ', $rules);
     } else {
-      $where = "";
+      $where = '';
     }
     if (!empty($orderBy)) {
       $orderBy = "ORDER BY $orderBy";
     } else {
-      $orderBy = "ORDER BY p.time, p.id";
+      $orderBy = 'ORDER BY p.time, p.id';
     }
-    $limit = $singleRow ? "LIMIT 1" : "";
-    $query = "SELECT p.id, " . $this->db->unix_timestamp('p.time') . " AS tstamp, p.user_id, p.track_id,
+    $limit = $singleRow ? 'LIMIT 1' : '';
+    $query = 'SELECT p.id, ' . $this->db->unix_timestamp('p.time') . ' AS tstamp, p.user_id, p.track_id,
               p.latitude, p.longitude, p.altitude, p.speed, p.bearing, p.accuracy, p.provider,
               p.comment, p.image, u.login, t.name,
               CASE 
                   WHEN p.image IS NOT NULL THEN 1 
                   ELSE 0 
               END AS has_image
-              FROM " . $this->db->table('positions') . " p
-              LEFT JOIN " . $this->db->table('users') . " u ON (p.user_id = u.id)
-              LEFT JOIN " . $this->db->table('tracks') . " t ON (p.track_id = t.id)
+              FROM ' . $this->db->table('positions') . ' p
+              LEFT JOIN ' . $this->db->table('users') . ' u ON (p.user_id = u.id)
+              LEFT JOIN ' . $this->db->table('tracks') . " t ON (p.track_id = t.id)
               $where $orderBy $limit";
     $positions = [];
     try {

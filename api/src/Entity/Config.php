@@ -24,15 +24,15 @@ use uLogger\Mapper\MapperFactory;
 class Config extends AbstractEntity {
 
   /** @var string Version number */
-  public string $version = "2.0-beta";
+  public string $version = '2.0-beta';
 
   /** @var string Default map drawing framework */
-  #[Column(name: "map_api")]
+  #[Column(name: 'map_api')]
   #[JsonField]
-  public string $mapApi = "openlayers";
+  public string $mapApi = 'openlayers';
 
   /** @var string|null Google Maps key */
-  #[Column(name: "google_key")]
+  #[Column(name: 'google_key')]
   #[JsonField]
   public ?string $googleKey = null;
 
@@ -41,27 +41,27 @@ class Config extends AbstractEntity {
   public array $olLayers = [];
 
   /** @var float Default latitude for initial map */
-  #[Column(name: "latitude")]
+  #[Column(name: 'latitude')]
   #[JsonField]
   public float $initLatitude = 52.23;
 
   /** @var float Default longitude for initial map */
-  #[Column(name: "longitude")]
+  #[Column(name: 'longitude')]
   #[JsonField]
   public float $initLongitude = 21.01;
 
   /** @var bool Require login/password authentication */
-  #[Column(name: "require_auth")]
+  #[Column(name: 'require_auth')]
   #[JsonField]
   public bool $requireAuthentication = true;
 
   /** @var bool All users tracks are visible to authenticated user */
-  #[Column(name: "public_tracks")]
+  #[Column(name: 'public_tracks')]
   #[JsonField]
   public bool $publicTracks = false;
 
   /** @var int Minimum required length of user password */
-  #[Column(name: "pass_lenmin")]
+  #[Column(name: 'pass_lenmin')]
   #[JsonField]
   public int $passLenMin = 10;
 
@@ -72,70 +72,70 @@ class Config extends AbstractEntity {
    * 2 = require mixed case and numbers
    * 3 = require mixed case, numbers and non-alphanumeric characters
    */
-  #[Column(name: "pass_strength")]
+  #[Column(name: 'pass_strength')]
   #[JsonField]
   public int $passStrength = 2;
 
   /** @var int Default interval in seconds for live auto reload */
-  #[Column(name: "interval_seconds")]
+  #[Column(name: 'interval_seconds')]
   #[JsonField]
   public int $interval = 10;
 
   /** @var string Default language code */
   #[Column]
   #[JsonField]
-  public string $lang = "en";
+  public string $lang = 'en';
 
   /** @var string Default units */
   #[Column]
   #[JsonField]
-  public string $units = "metric";
+  public string $units = 'metric';
 
   /** @var int Stroke weight */
-  #[Column(name: "stroke_weight")]
+  #[Column(name: 'stroke_weight')]
   #[JsonField]
   public int $strokeWeight = 2;
 
   /** @var string Stroke color */
-  #[Column(name: "stroke_color")]
+  #[Column(name: 'stroke_color')]
   #[JsonField]
-  public string $strokeColor = "#ff0000";
+  public string $strokeColor = '#ff0000';
 
   /** @var float Stroke opacity */
-  #[Column(name: "stroke_opacity")]
+  #[Column(name: 'stroke_opacity')]
   #[JsonField]
   public float $strokeOpacity = 1.0;
 
   /** @var string Stroke color */
-  #[Column(name: "color_normal")]
+  #[Column(name: 'color_normal')]
   #[JsonField]
-  public string $colorNormal = "#ffffff";
+  public string $colorNormal = '#ffffff';
 
   /** @var string Stroke color */
-  #[Column(name: "color_start")]
+  #[Column(name: 'color_start')]
   #[JsonField]
-  public string $colorStart = "#55b500";
+  public string $colorStart = '#55b500';
 
   /** @var string Stroke color */
-  #[Column(name: "color_stop")]
+  #[Column(name: 'color_stop')]
   #[JsonField]
-  public string $colorStop = "#ff6a00";
+  public string $colorStop = '#ff6a00';
 
   /** @var string Stroke color */
-  #[Column(name: "color_extra")]
+  #[Column(name: 'color_extra')]
   #[JsonField]
-  public string $colorExtra = "#cccccc";
+  public string $colorExtra = '#cccccc';
 
   /** @var string Stroke color */
-  #[Column(name: "color_hilite")]
+  #[Column(name: 'color_hilite')]
   #[JsonField]
-  public string $colorHilite = "#feff6a";
+  public string $colorHilite = '#feff6a';
 
   /**
    * @var int Maximum size of uploaded files in bytes.
    * Will be adjusted to system maximum upload size
    */
-  #[Column(name: "upload_maxsize")]
+  #[Column(name: 'upload_maxsize')]
   #[JsonField]
   public int $uploadMaxSize = 5242880;
 
@@ -156,10 +156,10 @@ class Config extends AbstractEntity {
    */
   public static function createFromCookies(): Config {
     $config = new self();
-    if (isset($_COOKIE["ulogger_api"])) { $config->mapApi = $_COOKIE["ulogger_api"]; }
-    if (isset($_COOKIE["ulogger_lang"])) { $config->lang = $_COOKIE["ulogger_lang"]; }
-    if (isset($_COOKIE["ulogger_units"])) { $config->units = $_COOKIE["ulogger_units"]; }
-    if (isset($_COOKIE["ulogger_interval"])) { $config->interval = $_COOKIE["ulogger_interval"]; }
+    if (isset($_COOKIE['ulogger_api'])) { $config->mapApi = $_COOKIE['ulogger_api']; }
+    if (isset($_COOKIE['ulogger_lang'])) { $config->lang = $_COOKIE['ulogger_lang']; }
+    if (isset($_COOKIE['ulogger_units'])) { $config->units = $_COOKIE['ulogger_units']; }
+    if (isset($_COOKIE['ulogger_interval'])) { $config->interval = $_COOKIE['ulogger_interval']; }
     return $config;
   }
 
@@ -180,26 +180,26 @@ class Config extends AbstractEntity {
    * @return string
    */
   public function passRegex(): string {
-    $regex = "";
+    $regex = '';
     if ($this->passStrength > 0) {
       // lower and upper case
-      $regex .= "(?=.*[a-z])(?=.*[A-Z])";
+      $regex .= '(?=.*[a-z])(?=.*[A-Z])';
     }
     if ($this->passStrength > 1) {
       // digits
-      $regex .= "(?=.*[0-9])";
+      $regex .= '(?=.*[0-9])';
     }
     if ($this->passStrength > 2) {
       // not latin, not digits
-      $regex .= "(?=.*[^a-zA-Z0-9])";
+      $regex .= '(?=.*[^a-zA-Z0-9])';
     }
     if ($this->passLenMin > 0) {
-      $regex .= "(?=.{" . $this->passLenMin . ",})";
+      $regex .= '(?=.{' . $this->passLenMin . ',})';
     }
     if (empty($regex)) {
-      $regex = ".*";
+      $regex = '.*';
     }
-    return "/" . $regex . "/";
+    return '/' . $regex . '/';
   }
 
   /**

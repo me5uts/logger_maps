@@ -167,7 +167,7 @@ class Response {
 
   public static function redirect($path): Response {
     $response = new Response(null, self::CODE_3_FOUND);
-    $response->extraHeaders["Location"] = "$path";
+    $response->extraHeaders['Location'] = "$path";
     $response->setContentType('');
     return $response;
   }
@@ -198,7 +198,7 @@ class Response {
     } elseif ($e instanceof NotFoundException) {
       return Response::notFound();
     }
-    return Response::internalServerError("An unexpected error occurred.");
+    return Response::internalServerError('An unexpected error occurred.');
   }
 
   public function send(): void {

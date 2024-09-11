@@ -68,7 +68,7 @@ class Position extends AbstractController {
   public function update(int $positionId, Entity\Position $position): Response {
 
     if ($positionId !== $position->id) {
-      return Response::unprocessableError("Wrong position id");
+      return Response::unprocessableError('Wrong position id');
     }
 
     try {
@@ -140,7 +140,7 @@ class Position extends AbstractController {
       return Response::exception($e);
     }
 
-    return Response::created([ "image" => $position->image ]);
+    return Response::created([ 'image' => $position->image ]);
   }
 
   /**

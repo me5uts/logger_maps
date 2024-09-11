@@ -119,20 +119,20 @@ class User extends AbstractController {
     $isAdmin = $user->isAdmin;
 
     if ($userId !== $user->id) {
-      return Response::unprocessableError("Wrong user id");
+      return Response::unprocessableError('Wrong user id');
     }
 
     try {
       $currentUser = $this->mapper(Mapper\User::class)->fetch($userId);
       if ($userId === $this->session->user->id) {
-        return Response::unprocessableError("selfeditwarn");
+        return Response::unprocessableError('selfeditwarn');
       }
       $currentUser->isAdmin = $isAdmin;
       $this->mapper(Mapper\User::class)->updateIsAdmin($currentUser);
 
       if (!empty($password)) {
         if (!$this->config->validPassStrength($password)) {
-          return Response::internalServerError("Setting pass failed");
+          return Response::internalServerError('Setting pass failed');
         }
         $currentUser->password = $password;
         $this->mapper(Mapper\User::class)->updatePassword($currentUser);
@@ -161,10 +161,10 @@ class User extends AbstractController {
     }
 
     if (!$this->config->validPassStrength($password)) {
-      return Response::unprocessableError("passstrengthwarn");
+      return Response::unprocessableError('passstrengthwarn');
     }
     if (!$this->session->user->validPassword($oldPassword)) {
-      return Response::unprocessableError("oldpassinvalid");
+      return Response::unprocessableError('oldpassinvalid');
     }
 
     $this->session->user->password = $password;
@@ -190,11 +190,11 @@ class User extends AbstractController {
     try {
       try {
         $this->mapper(Mapper\User::class)->fetchByLogin($user->login);
-        return Response::conflictError("userexists");
+        return Response::conflictError('userexists');
       } catch (NotFoundException) { /* ignored */ }
 
       if (!$this->config->validPassStrength($user->password)) {
-        return Response::unprocessableError("passstrengthwarn");
+        return Response::unprocessableError('passstrengthwarn');
       }
       $this->mapper(Mapper\User::class)->create($user);
 
@@ -215,7 +215,7 @@ class User extends AbstractController {
   public function delete(int $userId): Response {
 
     if ($userId === $this->session->user->id) {
-      return Response::unprocessableError("selfeditwarn");
+      return Response::unprocessableError('selfeditwarn');
     }
 
     try {

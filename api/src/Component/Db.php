@@ -36,19 +36,19 @@ class Db extends PDO {
   /**
    * @var string Database DSN
    */
-  private static string $dsn = "";
+  private static string $dsn = '';
   /**
    * @var string Database user
    */
-  private static string $user = "";
+  private static string $user = '';
   /**
    * @var string Database pass
    */
-  private static string $password = "";
+  private static string $password = '';
   /**
    * @var string Optional table names prefix, eg. "ulogger_"
    */
-  private static string $prefix = "";
+  private static string $prefix = '';
 
   /**
    * PDO constructor
@@ -67,7 +67,7 @@ class Db extends PDO {
       ];
       @parent::__construct($dsn, $user, $pass, $options);
       self::$driver = $this->getAttribute(PDO::ATTR_DRIVER_NAME);
-      $this->setCharset("utf8");
+      $this->setCharset('utf8');
       $this->initTables();
     } catch (PDOException $e) {
       throw new DatabaseException($e->getMessage());
@@ -80,11 +80,11 @@ class Db extends PDO {
   private function initTables(): void {
     self::$tables = [];
     $prefix = preg_replace('/[^a-z0-9_]/i', '', self::$prefix);
-    self::$tables['positions'] = $prefix . "positions";
-    self::$tables['tracks'] = $prefix . "tracks";
-    self::$tables['users'] = $prefix . "users";
-    self::$tables['config'] = $prefix . "config";
-    self::$tables['ol_layers'] = $prefix . "ol_layers";
+    self::$tables['positions'] = $prefix . 'positions';
+    self::$tables['tracks'] = $prefix . 'tracks';
+    self::$tables['users'] = $prefix . 'users';
+    self::$tables['config'] = $prefix . 'config';
+    self::$tables['ol_layers'] = $prefix . 'ol_layers';
   }
 
   /**
@@ -101,9 +101,9 @@ class Db extends PDO {
    * @throws DatabaseException
    */
   private static function getConfig(): void {
-    $configFile = dirname(__DIR__, 2) . "/config/config.php";
+    $configFile = dirname(__DIR__, 2) . '/config/config.php';
     if (!file_exists($configFile)) {
-      throw new DatabaseException("Missing config.php file");
+      throw new DatabaseException('Missing config.php file');
     }
     include($configFile);
     if (isset($dbdsn)) {
@@ -138,11 +138,11 @@ class Db extends PDO {
   public function unix_timestamp(string $column): string {
     switch (self::$driver) {
       default:
-      case "mysql":
+      case 'mysql':
         return "UNIX_TIMESTAMP($column)";
-      case "pgsql":
+      case 'pgsql':
         return "EXTRACT(EPOCH FROM $column::TIMESTAMP WITH TIME ZONE)";
-      case "sqlite":
+      case 'sqlite':
         return "STRFTIME('%s', $column)";
     }
   }
@@ -154,11 +154,11 @@ class Db extends PDO {
   public function lobPlaceholder(): string {
     switch (self::$driver) {
       default:
-      case "mysql":
-      case "sqlite":
-        return "?";
-      case "pgsql":
-        return "?::bytea";
+      case 'mysql':
+      case 'sqlite':
+        return '?';
+      case 'pgsql':
+        return '?::bytea';
     }
   }
 
@@ -170,10 +170,10 @@ class Db extends PDO {
   public function from_lob(string $column): string {
     switch (self::$driver) {
       default:
-      case "mysql":
-      case "sqlite":
+      case 'mysql':
+      case 'sqlite':
         return $column;
-      case "pgsql":
+      case 'pgsql':
         return "encode($column, 'escape') AS $column";
     }
   }
@@ -186,11 +186,11 @@ class Db extends PDO {
   public function from_unixtime(string $column): string {
     switch (self::$driver) {
       default:
-      case "mysql":
+      case 'mysql':
         return "FROM_UNIXTIME($column)";
-      case "pgsql":
+      case 'pgsql':
         return "TO_TIMESTAMP($column)";
-      case "sqlite":
+      case 'sqlite':
         return "DATETIME($column, 'unixepoch')";
     }
   }
@@ -206,23 +206,23 @@ class Db extends PDO {
    * @return string
    */
   public function insertOrReplace(string $table, array $columns, array $values, string $key, string $update): string {
-    $cols = implode(", ", $columns);
+    $cols = implode(', ', $columns);
     $rows = [];
     foreach ($values as $row) {
-      $rows[] = "(" . implode(", ", $row) . ")";
+      $rows[] = '(' . implode(', ', $row) . ')';
     }
-    $vals = implode(", ", $rows);
+    $vals = implode(', ', $rows);
     switch (self::$driver) {
       default:
-      case "mysql":
+      case 'mysql':
         return "INSERT INTO {$this->table($table)} ($cols)
                 VALUES $vals
                 ON DUPLICATE KEY UPDATE $update = VALUES($update)";
-      case "pgsql":
+      case 'pgsql':
         return "INSERT INTO {$this->table($table)} ($cols)
                 VALUES $vals
                 ON CONFLICT ($key) DO UPDATE SET $update = EXCLUDED.$update";
-      case "sqlite":
+      case 'sqlite':
         return "REPLACE INTO {$this->table($table)} ($cols)
                 VALUES $vals";
     }
@@ -234,7 +234,7 @@ class Db extends PDO {
    * @noinspection PhpSameParameterValueInspection
    */
   private function setCharset(string $charset): void {
-    if (self::$driver === "pgsql" || self::$driver === "mysql") {
+    if (self::$driver === 'pgsql' || self::$driver === 'mysql') {
       $this->exec("SET NAMES '$charset'");
     }
   }
@@ -245,13 +245,13 @@ class Db extends PDO {
    * @return string Empty string if not found
    */
   public static function getDbName(string $dsn): string {
-    $name = "";
-    if (str_contains($dsn, ":")) {
-      [$scheme, $dsnWithoutScheme] = explode(":", $dsn, 2);
+    $name = '';
+    if (str_contains($dsn, ':')) {
+      [$scheme, $dsnWithoutScheme] = explode(':', $dsn, 2);
       $pattern = match ($scheme) {
-        "sqlite", "sqlite2", "sqlite3" => "/(.+)/",
-        "pgsql" => "/dbname=([^; ]+)/",
-        default => "/dbname=([^;]+)/",
+        'sqlite', 'sqlite2', 'sqlite3' => '/(.+)/',
+        'pgsql' => '/dbname=([^; ]+)/',
+        default => '/dbname=([^;]+)/',
       };
       $result = preg_match($pattern, $dsnWithoutScheme, $matches);
       if ($result === 1) {
@@ -268,16 +268,16 @@ class Db extends PDO {
    * @return string Normalized DSN
    */
   public static function normalizeDsn(string $dsn): string {
-    if (stripos($dsn, "sqlite") !== 0) {
+    if (stripos($dsn, 'sqlite') !== 0) {
       return $dsn;
     }
-    $arr = explode(":", $dsn, 2);
+    $arr = explode(':', $dsn, 2);
     if (count($arr) < 2 || empty($arr[1]) || Utils::isAbsolutePath($arr[1])) {
       return $dsn;
     }
     $scheme = $arr[0];
     $path = Utils::getRootDir() . DIRECTORY_SEPARATOR . $arr[1];
-    return $scheme . ":" . realpath(dirname($path)) . DIRECTORY_SEPARATOR . basename(($path));
+    return $scheme . ':' . realpath(dirname($path)) . DIRECTORY_SEPARATOR . basename(($path));
   }
 }
 ?>

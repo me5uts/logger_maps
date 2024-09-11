@@ -39,9 +39,9 @@ class Legacy extends AbstractController {
   public function client(string $action): Response {
     try {
       $response = match ($action) {
-        "auth" => $this->session(),
-        "addtrack" => $this->track(),
-        "addpos" => $this->position(),
+        'auth' => $this->session(),
+        'addtrack' => $this->track(),
+        'addpos' => $this->position(),
         default => throw new NotFoundException(),
       };
     } catch (NotFoundException|ServerException|ReflectionException|InvalidInputException $e) {

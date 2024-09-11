@@ -23,21 +23,21 @@ class Lang {
    * @var array
    */
   private static array $languages = [
-    "ca" => "Català",
-    "cs" => "Čeština",
-    "de" => "Deutsch",
-    "el" => "Ελληνικά",
-    "en" => "English",
-    "es" => "Español",
-    "eu" => "Euskera",
-    "fi" => "Suomi",
-    "fr" => "Français",
-    "gl" => "Galego",
-    "it" => "Italiano",
-    "pl" => "Polski",
-    "pt-br" => "Português (Br)",
-    "ru" => "Русский",
-    "sk" => "Slovenčina"
+    'ca' => 'Català',
+    'cs' => 'Čeština',
+    'de' => 'Deutsch',
+    'el' => 'Ελληνικά',
+    'en' => 'English',
+    'es' => 'Español',
+    'eu' => 'Euskera',
+    'fi' => 'Suomi',
+    'fr' => 'Français',
+    'gl' => 'Galego',
+    'it' => 'Italiano',
+    'pl' => 'Polski',
+    'pt-br' => 'Português (Br)',
+    'ru' => 'Русский',
+    'sk' => 'Slovenčina'
   ];
 
   /**
@@ -65,11 +65,11 @@ class Lang {
     $lang = [];
     $langSetup = [];
     // always load en base
-    require(Utils::getSourceDir() . "/Lang/en.php");
+    require(Utils::getSourceDir() . '/Lang/en.php');
 
     // override with translated strings if needed
     // missing strings will be displayed in English
-    if ($language !== "en" && array_key_exists($language, self::$languages)) {
+    if ($language !== 'en' && array_key_exists($language, self::$languages)) {
       require(Utils::getSourceDir() . "/Lang/$language.php");
     }
 
