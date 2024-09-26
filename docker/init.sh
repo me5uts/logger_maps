@@ -11,7 +11,7 @@ sed -i "s/^nobody:.*$/nobody:x:1000:50::nobody:\/:\/sbin\/nologin/" /etc/passwd
 sed -i "s/^nobody:.*$/nobody:x:50:/" /etc/group
 
 # Prepare ulogger filesystem
-grep '^[$<?]' /var/www/html/api/config.default.php > /var/www/html/api/config.php
+grep '^[$<?]' /var/www/html/api/config/config.default.php > /var/www/html/api/config/config.php
 mkdir -p /data/uploads
 rm -rf /var/www/html/api/uploads
 ln -s /data/uploads /var/www/html/api/uploads
@@ -19,11 +19,11 @@ chown nobody:nobody /var/www/html/api/uploads
 chmod 775 /var/www/html/api/uploads
 
 if [ "$ULOGGER_DB_DRIVER" = "sqlite" ]; then
-  sed -i "s/^\$dbuser = .*$//" /var/www/html/api/config.php
-  sed -i "s/^\$dbpass = .*$//" /var/www/html/api/config.php
+  sed -i "s/^\$dbuser = .*$//" /var/www/html/api/config/config.php
+  sed -i "s/^\$dbpass = .*$//" /var/www/html/api/config/config.php
 else
-  sed -i "s/^\$dbuser = .*$/\$dbuser = \"ulogger\";/" /var/www/html/api/config.php
-  sed -i "s/^\$dbpass = .*$/\$dbpass = \"${DB_USER_PASS}\";/" /var/www/html/api/config.php
+  sed -i "s/^\$dbuser = .*$/\$dbuser = \"ulogger\";/" /var/www/html/api/config/config.php
+  sed -i "s/^\$dbpass = .*$/\$dbpass = \"${DB_USER_PASS}\";/" /var/www/html/api/config/config.php
 fi
 
 if [ "$ULOGGER_DB_DRIVER" = "pgsql" ]; then
@@ -37,19 +37,19 @@ if [ "$ULOGGER_DB_DRIVER" = "pgsql" ]; then
   su postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD '${DB_ROOT_PASS}'\""
   su postgres -c "psql -c \"CREATE USER ulogger WITH PASSWORD '${DB_USER_PASS}'\""
   su postgres -c "createdb -E UTF8 -l en_US.utf-8 -O ulogger ulogger"
-  su postgres -c "psql -U ulogger < /var/www/html/api/public/scripts/ulogger.pgsql"
+  su postgres -c "psql -U ulogger < /var/www/html/api/scripts/ulogger.pgsql"
   su postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ulogger TO ulogger\""
   su postgres -c "psql -d ulogger -c \"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ulogger\""
   su postgres -c "psql -d ulogger -c \"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ulogger\""
   su postgres -c "psql -d ulogger -c \"INSERT INTO users (login, password, admin) VALUES ('${ULOGGER_ADMIN_USER}', '\\\$2y\\\$10\\\$7OvZrKgonVZM9lkzrTbiou.CVhO3HjPk5y0W9L68fVwPs/osBRIMq', TRUE)\""
   su postgres -c "pg_ctl -w stop"
-  sed -i "s/^\$dbdsn = .*$/\$dbdsn = \"pgsql:host=localhost;port=5432;dbname=ulogger\";/" /var/www/html/api/config.php
+  sed -i "s/^\$dbdsn = .*$/\$dbdsn = \"pgsql:host=localhost;port=5432;dbname=ulogger\";/" /var/www/html/api/config/config.php
 elif [ "$ULOGGER_DB_DRIVER" = "sqlite" ]; then
   mkdir -p /data/sqlite
-  sqlite3 -init /var/www/html/api/public/scripts/ulogger.sqlite /data/sqlite/ulogger.db .exit
+  sqlite3 -init /var/www/html/api/scripts/ulogger.sqlite /data/sqlite/ulogger.db .exit
   sqlite3 -line /data/sqlite/ulogger.db "INSERT INTO users (login, password, admin) VALUES ('${ULOGGER_ADMIN_USER}', '\$2y\$10\$7OvZrKgonVZM9lkzrTbiou.CVhO3HjPk5y0W9L68fVwPs/osBRIMq', 1)"
   chown -R nobody:nobody /data/sqlite
-  sed -i "s/^\$dbdsn = .*$/\$dbdsn = \"sqlite:\/data\/sqlite\/ulogger.db\";/" /var/www/html/api/config.php
+  sed -i "s/^\$dbdsn = .*$/\$dbdsn = \"sqlite:\/data\/sqlite\/ulogger.db\";/" /var/www/html/api/config/config.php
 else
   sed -i "s/.*skip-networking.*/#skip-networking/" /etc/my.cnf.d/mariadb-server.cnf
   mkdir -p /run/mysqld /data/mysql
@@ -58,12 +58,12 @@ else
   mysqld_safe --datadir=/data/mysql &
   mysqladmin --silent --wait=30 ping
   mysqladmin -u root password "${DB_ROOT_PASS}"
-  mysql -u root -p"${DB_ROOT_PASS}" < /var/www/html/api/public/scripts/ulogger.mysql
+  mysql -u root -p"${DB_ROOT_PASS}" < /var/www/html/api/scripts/ulogger.mysql
   mysql -u root -p"${DB_ROOT_PASS}" -e "CREATE USER 'ulogger'@'localhost' IDENTIFIED BY '${DB_USER_PASS}'"
   mysql -u root -p"${DB_ROOT_PASS}" -e "GRANT ALL PRIVILEGES ON ulogger.* TO 'ulogger'@'localhost'"
   mysql -u root -p"${DB_ROOT_PASS}" -e "CREATE USER 'ulogger'@'%' IDENTIFIED BY '${DB_USER_PASS}'"
   mysql -u root -p"${DB_ROOT_PASS}" -e "GRANT ALL PRIVILEGES ON ulogger.* TO 'ulogger'@'%'"
   mysql -u root -p"${DB_ROOT_PASS}" -e "INSERT INTO users (login, password, admin) VALUES ('${ULOGGER_ADMIN_USER}', '\$2y\$10\$7OvZrKgonVZM9lkzrTbiou.CVhO3HjPk5y0W9L68fVwPs/osBRIMq', TRUE)" ulogger
   mysqladmin -u root -p"${DB_ROOT_PASS}" shutdown
-  sed -i "s/^\$dbdsn = .*$/\$dbdsn = \"mysql:host=localhost;port=3306;dbname=ulogger;charset=utf8\";/" /var/www/html/api/config.php
+  sed -i "s/^\$dbdsn = .*$/\$dbdsn = \"mysql:host=localhost;port=3306;dbname=ulogger;charset=utf8\";/" /var/www/html/api/config/config.php
 fi

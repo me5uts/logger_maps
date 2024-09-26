@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "${ULOGGER_ENABLE_SETUP}" = "1" ]; then
-  sed -i "s/\$enabled = false;/\$enabled = true;/" /var/www/html/api/public/scripts/setup.php;
+  sed -i "s/\$enabled = false;/\$enabled = true;/" /var/www/html/api/scripts/setup.php;
   echo "ulogger setup script enabled"
   echo "----------------------------"
 fi
@@ -9,7 +9,7 @@ fi
 # show config variables
 echo "ulogger configuration"
 echo "---------------------"
-grep '^\$' /var/www/html/api/config.php
+grep '^\$' /var/www/html/api/config/config.php
 
 # start services
 if [ "$ULOGGER_DB_DRIVER" = "pgsql" ]; then
@@ -18,4 +18,4 @@ elif [ "$ULOGGER_DB_DRIVER" = "mysql" ]; then
   mysqld_safe --datadir=/data/mysql &
 fi
 nginx
-php-fpm7 -F
+php-fpm83 -F
