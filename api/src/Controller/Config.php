@@ -46,9 +46,7 @@ class Config extends AbstractController {
       $config->publicTracks = true;
     }
     try {
-      if ($this->mapper(Mapper\Config::class)->update($config) === false) {
-        return Response::internalServerError('servererror');
-      }
+      $this->mapper(Mapper\Config::class)->update($config);
       $this->config->setFromConfig($config);
     } catch (Exception $e) {
       return Response::exception($e);
