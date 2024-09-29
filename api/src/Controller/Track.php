@@ -16,6 +16,10 @@ use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Session;
 use uLogger\Entity;
+use uLogger\Exception\DatabaseException;
+use uLogger\Exception\GpxParseException;
+use uLogger\Exception\InvalidInputException;
+use uLogger\Exception\ServerException;
 use uLogger\Helper\Gpx;
 use uLogger\Helper\Kml;
 use uLogger\Mapper;
@@ -112,9 +116,8 @@ class Track extends AbstractController {
     $gpxFile = $gpxUpload->getTmpName();
     $gpxName = basename($gpxUpload->getName());
     try {
-      $gpx = new Gpx($gpxName, $this->config, $this->mapperFactory);
-      $result = $gpx->import($this->session->user->id, $gpxFile);
-      return Response::created($result);
+      $tracks = $this->getImportedTracks($gpxName, $gpxFile);
+      return Response::created($tracks);
     } catch (Exception $e) {
       return Response::exception($e);
     } finally {
@@ -145,22 +148,39 @@ class Track extends AbstractController {
         return Response::notFound();
       }
 
-      switch ($format) {
-        case 'gpx':
-          $file = new Gpx($track->name, $this->config, $this->mapperFactory);
-          break;
-
-        case 'kml':
-          $file = new Kml($track->name, $this->config);
-          break;
-
-        default:
-          return Response::unprocessableError("Unsupported format: $format");
-      }
+      $file = $this->getFile($format, $track);
     } catch (Exception $e) {
       return Response::exception($e);
     }
-    return Response::fileAttachment($file->export($positions), $file->getExportedName(), $file->getMimeType());
+    return Response::fileAttachment($file->export($positions));
+  }
+
+  /**
+   * @param string $gpxName
+   * @param string $gpxFile
+   * @return Entity\Track[]
+   * @throws DatabaseException
+   * @throws GpxParseException
+   * @throws ServerException
+   */
+  protected function getImportedTracks(string $gpxName, string $gpxFile): array {
+    $gpx = new Gpx($gpxName, $this->config, $this->mapperFactory);
+    return $gpx->import($this->session->user->id, $gpxFile);
+  }
+
+  /**
+   * @param string $format
+   * @param Entity\Track $track
+   * @return Gpx|Kml
+   * @throws InvalidInputException
+   * @throws ServerException
+   */
+  protected function getFile(string $format, Entity\Track $track): Kml|Gpx {
+    return match ($format) {
+      'gpx' => new Gpx($track->name, $this->config, $this->mapperFactory),
+      'kml' => new Kml($track->name, $this->config),
+      default => throw new InvalidInputException("Unsupported format: $format"),
+    };
   }
 
 }

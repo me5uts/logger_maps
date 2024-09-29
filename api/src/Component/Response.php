@@ -11,6 +11,7 @@ namespace uLogger\Component;
 
 use Exception;
 use JsonException;
+use uLogger\Entity\File;
 use uLogger\Exception\DatabaseException;
 use uLogger\Exception\GpxParseException;
 use uLogger\Exception\InvalidInputException;
@@ -131,14 +132,14 @@ class Response {
     return new Response($payload, $code, $contentType);
   }
 
-  public static function fileAttachment(string $fileContent, string $filename, string $contentType): Response {
-    $response = self::file($fileContent, $contentType);
-    $response->extraHeaders[Request::CONTENT_DISPOSITION] = "attachment; filename=\"$filename\"";
+  public static function fileAttachment(File $file): Response {
+    $response = self::file($file);
+    $response->extraHeaders[Request::CONTENT_DISPOSITION] = "attachment; filename=\"{$file->getFileName()}\"";
     return $response;
   }
 
-  public static function file(string $fileContent, string $contentType): Response {
-    return new Response($fileContent, self::CODE_2_OK, $contentType);
+  public static function file(File $file): Response {
+    return new Response($file->getContent(), self::CODE_2_OK, $file->getMimeType());
   }
 
   public static function internalServerError(string $message): Response {
@@ -157,8 +158,8 @@ class Response {
     return self::error($message, self::CODE_4_CONFLICT);
   }
 
-  public static function created($message = null): Response {
-    return self::success($message, self::CODE_2_CREATED);
+  public static function created($payload = null): Response {
+    return self::success($payload, self::CODE_2_CREATED);
   }
 
   public static function notFound(): Response {

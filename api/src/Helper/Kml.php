@@ -11,6 +11,7 @@ namespace uLogger\Helper;
 
 use uLogger\Component\Response;
 use uLogger\Entity\Config;
+use uLogger\Entity\File;
 use uLogger\Entity\Position;
 use uLogger\Exception\ServerException;
 use XMLWriter;
@@ -61,9 +62,9 @@ class Kml implements FileFormatInterface {
   /**
    * TODO Improve KML format (lang?)
    * @param Position[] $positions
-   * @return string GPX file
+   * @return File GPX file
    */
-  public function export(array $positions): string {
+  public function export(array $positions): File {
 
     $this->trackId = $positions[0]->trackId;
 
@@ -104,7 +105,12 @@ class Kml implements FileFormatInterface {
     $xml->endElement();
     $xml->endDocument();
 
-    return $xml->outputMemory();
+    $file = new File();
+    $file->setFileName("track$this->trackId.kml");
+    $file->setContent($xml->outputMemory());
+    $file->setMimeType(Response::TYPE_KML);
+
+    return $file;
   }
 
   /**
@@ -119,14 +125,6 @@ class Kml implements FileFormatInterface {
     $m = floor((($s % 86400) % 3600) / 60);
     $s = (($s % 86400) % 3600) % 60;
     return (($d > 0) ? "$d d " : '') . sprintf('%02d:%02d:%02d', $h, $m, $s);
-  }
-
-  public function getExportedName(): string {
-    return "track$this->trackId.kml";
-  }
-
-  public function getMimeType(): string {
-    return Response::TYPE_KML;
   }
 
   /**

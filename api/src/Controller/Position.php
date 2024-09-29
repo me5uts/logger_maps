@@ -16,6 +16,7 @@ use uLogger\Component\Request;
 use uLogger\Component\Response;
 use uLogger\Component\Session;
 use uLogger\Entity;
+use uLogger\Entity\File;
 use uLogger\Exception\NotFoundException;
 use uLogger\Mapper;
 
@@ -180,13 +181,19 @@ class Position extends AbstractController {
       if (!$position->image) {
         throw new NotFoundException();
       }
-      $file = FileUpload::getUploadedFile($position->image);
-      $mimeType = FileUpload::getMimeType($position->image);
-      return Response::file($file, $mimeType);
+      $file = $this->getFile($position->image);
+      return Response::file($file);
 
     } catch (Exception $e) {
       return Response::exception($e);
     }
 
+  }
+
+  /**
+   * @throws NotFoundException
+   */
+  protected function getFile(string $fileName): File {
+    return File::createFromUpload($fileName);
   }
 }

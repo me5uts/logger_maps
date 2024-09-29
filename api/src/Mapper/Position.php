@@ -46,11 +46,12 @@ class Position extends AbstractMapper {
   }
 
   /**
+   * @return Entity\Position[]
    * @throws DatabaseException
-   * @throws ServerException
    * @throws NotFoundException
+   * @throws ServerException
    */
-  public function fetchLastAllUsers(): Entity\Position {
+  public function fetchLastAllUsers(): array {
     $rules['p.id'] = '(
     SELECT p2.id FROM ' . $this->db->table('positions') . ' p2
           WHERE p2.user_id = p.user_id
@@ -61,7 +62,7 @@ class Position extends AbstractMapper {
     if (empty($positions)) {
       throw new NotFoundException();
     }
-    return $positions[0];
+    return $positions;
   }
 
   /**
@@ -166,6 +167,7 @@ class Position extends AbstractMapper {
    * @return void
    * @throws InvalidInputException
    * @throws ServerException
+   * @throws NotFoundException
    */
   public function setImage(Entity\Position $position, FileUpload $imageMeta): void {
 
@@ -182,6 +184,7 @@ class Position extends AbstractMapper {
   /**
    * Delete image
    * @throws ServerException
+   * @throws NotFoundException
    */
   public function removeImage(Entity\Position $position): void {
 
@@ -191,7 +194,8 @@ class Position extends AbstractMapper {
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $position->id ]);
 
-      if (FileUpload::delete($position->image) === false) {
+      $file = Entity\File::createFromUpload($position->image);
+      if ($file->delete() === false) {
         throw new ServerException('Unable to delete image from filesystem');
       }
       $position->image = null;

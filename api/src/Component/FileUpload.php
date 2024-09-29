@@ -4,8 +4,8 @@ declare(strict_types = 1);
 namespace uLogger\Component;
 
 use Exception;
+use uLogger\Entity\File;
 use uLogger\Exception\InvalidInputException;
-use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Helper\Utils;
 
@@ -66,74 +66,6 @@ class FileUpload {
     return $this->size;
   }
 
-  private static array $mimeMap = [];
-
-  /**
-   * @return string[] Mime to extension mapping
-   */
-  private static function getMimeMap(): array {
-    if (empty(self::$mimeMap)) {
-      self::$mimeMap['image/jpeg'] = 'jpg';
-      self::$mimeMap['image/jpg'] = 'jpg';
-      self::$mimeMap['image/x-ms-bmp'] = 'bmp';
-      self::$mimeMap['image/gif'] = 'gif';
-      self::$mimeMap['image/png'] = 'png';
-    }
-    return self::$mimeMap;
-  }
-
-  /**
-   * Is mime accepted type
-   * @param string $mime Mime type
-   * @return bool True if known
-   */
-  private static function isKnownMime(string $mime): bool {
-    return array_key_exists($mime, self::getMimeMap());
-  }
-
-  /**
-   * Get file extension for given mime
-   * @param string $mime
-   * @return string|null Extension or null if not found
-   */
-  private static function getExtension(string $mime): ?string {
-    if (self::isKnownMime($mime)) {
-      return self::getMimeMap()[$mime];
-    }
-    return null;
-  }
-
-  private static function getMime(string $extension): ?string {
-    foreach(self::getMimeMap() as $mime => $ext) {
-      if ($extension === $ext) {
-        return $mime;
-      }
-    }
-    return null;
-  }
-
-  public static function getUploadedPath(string $fileName): string {
-    return Utils::getUploadDir() . "/$fileName";
-  }
-
-  /**
-   * @throws NotFoundException
-   */
-  public static function getUploadedFile(string $fileName): string {
-    $fileContent = file_get_contents(self::getUploadedPath($fileName));
-
-    if ($fileContent === false) {
-      throw new NotFoundException();
-    } else {
-      return $fileContent;
-    }
-  }
-
-  public static function getMimeType(string $fileName): ?string {
-    $extension = pathinfo($fileName, PATHINFO_EXTENSION);
-    return self::getMime($extension);
-  }
-
   /**
    * Save file to uploads folder, basic sanitizing
    * @param int $trackId
@@ -148,23 +80,6 @@ class FileUpload {
       syslog(LOG_ERR, $e->getMessage());
       throw $e;
     }
-  }
-
-  /**
-   * Delete upload from database and filesystem
-   * @param string $path File relative path
-   * @return bool False if file exists but can't be unlinked
-   */
-  public static function delete(string $path): bool {
-    $ret = true;
-    $filePattern = '/[a-z0-9_.]{20,}/';
-    if (preg_match($filePattern, $path)) {
-      $path = Utils::getUploadDir() . "/$path";
-      if (file_exists($path)) {
-        $ret = unlink($path);
-      }
-    }
-    return $ret;
   }
 
   /**
@@ -206,7 +121,7 @@ class FileUpload {
     if (!$file || !file_exists($file)) {
       throw new InvalidInputException('File not found');
     }
-    if ($checkMime && !self::isKnownMime($this->type)) {
+    if ($checkMime && !File::isKnownMime($this->type)) {
       throw new InvalidInputException('Unsupported mime type');
     }
   }
@@ -218,7 +133,7 @@ class FileUpload {
    */
   private function moveFile(int $trackId): string {
 
-    $extension = self::getExtension($this->type);
+    $extension = File::getExtension($this->type);
 
     do {
       /** @noinspection NonSecureUniqidUsageInspection */

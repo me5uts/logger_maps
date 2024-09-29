@@ -12,6 +12,7 @@ namespace uLogger\Helper;
 use SimpleXMLElement;
 use uLogger\Component\Response;
 use uLogger\Entity;
+use uLogger\Entity\File;
 use uLogger\Exception\DatabaseException;
 use uLogger\Exception\GpxParseException;
 use uLogger\Exception\ServerException;
@@ -90,9 +91,9 @@ class Gpx implements FileFormatInterface {
 
   /**
    * @param Entity\Position[] $positions
-   * @return string GPX file
+   * @return Entity\File GPX file
    */
-  public function export(array $positions): string {
+  public function export(array $positions): Entity\File {
 
     $this->trackId = $positions[0]->trackId;
 
@@ -120,15 +121,13 @@ class Gpx implements FileFormatInterface {
       $xml->endElement();
     }
     $xml->endDocument();
-    return $xml->outputMemory();
-  }
 
-  public function getExportedName(): string {
-    return "track$this->trackId.gpx";
-  }
+    $file = new File();
+    $file->setFileName("track$this->trackId.gpx");
+    $file->setContent($xml->outputMemory());
+    $file->setMimeType(Response::TYPE_GPX);
 
-  public function getMimeType(): string {
-    return Response::TYPE_GPX;
+    return $file;
   }
 
   /**
@@ -284,4 +283,5 @@ class Gpx implements FileFormatInterface {
 
     $xml->endElement();
   }
+
 }
