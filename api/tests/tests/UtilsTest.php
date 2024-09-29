@@ -12,8 +12,8 @@ class UtilsTest extends TestCase {
 
   private $rootDir;
 
-  public function __construct() {
-    parent::__construct();
+  public function __construct($name) {
+    parent::__construct($name);
     $this->rootDir = Utils::getRootDir();
   }
 

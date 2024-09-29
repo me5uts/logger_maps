@@ -4,9 +4,8 @@ declare(strict_types = 1);
 namespace uLogger\Tests\lib;
 
 use Dotenv;
-use ReflectionClass;
-use ReflectionException;
 use uLogger\Component\Db;
+use uLogger\Exception\DatabaseException;
 
 class UloggerDatabaseTestCase extends BaseDatabaseTestCase {
 
@@ -16,7 +15,7 @@ class UloggerDatabaseTestCase extends BaseDatabaseTestCase {
   static private $udb;
 
   /**
-   * @throws ReflectionException
+   * @throws DatabaseException
    */
   public static function setUpBeforeClass(): void {
     parent::setUpBeforeClass();
@@ -33,10 +32,7 @@ class UloggerDatabaseTestCase extends BaseDatabaseTestCase {
 
     // Db connection
     if (self::$udb == null) {
-      self::$udb = new ReflectionClass('uLogger\\Controller\\Db');
-      $dbInstance = self::$udb->getProperty('instance');
-      $dbInstance->setAccessible(true);
-      $dbInstance->setValue(new Db($db_dsn, $db_user, $db_pass));
+      self::$udb = new Db($db_dsn, $db_user, $db_pass);
     }
   }
 

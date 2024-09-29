@@ -9,7 +9,7 @@ use PDO;
 use PHPUnit;
 use PHPUnit\DbUnit\Database\Connection;
 use PHPUnit\DbUnit\DataSet\IDataSet;
-use uLogger\Component\Config;
+use uLogger\Entity\Config;
 
 abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
 
@@ -55,7 +55,7 @@ abstract class BaseDatabaseTestCase extends PHPUnit\DbUnit\TestCase {
 
   public function setUp(): void {
     parent::setUp();
-    $this->mockConfig = new Config(false);
+    $this->mockConfig = new Config();
   }
 
   public static function setUpBeforeClass(): void {
