@@ -20,7 +20,7 @@ use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Mapper;
 
-class PositionTest extends AbstractControllerTest
+class PositionTest extends AbstractControllerTestCase
 {
   private Controller\Position $controller;
 

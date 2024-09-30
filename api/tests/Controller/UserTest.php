@@ -15,7 +15,7 @@ use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Mapper;
 
-class UserTest extends AbstractControllerTest
+class UserTest extends AbstractControllerTestCase
 {
   private Controller\User $controller;
 

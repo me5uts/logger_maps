@@ -17,7 +17,7 @@ use uLogger\Entity;
 use uLogger\Mapper\MapperFactory;
 
 
-abstract class AbstractControllerTest extends TestCase {
+abstract class AbstractControllerTestCase extends TestCase {
 
   protected MockObject|MapperFactory $mapperFactory;
   protected MockObject|Session $session;

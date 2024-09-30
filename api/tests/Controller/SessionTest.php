@@ -14,7 +14,7 @@ use uLogger\Entity;
 use uLogger\Exception\ServerException;
 use uLogger\Mapper;
 
-class ConfigTest extends AbstractControllerTestCase
+class SessionTest extends AbstractControllerTestCase
 {
   private Controller\Config $controller;
 

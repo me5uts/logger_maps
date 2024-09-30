@@ -11,7 +11,7 @@ namespace uLogger\Tests\Controller;
 
 use uLogger\Controller;
 
-class LocaleTest extends AbstractControllerTest
+class LocaleTest extends AbstractControllerTestCase
 {
   private Controller\Locale $controller;
 

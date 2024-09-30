@@ -17,7 +17,7 @@
   </coverage>
   <testsuites>
     <testsuite name="µlogger test suite">
-      <directory suffix=".php">Controller</directory>
+      <directory>Controller</directory>
     </testsuite>
   </testsuites>
   <logging/>

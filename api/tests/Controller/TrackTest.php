@@ -18,7 +18,7 @@ use uLogger\Exception\DatabaseException;
 use uLogger\Helper\Gpx;
 use uLogger\Mapper;
 
-class TrackTest extends AbstractControllerTest
+class TrackTest extends AbstractControllerTestCase
 {
   private Controller\Track $controller;
 
