@@ -9,7 +9,7 @@ Together with a dedicated [μlogger mobile client](https://github.com/bfabiszews
 - hosted by lima-city.de
 
 ## Minimum requirements:
-- PHP 7.3
+- PHP 8.1
 - PHP extensions: ctype, json, pdo (with respective drivers), session, simplexml, xmlwriter, xdebug (only for tests)
 - MySQL, PostgreSQL or SQLite (over PDO driver)
 - browser with javascript enabled, cookies for authentication and saving preferences
@@ -44,21 +44,8 @@ Together with a dedicated [μlogger mobile client](https://github.com/bfabiszews
 - You may also want to set your new user as an [admin in config file](https://github.com/bfabiszewski/ulogger-server/blob/v0.2/config.default.php#L67)
 - Folders `.docker/` and `.tests/` as well as composer files are needed only for development. May be safely removed
 
-## Upgrade to version 1.x
-- Incompatible changes include database and config file changes
-- Upgrading manually:
-  - for database changes, see MySQL example script in `scripts/migrate_to_1_x.mysql`
-  - set `admin` column in `users` table to true for admin users
-  - edit configuration from application settings dialog
-- Upgrading with migration script from version 0.6:
-  - create database backup
-  - replace all project files with new ones, but keep old local config file: `config.php`
-  - change directory to application root folder and run migration script from the console: `php scripts/migrate_to_1_x.php`
-  - the script will update database schema and save old config variables to database
-- Additional tasks after manual or script update:
-  - edit your `config.php` file and remove all variables except database settings, see [config.default.php](https://github.com/bfabiszewski/ulogger-server/blob/master/config.default.php) for valid values
-  - make sure `uploads` folder (for images uploaded from client app) is writable by PHP
-  - clear browser cache and restart web page
+## Upgrade to version 2.x
+- TODO
 
 ## Docker
 - Run `docker run --name ulogger -p 8080:80 -d bfabiszewski/ulogger` and access `http://localhost:8080` in your browser. Log in with `admin`:`admin` credentials and change default password
@@ -69,7 +56,7 @@ Together with a dedicated [μlogger mobile client](https://github.com/bfabiszews
 - Docker was created to facilitate development and testing. It is not production ready. If you want to use it in production, you will have to adjust it to your needs.
 
 ## Tests
-- Install tests dependecies. PHP tests require PHP >= 7.3.
+- Install tests dependencies
   - `composer install`
   - `npm install`
 - Integration tests may be run against docker image. We need exposed http and optionally database ports (eg. mapped to localhost 8080 and 8081). Below example for MySQL setup
