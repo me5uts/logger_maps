@@ -29,6 +29,9 @@ class UserTest extends AbstractControllerTestCase
 
   // getAll
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllSuccess() {
     $users = [
       new Entity\User('test'),
@@ -45,6 +48,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $users);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllException() {
 
     $exception = new ServerException('Database error');
@@ -61,6 +67,9 @@ class UserTest extends AbstractControllerTestCase
 
   // getTracks
 
+  /**
+   * @throws ServerException
+   */
   public function testGetTracksSuccess() {
     $userId = 1;
     $tracks = [
@@ -79,6 +88,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $tracks);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetTracksException() {
     $userId = 1;
     $exception = new ServerException('Database error');
@@ -96,6 +108,9 @@ class UserTest extends AbstractControllerTestCase
 
   // getPosition
 
+  /**
+   * @throws ServerException
+   */
   public function testGetPositionSuccess() {
     $userId = 1;
     $position = new Entity\Position(1000, $userId, 1, 0, 0);
@@ -111,6 +126,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $position);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetPositionException() {
     $userId = 1;
     $exception = new ServerException('Database error');
@@ -128,6 +146,9 @@ class UserTest extends AbstractControllerTestCase
 
   // getAllPosition
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllPositionSuccess() {
     $positions = [
       new Entity\Position(1000, 1, 1, 0, 0),
@@ -144,6 +165,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $positions);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllPositionNotFoundException() {
 
     // Should return success with empty positions array
@@ -159,6 +183,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $positions);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllPositionGenericException() {
 
     $exception = new ServerException('Some server error');
@@ -175,6 +202,9 @@ class UserTest extends AbstractControllerTestCase
 
   // update
 
+  /**
+   * @throws ServerException
+   */
   public function testUpdateSuccess() {
     $userId = 2;
     $user = new Entity\User('test');
@@ -240,6 +270,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseUnprocessableError($response, 'selfeditwarn');
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testUpdateWeakPassword() {
     $userId = 2;
     $user = new Entity\User('test');
@@ -267,6 +300,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseInternalServerError($response, 'Setting pass failed');
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testUpdateException() {
     $userId = 2;
     $user = new Entity\User('test');
@@ -461,6 +497,9 @@ class UserTest extends AbstractControllerTestCase
 
   // add
 
+  /**
+   * @throws ServerException
+   */
   public function testAddSuccess() {
     // Arrange
     $user = new Entity\User('new_user');
@@ -490,6 +529,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseCreatedWithPayload($response, $user);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testAddUserAlreadyExists() {
     $user = new Entity\User('existing_user');
     $user->password = 'StrongPassword123';
@@ -506,6 +548,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseConflictError($response, 'userexists');
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testAddWeakPassword() {
     $user = new Entity\User('new_user');
     $user->password = 'weak_pass';
@@ -528,6 +573,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseUnprocessableError($response, 'passstrengthwarn');
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testAddException() {
     $user = new Entity\User('new_user');
     $user->password = 'StrongPassword123';
@@ -560,6 +608,9 @@ class UserTest extends AbstractControllerTestCase
 
   // delete
 
+  /**
+   * @throws ServerException
+   */
   public function testDeleteSuccess() {
     $userId = 5; // Some user to delete
     $currentUserId = 10; // Admin user ID performing the deletion
@@ -598,6 +649,9 @@ class UserTest extends AbstractControllerTestCase
     $this->assertResponseUnprocessableError($response, 'selfeditwarn');
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testDeleteMapperException() {
     $userId = 5; // Some user to delete
     $currentUserId = 10; // Admin user ID performing the deletion

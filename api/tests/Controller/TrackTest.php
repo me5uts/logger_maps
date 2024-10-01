@@ -15,6 +15,7 @@ use uLogger\Component\Response;
 use uLogger\Controller;
 use uLogger\Entity;
 use uLogger\Exception\DatabaseException;
+use uLogger\Exception\ServerException;
 use uLogger\Helper\Gpx;
 use uLogger\Mapper;
 
@@ -31,7 +32,7 @@ class TrackTest extends AbstractControllerTestCase
   // get
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testGetTrackSuccess() {
     $trackId = 123;
@@ -50,6 +51,9 @@ class TrackTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $trackMock);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetTrackException() {
     $trackId = 123;
     $exception = new DatabaseException();
@@ -68,7 +72,7 @@ class TrackTest extends AbstractControllerTestCase
   // update
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testUpdateTrackSuccess() {
     $trackId = 123;
@@ -101,7 +105,7 @@ class TrackTest extends AbstractControllerTestCase
   }
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testUpdateTrackException() {
     $trackId = 123;
@@ -124,7 +128,7 @@ class TrackTest extends AbstractControllerTestCase
   // add
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testAddTrackSuccess() {
     $trackId = 123;
@@ -143,7 +147,7 @@ class TrackTest extends AbstractControllerTestCase
   }
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testAddTrackException() {
     $trackId = 123;
@@ -166,7 +170,7 @@ class TrackTest extends AbstractControllerTestCase
   // delete
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testDeleteTrackSuccess() {
     $trackMock = $this->createMock(Entity\Track::class);
@@ -193,7 +197,7 @@ class TrackTest extends AbstractControllerTestCase
   }
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testDeleteTrackException() {
     $trackId = 123;
@@ -259,9 +263,7 @@ class TrackTest extends AbstractControllerTestCase
     $tmpFile = '/tmp/file.gpx';
     $gpxName = 'file.gpx';
     $userId = 123;
-    $tracks = [
-      $this->createMock(Entity\Track::class)
-    ];
+
     $exception = new DatabaseException();
 
     // Mock the FileUpload object.
@@ -293,7 +295,7 @@ class TrackTest extends AbstractControllerTestCase
   // export
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testExportSuccess() {
     $format = 'gpx';
@@ -337,7 +339,7 @@ class TrackTest extends AbstractControllerTestCase
   }
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testExportNotFoundException() {
     $format = 'gpx';
@@ -376,7 +378,7 @@ class TrackTest extends AbstractControllerTestCase
   }
 
   /**
-   * @throws MockException
+   * @throws MockException|ServerException
    */
   public function testExportOtherException() {
     $format = 'gpx';

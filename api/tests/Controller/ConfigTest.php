@@ -29,6 +29,9 @@ class ConfigTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $this->config);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testUpdateConfigSuccess() {
     $newConfig = new Entity\Config();
 
@@ -50,6 +53,9 @@ class ConfigTest extends AbstractControllerTestCase
 
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testUpdateConfigWithNoAuthSetsPublicTracks() {
     $newConfig = new Entity\Config();
     $newConfig->requireAuthentication = false;
@@ -71,6 +77,9 @@ class ConfigTest extends AbstractControllerTestCase
     $this->assertTrue($newConfig->publicTracks);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testUpdateConfigException() {
     $newConfig = new Entity\Config();
     $exception = new ServerException('server error');

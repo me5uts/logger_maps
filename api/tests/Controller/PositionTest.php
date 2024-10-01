@@ -32,6 +32,9 @@ class PositionTest extends AbstractControllerTestCase
 
   // getAll
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllSuccessWithAfterIdAndPrevPosition() {
     $trackId = 1;
     $afterId = 1;
@@ -57,6 +60,9 @@ class PositionTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $positions);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllSuccessWithAfterIdAndNoPrevPosition() {
     $trackId = 1;
     $afterId = 1;
@@ -82,6 +88,9 @@ class PositionTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $positions);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllSuccessWithoutAfterId() {
     $trackId = 1;
     $afterId = null;
@@ -106,6 +115,9 @@ class PositionTest extends AbstractControllerTestCase
     $this->assertResponseSuccessWithPayload($response, $positions);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetAllException() {
     $trackId = 1;
     $afterId = null;
@@ -196,6 +208,7 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
    */
   public function testAddPositionWithImageSuccess() {
     $trackId = 1;
@@ -219,6 +232,9 @@ class PositionTest extends AbstractControllerTestCase
     $this->assertEquals('path/to/image.jpg', $position->image);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testAddPositionWithoutImageSuccess() {
     $trackId = 1;
     $position = new Entity\Position(1000, 1, $trackId, 0, 0);
@@ -236,6 +252,7 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
    */
   public function testAddPositionException() {
     $trackId = 1;
@@ -256,6 +273,9 @@ class PositionTest extends AbstractControllerTestCase
 
   // delete
 
+  /**
+   * @throws ServerException
+   */
   public function testDeletePositionSuccess() {
     $trackId = 1;
     $position = new Entity\Position(1000, 1, $trackId, 0, 0);
@@ -277,6 +297,9 @@ class PositionTest extends AbstractControllerTestCase
     $this->assertResponseSuccessNoPayload($response);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testDeletePositionNotFoundException() {
     $trackId = 1;
     $position = new Entity\Position(1000, 1, $trackId, 0, 0);
@@ -298,6 +321,9 @@ class PositionTest extends AbstractControllerTestCase
     $this->assertResponseException($response, $exception);
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testDeletePositionDatabaseException() {
     $trackId = 1;
     $position = new Entity\Position(1000, 1, $trackId, 0, 0);
@@ -325,6 +351,8 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
+   * @throws ServerException
    */
   public function testAddImagePositionSuccess() {
     $trackId = 1;
@@ -355,6 +383,8 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
+   * @throws ServerException
    */
   public function testAddImagePositionNotFoundException() {
     $trackId = 1;
@@ -380,6 +410,8 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
+   * @throws ServerException
    */
   public function testAddImagePositionDatabaseException() {
     $trackId = 1;
@@ -433,6 +465,8 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
+   * @throws ServerException
    */
   public function testDeleteImagePositionNotFoundException() {
     $trackId = 1;
@@ -457,6 +491,8 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
+   * @throws ServerException
    */
   public function testDeleteImagePositionDatabaseException() {
     $trackId = 1;
@@ -485,6 +521,7 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
    */
   public function testGetImageSuccess() {
     $position = new Entity\Position(1000, 1, 1, 0, 0);
@@ -520,6 +557,7 @@ class PositionTest extends AbstractControllerTestCase
 
   /**
    * @throws MockException
+   * @throws ServerException
    */
   public function testGetImageNotFound() {
 
@@ -538,6 +576,9 @@ class PositionTest extends AbstractControllerTestCase
     $this->assertResponseException($response, new NotFoundException());
   }
 
+  /**
+   * @throws ServerException
+   */
   public function testGetImageException() {
     $positionId = 123;
     $exception = new ServerException('Database error');

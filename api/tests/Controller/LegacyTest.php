@@ -31,9 +31,6 @@ class LegacyTest extends AbstractControllerTestCase
     $this->controller = new Controller\Legacy($this->mapperFactory, $this->session, $this->config, $this->router);
   }
 
-  /**
-   * @throws Exception
-   */
   public function testClientUnknownAction() {
 
     $legacyResponse = $this->controller->client('unknown');
