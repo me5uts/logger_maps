@@ -14,6 +14,7 @@ use uLogger\Attribute\Route;
 use uLogger\Component;
 use uLogger\Component\Request;
 use uLogger\Component\Response;
+use uLogger\Exception\NotFoundException;
 
 class Session extends AbstractController {
 
@@ -41,9 +42,9 @@ class Session extends AbstractController {
   #[Route(Request::METHOD_POST, '/api/client/session', [ Component\Session::ACCESS_ALL => [ Component\Session::ALLOW_ALL ] ])]
   public function logIn(string $login, string $password): Response {
     try {
-      if ($this->session->checkLogin($login, $password) === false) {
-        return Response::notAuthorized();
-      }
+      $this->session->setAuthenticatedIfValid($login, $password);
+    } catch (NotFoundException) {
+      return Response::notAuthorized();
     } catch (Exception $e) {
       return Response::exception($e);
     }

@@ -181,23 +181,19 @@ class Session {
    *
    * @param string $login
    * @param string $password
-   * @return bool True if valid
    * @throws DatabaseException
    * @throws ServerException
    * @throws InvalidInputException
+   * @throws NotFoundException On wrong login or password
    */
-  public function checkLogin(string $login, string $password): bool {
-    try {
-      $user = $this->userMapper->fetchByLogin($login);
-      if ($user->validPassword($password)) {
-        $this->setAuthenticated($user);
-        $this->sessionCleanup();
-        $this->userMapper->storeInSession($user);
-        return true;
-      }
-    } catch (NotFoundException) { /* ignored */ }
-
-    return false;
+  public function setAuthenticatedIfValid(string $login, string $password): void {
+    $user = $this->userMapper->fetchByLogin($login);
+    if (!$user->validPassword($password)) {
+      throw new NotFoundException();
+    }
+    $this->setAuthenticated($user);
+    $this->sessionCleanup();
+    $this->userMapper->storeInSession($user);
   }
 
   /**
