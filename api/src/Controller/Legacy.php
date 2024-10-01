@@ -19,7 +19,7 @@ use uLogger\Entity;
 use uLogger\Exception\InvalidInputException;
 use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
-use uLogger\Helper\Utils;
+use uLogger\Exception\UnauthorizedException;
 use uLogger\Mapper\MapperFactory;
 
 class Legacy extends AbstractController {
@@ -32,18 +32,20 @@ class Legacy extends AbstractController {
 
   /**
    * @param string $action
+   * @param mixed ...$params
    * @return Response
-   * @noinspection PhpUnused
    */
   #[Route(Request::METHOD_POST, '/client/index.php', [ Component\Session::ACCESS_ALL => [ Component\Session::ALLOW_ALL ] ])]
-  public function client(string $action): Response {
+  public function client(string $action, mixed ...$params): Response {
     try {
       $response = match ($action) {
-        'auth' => $this->session(),
-        'addtrack' => $this->track(),
-        'addpos' => $this->position(),
+        'auth' => $this->session($params),
+        'addtrack' => $this->track($params),
+        'addpos' => $this->position($params),
         default => throw new NotFoundException(),
       };
+    } catch (UnauthorizedException) {
+      $response = Response::notAuthorized();
     } catch (NotFoundException|ServerException|ReflectionException|InvalidInputException $e) {
       $response = Response::success([ 'error' => true, 'message' => $e->getMessage() ]);
     }
@@ -51,36 +53,39 @@ class Legacy extends AbstractController {
   }
 
   /**
+   * @param array $params
    * @return Response
    * @throws InvalidInputException
    * @throws ReflectionException
    * @throws ServerException
    */
-  private function session(): Response {
+  private function session(array $params): Response {
     $request = new Request(
       path: '/api/client/session',
       method: Request::METHOD_POST,
       payload: [
-        'login' => Utils::postString('user'),
-        'password' => Utils::postPass('pass'),
+        'login' => $params['user'] ?? null,
+        'password' => $params['pass'] ?? null,
       ]
     );
     return $this->rewriteResponse($this->router->dispatch($request));
   }
 
   /**
+   * @param array $params
    * @return Response
    * @throws InvalidInputException
    * @throws ReflectionException
    * @throws ServerException
+   * @throws UnauthorizedException
    */
-  private function track(): Response {
+  private function track(array $params): Response {
     $request = new Request(
       path: '/api/client/tracks',
       method: Request::METHOD_POST,
       payload: [
-        'name' => Utils::postString('track'),
-        'userId' => $this->session->user->id ?? null,
+        'name' => $params['track'] ?? null,
+        'userId' => $this->session->user->id ?? throw new UnauthorizedException(),
       ]
     );
     $response = $this->router->dispatch($request);
@@ -94,28 +99,33 @@ class Legacy extends AbstractController {
   }
 
   /**
+   * @param array $params
    * @return Response
    * @throws InvalidInputException
    * @throws ReflectionException
    * @throws ServerException
+   * @throws UnauthorizedException
    */
-  private function position(): Response {
+  private function position(array $params): Response {
     $request = new Request(
       path: '/api/client/positions',
       method: Request::METHOD_POST,
       payload: [
-        'latitude' => Utils::postFloat('lat'),
-        'longitude' => Utils::postFloat('lon'),
-        'timestamp' => Utils::postInt('time'),
-        'altitude' => Utils::postFloat('altitude'),
-        'speed' => Utils::postFloat('speed'),
-        'bearing' => Utils::postFloat('bearing'),
-        'accuracy' => Utils::postInt('accuracy'),
-        'provider' => Utils::postString('provider'),
-        'comment' => Utils::postString('comment'),
-        'trackId' => Utils::postInt('trackid'),
-        'userId' => $this->session->user->id ?? null,
-      ]
+        'latitude' => $params['lat'] ?? null,
+        'longitude' => $params['lon'] ?? null,
+        'timestamp' => $params['time'] ?? null,
+        'altitude' => $params['altitude'] ?? null,
+        'speed' => $params['speed'] ?? null,
+        'bearing' => $params['bearing'] ?? null,
+        'accuracy' => $params['accuracy'] ?? null,
+        'provider' => $params['provider'] ?? null,
+        'comment' => $params['comment'] ?? null,
+        'trackId' => $params['trackid'] ?? null,
+        'userId' => $this->session->user->id ?? throw new UnauthorizedException()
+      ],
+      uploads: $params['image'] ? [
+        'image' => $params['image']
+      ] : null
     );
     return $this->rewriteResponse($this->router->dispatch($request));
   }

@@ -215,6 +215,17 @@ class Request {
       } elseif (array_key_exists($routeParamName, $requestParams)) {
         // params, filters
         $this->preparedArguments[] = Reflection::castArgument($requestParams[$routeParamName], $routeParamType);
+      } elseif ($this->hasPayload() && $routeParam->isVariadic()) {
+        // map payload to variadic argument
+        $arr = array_merge($this->preparedArguments, array_diff($requestPayload, $this->preparedArguments));
+        if (!empty($this->uploads)) {
+          foreach ($this->uploads as $key => $upload) {
+            if (!array_key_exists($key, $arr)) {
+              $arr[$key] = $upload;
+            }
+          }
+        }
+        $this->preparedArguments = $arr;
       } elseif ($this->hasPayload() && is_subclass_of($routeParamTypeName, AbstractEntity::class)) {
         // payload (map params to entity)
         $this->preparedArguments[] = $routeParamTypeName::fromPayload($requestPayload);

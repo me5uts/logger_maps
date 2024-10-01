@@ -140,10 +140,10 @@ class FileUpload {
       $fileName = uniqid("{$trackId}_") . ".$extension";
       $destinationPath = Utils::getUploadDir() . "/$fileName";
     } while (file_exists($destinationPath));
-    if (is_uploaded_file($this->tmpName) && !move_uploaded_file($this->tmpName, $destinationPath)) {
-      throw new ServerException('Move uploaded file failed');
-    } elseif ($this->isSelfUploaded($this->tmpName) && !rename($this->tmpName, $destinationPath)) {
-      throw new ServerException('Move self uploaded file failed');
+    if (is_uploaded_file($this->tmpName)) {
+      move_uploaded_file($this->tmpName, $destinationPath) || throw new ServerException('Move uploaded file failed');
+    } elseif ($this->isSelfUploaded($this->tmpName)) {
+      rename($this->tmpName, $destinationPath) || throw new ServerException('Move self uploaded file failed');
     }
     return $fileName;
   }
@@ -151,7 +151,7 @@ class FileUpload {
   private function isSelfUploaded(string $tmpName): bool {
     $tempDir = realpath(sys_get_temp_dir());
     $realTmpName = realpath($tmpName);
-    if (dirname($realTmpName) !== $tempDir) {
+    if (!$realTmpName || dirname($realTmpName) !== $tempDir) {
       return false;
     }
 
