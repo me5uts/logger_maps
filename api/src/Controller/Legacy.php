@@ -47,7 +47,8 @@ class Legacy extends AbstractController {
     } catch (UnauthorizedException) {
       $response = Response::notAuthorized();
     } catch (NotFoundException|ServerException|ReflectionException|InvalidInputException $e) {
-      $response = Response::success([ 'error' => true, 'message' => $e->getMessage() ]);
+      $message = empty($e->getMessage()) ? 'Error ' . get_class($e) : $e->getMessage();
+      $response = Response::success([ 'error' => true, 'message' => $message ]);
     }
     return $response;
   }
@@ -90,7 +91,7 @@ class Legacy extends AbstractController {
     );
     $response = $this->router->dispatch($request);
 
-    if ($response->getCode() === 201) {
+    if ($response->getCode() === Response::CODE_2_CREATED) {
       $payload = $response->getPayload();
       $trackId = $payload->id ?? null;
       return Response::success([ 'error' => false, 'trackid' => $trackId ]);
@@ -123,9 +124,7 @@ class Legacy extends AbstractController {
         'trackId' => $params['trackid'] ?? null,
         'userId' => $this->session->user->id ?? throw new UnauthorizedException()
       ],
-      uploads: $params['image'] ? [
-        'image' => $params['image']
-      ] : null
+      uploads: $params['image'] ? [ 'image' => $params['image'] ] : []
     );
     return $this->rewriteResponse($this->router->dispatch($request));
   }
@@ -136,7 +135,8 @@ class Legacy extends AbstractController {
     } elseif ($response->getCode() === Response::CODE_4_UNAUTHORIZED) {
       return $response;
     } else {
-      return Response::success($response->getPayload());
+      $message = $response->getPayload()['message'] ?? "Error {$response->getCode()}";
+      return Response::success([ 'error' => true, 'message' => $message ]);
     }
   }
 
