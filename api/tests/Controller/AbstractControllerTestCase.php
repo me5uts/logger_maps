@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 use uLogger\Component\Response;
 use uLogger\Component\Session;
 use uLogger\Entity;
+use uLogger\Exception\ServerException;
 use uLogger\Mapper\MapperFactory;
 
 
@@ -43,6 +44,9 @@ abstract class AbstractControllerTestCase extends TestCase {
   }
 
 
+  /**
+   * @throws ServerException
+   */
   protected function mapperMock(string $class): MockObject {
     return $this->mapperFactory->getMapper($class);
   }
@@ -52,8 +56,7 @@ abstract class AbstractControllerTestCase extends TestCase {
    * @return void
    */
   protected static function assertResponseSuccessNoPayload(Response $actualResponse): void {
-    self::assertInstanceOf(Response::class, $actualResponse);
-    self::assertEquals(Response::success(), $actualResponse);
+    self::assertResponse(Response::success(), $actualResponse);
   }
 
   /**
@@ -62,8 +65,7 @@ abstract class AbstractControllerTestCase extends TestCase {
    * @return void
    */
   protected static function assertResponseSuccessWithPayload(Response $actualResponse, mixed $expectedPayload): void {
-    self::assertInstanceOf(Response::class, $actualResponse);
-    self::assertEquals(Response::success($expectedPayload), $actualResponse);
+    self::assertResponse(Response::success($expectedPayload), $actualResponse);
   }
 
   /**
@@ -81,42 +83,55 @@ abstract class AbstractControllerTestCase extends TestCase {
    * @return void
    */
   protected static function assertResponseCreatedWithPayload(Response $actualResponse, mixed $expectedPayload): void {
-    self::assertInstanceOf(Response::class, $actualResponse);
-    self::assertEquals(Response::created($expectedPayload), $actualResponse);
+    self::assertResponse(Response::created($expectedPayload), $actualResponse);
   }
 
   protected static function assertResponseException(Response $actualResponse, \Exception $expectedException): void {
+    self::assertResponse(Response::exception($expectedException), $actualResponse);
+  }
+
+  /**
+   * @param Response $actualResponse
+   * @param string $expectedMessage
+   * @return void
+   */
+  protected static function assertResponseUnprocessableError(Response $actualResponse, string $expectedMessage): void {
+    self::assertResponse(Response::unprocessableError($expectedMessage), $actualResponse);
+  }
+
+  /**
+   * @param Response $actualResponse
+   * @param string $expectedMessage
+   * @return void
+   */
+  protected static function assertResponseInternalServerError(Response $actualResponse, string $expectedMessage): void {
+    self::assertResponse(Response::internalServerError($expectedMessage), $actualResponse);
+  }
+
+  /**
+   * @param Response $actualResponse
+   * @param string $expectedMessage
+   * @return void
+   */
+  protected static function assertResponseConflictError(Response $actualResponse, string $expectedMessage): void {
+    self::assertResponse(Response::conflictError($expectedMessage), $actualResponse);
+  }
+
+  /**
+   * @param Response $actualResponse
+   * @return void
+   */
+  protected static function assertResponseNotAuthorized(Response $actualResponse): void {
+    self::assertResponse(Response::notAuthorized(), $actualResponse);
+  }
+
+  /**
+   * @param Response $actualResponse
+   * @param Response $expectedResponse
+   * @return void
+   */
+  protected static function assertResponse(Response $expectedResponse, Response $actualResponse): void {
     self::assertInstanceOf(Response::class, $actualResponse);
-    self::assertEquals(Response::exception($expectedException), $actualResponse);
-  }
-
-  /**
-   * @param Response $response
-   * @param string $message
-   * @return void
-   */
-  protected static function assertResponseUnprocessableError(Response $response, string $message): void {
-    self::assertInstanceOf(Response::class, $response);
-    self::assertEquals(Response::unprocessableError($message), $response);
-  }
-
-  /**
-   * @param Response $response
-   * @param string $message
-   * @return void
-   */
-  protected static function assertResponseInternalServerError(Response $response, string $message): void {
-    self::assertInstanceOf(Response::class, $response);
-    self::assertEquals(Response::internalServerError($message), $response);
-  }
-
-  /**
-   * @param Response $response
-   * @param string $message
-   * @return void
-   */
-  protected static function assertResponseConflictError(Response $response, string $message): void {
-    self::assertInstanceOf(Response::class, $response);
-    self::assertEquals(Response::conflictError($message), $response);
+    self::assertEquals($expectedResponse, $actualResponse);
   }
 }

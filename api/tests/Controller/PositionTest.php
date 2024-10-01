@@ -123,6 +123,75 @@ class PositionTest extends AbstractControllerTestCase
     $this->assertResponseException($response, $exception);
   }
 
+  // update
+
+  /**
+   * @throws MockException
+   * @throws ServerException
+   */
+  public function testUpdateSuccess() {
+    $newPosition = new Entity\Position(1000, 1, 1, 0, 0);
+    $newPosition->id = 1;
+    $newPosition->comment = 'new comment';
+    $currentPosition = new Entity\Position(1000, 1, 1, 0, 0);
+    $currentPosition->id = 1;
+    $currentPosition->comment = 'old comment';
+
+    $this->mapperMock(Mapper\Position::class)
+      ->expects($this->once())
+      ->method('fetch')
+      ->with($newPosition->id)
+      ->willReturn($currentPosition);
+    $this->mapperMock(Mapper\Position::class)
+      ->expects($this->once())
+      ->method('update')
+      ->with($currentPosition);
+
+    $response = $this->controller->update($newPosition->id, $newPosition);
+
+    $this->assertResponseSuccessNoPayload($response);
+    $this->assertEquals($currentPosition->comment, $newPosition->comment);
+  }
+
+  /**
+   * @throws MockException
+   * @throws ServerException
+   */
+  public function testUpdateException() {
+    $newPosition = new Entity\Position(1000, 1, 1, 0, 0);
+    $newPosition->id = 1;
+    $newPosition->comment = 'new comment';
+    $currentPosition = new Entity\Position(1000, 1, 1, 0, 0);
+    $currentPosition->id = 1;
+    $currentPosition->comment = 'old comment';
+    $exception = new DatabaseException();
+
+    $this->mapperMock(Mapper\Position::class)
+      ->expects($this->once())
+      ->method('fetch')
+      ->with($newPosition->id)
+      ->willReturn($currentPosition);
+    $this->mapperMock(Mapper\Position::class)
+      ->expects($this->once())
+      ->method('update')
+      ->with($currentPosition)
+      ->willThrowException($exception);
+
+    $response = $this->controller->update($newPosition->id, $newPosition);
+
+    $this->assertResponseException($response, $exception);
+  }
+
+  public function testUpdateWrongPositionId() {
+    $newPosition = new Entity\Position(1000, 1, 1, 0, 0);
+    $newPosition->id = 1;
+    $wrongPositionId = 2;
+
+    $response = $this->controller->update($wrongPositionId, $newPosition);
+
+    $this->assertResponseUnprocessableError($response, 'Wrong position id');
+  }
+
   // add
 
   /**
@@ -369,7 +438,6 @@ class PositionTest extends AbstractControllerTestCase
     $trackId = 1;
     $position = new Entity\Position(1000, 1, $trackId, 0, 0);
     $position->id = 1;
-    $imageUpload = $this->createMock(FileUpload::class);
     $exception = new NotFoundException();
 
     $this->mapperMock(Mapper\Position::class)
@@ -380,9 +448,9 @@ class PositionTest extends AbstractControllerTestCase
 
     $this->mapperMock(Mapper\Position::class)
       ->expects($this->never())
-      ->method('setImage');
+      ->method('removeImage');
 
-    $response = $this->controller->addImage($position->id, $imageUpload);
+    $response = $this->controller->deleteImage($position->id);
 
     $this->assertResponseException($response, $exception);
   }
@@ -394,7 +462,6 @@ class PositionTest extends AbstractControllerTestCase
     $trackId = 1;
     $position = new Entity\Position(1000, 1, $trackId, 0, 0);
     $position->id = 1;
-    $imageUpload = $this->createMock(FileUpload::class);
     $exception = new DatabaseException();
 
     $this->mapperMock(Mapper\Position::class)
@@ -405,11 +472,11 @@ class PositionTest extends AbstractControllerTestCase
 
     $this->mapperMock(Mapper\Position::class)
       ->expects($this->once())
-      ->method('setImage')
-      ->with($position, $imageUpload)
+      ->method('removeImage')
+      ->with($position)
       ->willThrowException($exception);
 
-    $response = $this->controller->addImage($position->id, $imageUpload);
+    $response = $this->controller->deleteImage($position->id);
 
     $this->assertResponseException($response, $exception);
   }
@@ -458,8 +525,7 @@ class PositionTest extends AbstractControllerTestCase
 
     $position = new Entity\Position(1000, 1, 1, 0, 0);
     $position->id = 1;
-    $position->image = 'image.jpg';
-    $exception = new NotFoundException();
+    $position->image = null;
 
     $this->mapperMock(Mapper\Position::class)
       ->expects($this->once())
@@ -467,24 +533,9 @@ class PositionTest extends AbstractControllerTestCase
       ->with($position->id)
       ->willReturn($position);
 
-    $fileMock = $this->createMock(Entity\File::class);
-    $fileMock->setContent('content');
-    $fileMock->setMimeType('image/jpeg');
-    $fileMock->setFileName($position->image);
-
-    $this->controller = $this->getMockBuilder(Controller\Position::class)
-      ->setConstructorArgs([$this->mapperFactory, $this->session, $this->config])
-      ->onlyMethods([ 'getFile' ])
-      ->getMock();
-
-    // Return the mocked File object when creating a File instance.
-    $this->controller->method('getFile')
-      ->with($position->image)
-      ->willThrowException($exception);
-
     $response = $this->controller->getImage($position->id);
 
-    $this->assertResponseException($response, $exception);
+    $this->assertResponseException($response, new NotFoundException());
   }
 
   public function testGetImageException() {

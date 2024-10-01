@@ -22,7 +22,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
     $auth = new Session();
-    $auth->checkLogin($this->testUser, $this->testPass);
+    $auth->setAuthenticatedIfValid($this->testUser, $this->testPass);
     self::assertTrue($auth->isAuthenticated(), "Not authenticated");
     self::assertInstanceOf(User::class, $auth->user, "User variable not set");
     self::assertEquals($this->testUser, $auth->user->login, "Wrong login");
@@ -38,7 +38,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
     $auth = new Session();
-    $auth->checkLogin($this->testUser, "badPass");
+    $auth->setAuthenticatedIfValid($this->testUser, "badPass");
     self::assertFalse($auth->isAuthenticated(), "Should not be authenticated");
     self::assertNull($auth->user, "User not null");
   }
@@ -51,7 +51,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
     $auth = new Session();
-    $auth->checkLogin("", $this->testPass);
+    $auth->setAuthenticatedIfValid("", $this->testPass);
     self::assertFalse($auth->isAuthenticated(), "Should not be authenticated");
     self::assertNull($auth->user, "User not null");
   }
@@ -102,7 +102,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     unset($user);
 
     @$auth = new Session();
-    $auth->checkLogin($this->testUser, $this->testPass);
+    $auth->setAuthenticatedIfValid($this->testUser, $this->testPass);
     self::assertTrue($auth->isAuthenticated(), "Should be authenticated");
     self::assertEquals($this->testUser, $auth->user->login, "Wrong login");
   }
@@ -116,7 +116,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
     @$auth = new Session();
-    $auth->checkLogin($this->testUser, $this->testPass);
+    $auth->setAuthenticatedIfValid($this->testUser, $this->testPass);
     self::assertTrue($auth->isAuthenticated(), "Should be authenticated");
     self::assertFalse($auth->isAdmin(), "Should not be admin");
   }
@@ -129,7 +129,7 @@ class AuthTest extends UloggerDatabaseTestCase {
     self::assertEquals(1, $this->getConnection()->getRowCount('users'), "Wrong row count");
 
     @$auth = new Session();
-    $auth->checkLogin($this->testUser, $this->testPass);
+    $auth->setAuthenticatedIfValid($this->testUser, $this->testPass);
     self::assertTrue($auth->isAuthenticated(), "Should be authenticated");
     self::assertTrue($auth->isAdmin(), "Should be admin");
   }

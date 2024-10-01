@@ -9,8 +9,10 @@ declare(strict_types = 1);
 
 namespace uLogger\Tests\Controller;
 
+use PHPUnit\Framework\MockObject\Exception;
 use uLogger\Controller;
 use uLogger\Entity;
+use uLogger\Exception\DatabaseException;
 use uLogger\Exception\NotFoundException;
 use uLogger\Exception\ServerException;
 use uLogger\Mapper;
@@ -284,6 +286,175 @@ class UserTest extends AbstractControllerTestCase
       ->willThrowException($exception);
 
     $response = $this->controller->update($userId, $user);
+
+    $this->assertResponseException($response, $exception);
+  }
+
+  // updatePassword
+
+  /**
+   * @throws ServerException
+   * @throws Exception
+   */
+  public function testUpdatePasswordSuccess() {
+    $userId = 1;
+    $newPassword = 'new_password';
+    $oldPassword = 'old_password';
+    $sessionUser = $this->createMock(Entity\User::class);
+    // session user id must be same as $userId
+    $sessionUser->id = $userId;
+    $sessionUser->password = $oldPassword;
+    $sessionUser->isAdmin = false;
+
+    $this->session->user = $sessionUser;
+
+    $this->config
+      ->expects($this->once())
+      ->method('validPassStrength')
+      ->with($newPassword)
+      ->willReturn(true);
+    $this->session->user
+      ->expects($this->once())
+      ->method('validPassword')
+      ->with($oldPassword)
+      ->willReturn(true);
+    $this->mapperMock(Mapper\User::class)
+      ->expects($this->once())
+      ->method('updatePassword')
+      ->with($sessionUser);
+    $this->session
+      ->expects($this->once())
+      ->method('updateSession');
+
+    $response = $this->controller->updatePassword($userId, $newPassword, $oldPassword);
+
+    $this->assertResponseSuccessNoPayload($response);
+  }
+
+  /**
+   * @throws Exception
+   */
+  public function testUpdatePasswordUserIdMismatch() {
+    $userId = 1;
+    $newPassword = 'new_password';
+    $oldPassword = 'old_password';
+    $sessionUser = $this->createMock(Entity\User::class);
+    // session user id must be different from $userId
+    $sessionUser->id = 2;
+    $sessionUser->password = $oldPassword;
+    $sessionUser->isAdmin = false;
+
+    $this->session->user = $sessionUser;
+
+    $this->session
+      ->expects($this->never())
+      ->method('updateSession');
+
+    $response = $this->controller->updatePassword($userId, $newPassword, $oldPassword);
+
+    $this->assertResponseNotAuthorized($response);
+  }
+
+  /**
+   * @throws Exception
+   */
+  public function testUpdatePasswordInvalidPassStrength() {
+    $userId = 1;
+    $newPassword = 'new_password';
+    $oldPassword = 'old_password';
+    $sessionUser = $this->createMock(Entity\User::class);
+    // session user id must be same as $userId
+    $sessionUser->id = $userId;
+    $sessionUser->password = $oldPassword;
+    $sessionUser->isAdmin = false;
+
+    $this->session->user = $sessionUser;
+
+    $this->config
+      ->expects($this->once())
+      ->method('validPassStrength')
+      ->with($newPassword)
+      ->willReturn(false);
+    $this->session
+      ->expects($this->never())
+      ->method('updateSession');
+
+    $response = $this->controller->updatePassword($userId, $newPassword, $oldPassword);
+
+    $this->assertResponseUnprocessableError($response, 'passstrengthwarn');
+  }
+
+  /**
+   * @throws Exception
+   */
+  public function testUpdatePasswordInvalidOldPassword() {
+    $userId = 1;
+    $newPassword = 'new_password';
+    $oldPassword = 'old_password';
+    $sessionUser = $this->createMock(Entity\User::class);
+    // session user id must be same as $userId
+    $sessionUser->id = $userId;
+    $sessionUser->password = $oldPassword;
+    $sessionUser->isAdmin = false;
+
+    $this->session->user = $sessionUser;
+
+    $this->config
+      ->expects($this->once())
+      ->method('validPassStrength')
+      ->with($newPassword)
+      ->willReturn(true);
+    $this->session->user
+      ->expects($this->once())
+      ->method('validPassword')
+      ->with($oldPassword)
+      ->willReturn(false);
+    $this->session
+      ->expects($this->never())
+      ->method('updateSession');
+
+    $response = $this->controller->updatePassword($userId, $newPassword, $oldPassword);
+
+    $this->assertResponseUnprocessableError($response, 'oldpassinvalid');
+  }
+
+  /**
+   * @throws ServerException
+   * @throws Exception
+   */
+  public function testUpdatePasswordException() {
+    $userId = 1;
+    $newPassword = 'new_password';
+    $oldPassword = 'old_password';
+    $exception = new DatabaseException();
+    $sessionUser = $this->createMock(Entity\User::class);
+    // session user id must be same as $userId
+    $sessionUser->id = $userId;
+    $sessionUser->password = $oldPassword;
+    $sessionUser->isAdmin = false;
+
+    $this->session->user = $sessionUser;
+
+    $this->config
+      ->expects($this->once())
+      ->method('validPassStrength')
+      ->with($newPassword)
+      ->willReturn(true);
+    $this->session->user
+      ->expects($this->once())
+      ->method('validPassword')
+      ->with($oldPassword)
+      ->willReturn(true);
+    $this->mapperMock(Mapper\User::class)
+      ->expects($this->once())
+      ->method('updatePassword')
+      ->with($sessionUser)
+      ->willThrowException($exception);
+    $this->session
+      ->expects($this->never())
+      ->method('updateSession');
+
+    $response = $this->controller->updatePassword($userId, $newPassword, $oldPassword);
 
     $this->assertResponseException($response, $exception);
   }
