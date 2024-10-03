@@ -130,11 +130,6 @@ class User extends AbstractMapper {
    */
   public function delete(int $userId): void {
 
-    // remove tracks and positions
-//    if (Track::deleteAll($userId) === false) {
-//      return false;
-//    }
-    // remove user
     try {
       $query = 'DELETE FROM ' . $this->db->table('users') . ' WHERE id = ?';
       $stmt = $this->db->prepare($query);
@@ -154,7 +149,7 @@ class User extends AbstractMapper {
    * @throws DatabaseException
    * @throws ServerException
    */
-  public function get(?int $userId = null, ?string $login = null): array {
+  private function get(?int $userId = null, ?string $login = null): array {
 
     try {
       $query = 'SELECT id, login, password, admin FROM ' . $this->db->table('users');

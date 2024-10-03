@@ -103,8 +103,8 @@ class Track extends AbstractMapper {
    * @throws NotFoundException
    */
   public function update(Entity\Track $track): void {
-    if (empty($track->name)) {
-      throw new InvalidInputException('Empty track name');
+    if (empty($track->name) || empty($track->id)) {
+      throw new InvalidInputException('Malformed track object');
     }
     if ($track->comment === '') {
       $track->comment = null;

@@ -37,7 +37,7 @@ class MapperFactory {
       return $this->cache[$className];
     }
 
-    if (!class_exists($className)) {
+    if (!class_exists($className) || !is_subclass_of($className, AbstractMapper::class)) {
       throw new ServerException("Unknown mapper class $className");
     }
 

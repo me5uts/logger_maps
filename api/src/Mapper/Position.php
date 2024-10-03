@@ -52,7 +52,7 @@ class Position extends AbstractMapper {
    * @throws ServerException
    */
   public function fetchLastAllUsers(): array {
-    $rules['p.id'] = '(
+    $rules[] = 'p.id = (
     SELECT p2.id FROM ' . $this->db->table('positions') . ' p2
           WHERE p2.user_id = p.user_id
           ORDER BY p2.time DESC, p2.id DESC
@@ -138,7 +138,6 @@ class Position extends AbstractMapper {
     }
   }
 
-
   /**
    * Delete positions
    *
@@ -153,10 +152,15 @@ class Position extends AbstractMapper {
       $query = 'DELETE FROM ' . $this->db->table('positions') . ' WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $position->id ]);
-      $this->removeImage($position);
+      if ($position->image) {
+        $this->removeFromFilesystem($position->image);
+      }
     } catch (PDOException $e) {
       syslog(LOG_ERR, $e->getMessage());
       throw new DatabaseException($e->getMessage());
+    } catch (NotFoundException $e) {
+      // ignored
+      syslog(LOG_WARNING, $e->getMessage());
     }
   }
 
@@ -167,38 +171,54 @@ class Position extends AbstractMapper {
    * @return void
    * @throws InvalidInputException
    * @throws ServerException
-   * @throws NotFoundException
+   * @throws DatabaseException
    */
   public function setImage(Entity\Position $position, FileUpload $imageMeta): void {
 
-    if ($position->hasImage()) {
-      $this->removeImage($position);
-    }
+    $oldImage = $position->image;
+
     $position->image = $imageMeta->add($position->trackId);
-    $query = 'UPDATE ' . $this->db->table('positions') . '
-              SET image = ? WHERE id = ?';
-    $stmt = $this->db->prepare($query);
-    $stmt->execute([ $position->image, $position->id ]);
+    try {
+      $query = 'UPDATE ' . $this->db->table('positions') . '
+                SET image = ? WHERE id = ?';
+      $stmt = $this->db->prepare($query);
+      $stmt->execute([ $position->image, $position->id ]);
+      if ($oldImage) {
+        $this->removeFromFilesystem($oldImage);
+      }
+    } catch (PDOException $e) {
+      syslog(LOG_ERR, $e->getMessage());
+      throw new DatabaseException($e->getMessage());
+    } catch (NotFoundException $e) {
+      // ignored
+      syslog(LOG_WARNING, $e->getMessage());
+    }
   }
 
   /**
    * Delete image
    * @throws ServerException
-   * @throws NotFoundException
+   * @throws DatabaseException
    */
   public function removeImage(Entity\Position $position): void {
 
-    if ($position->hasImage()) {
+    if (!$position->hasImage()) {
+      return;
+    }
+    try {
       $query = 'UPDATE ' . $this->db->table('positions') . '
                 SET image = NULL WHERE id = ?';
       $stmt = $this->db->prepare($query);
       $stmt->execute([ $position->id ]);
-
-      $file = Entity\File::createFromUpload($position->image);
-      if ($file->delete() === false) {
-        throw new ServerException('Unable to delete image from filesystem');
-      }
+      $fileName = $position->image;
       $position->image = null;
+      $this->removeFromFilesystem($fileName);
+    } catch (PDOException $e) {
+      syslog(LOG_ERR, $e->getMessage());
+      throw new DatabaseException($e->getMessage());
+    } catch (NotFoundException $e) {
+      // ignored
+      syslog(LOG_WARNING, $e->getMessage());
     }
   }
 
@@ -207,32 +227,33 @@ class Position extends AbstractMapper {
    *
    * @param int $userId User id
    * @param int|null $trackId Optional track id
-   * @return bool True if success, false otherwise
    * @throws DatabaseException
    * @throws ServerException
    */
-  public function deleteAll(int $userId, ?int $trackId = null): bool {
-    $ret = false;
-    if (!empty($userId)) {
-      $args = [];
-      $where = 'WHERE user_id = ?';
-      $args[] = $userId;
-      if (!empty($trackId)) {
-        $where .= ' AND track_id = ?';
-        $args[] = $trackId;
-      }
-      self::removeImages($userId, $trackId);
-      try {
-        $query = 'DELETE FROM ' . $this->db->table('positions') . " $where";
-        $stmt = $this->db->prepare($query);
-        $stmt->execute($args);
-        $ret = true;
-      } catch (PDOException $e) {
-        syslog(LOG_ERR, $e->getMessage());
-        throw new DatabaseException($e->getMessage());
-      }
+  public function deleteAll(int $userId, ?int $trackId = null): void {
+    $where = 'WHERE user_id = ?';
+    $args[] = $userId;
+
+    if (!empty($trackId)) {
+      $where .= ' AND track_id = ?';
+      $args[] = $trackId;
     }
-    return $ret;
+
+    try {
+      $positionsWithImages = $this->getAllWithImage($userId, $trackId);
+      $query = 'DELETE FROM ' . $this->db->table('positions') . " $where";
+      $stmt = $this->db->prepare($query);
+      $stmt->execute($args);
+      foreach ($positionsWithImages as $position) {
+        $this->removeFromFilesystem($position->image);
+      }
+    } catch (PDOException $e) {
+      syslog(LOG_ERR, $e->getMessage());
+      throw new DatabaseException($e->getMessage());
+    } catch (NotFoundException $e) {
+      // ignored
+      syslog(LOG_WARNING, $e->getMessage());
+    }
   }
 
   /**
@@ -247,27 +268,6 @@ class Position extends AbstractMapper {
   public function getAllWithImage(?int $userId = null, ?int $trackId = null): array {
     $rules[] = 'p.image IS NOT NULL';
     return $this->get(userId: $userId, trackId: $trackId, rules: $rules);
-  }
-
-  /**
-   * Delete all user's uploads, optionally limit to given track
-   *
-   * @param int $userId User id
-   * @param int|null $trackId Optional track id
-   * @return void True if success, false otherwise
-   * @throws DatabaseException
-   * @throws ServerException
-   */
-  public function removeImages(int $userId, ?int $trackId = null): void {
-    $positions = $this->getAllWithImage($userId, $trackId);
-    foreach ($positions as $position) {
-      try {
-        $this->removeImage($position);
-      } catch (PDOException $e) {
-        syslog(LOG_ERR, $e->getMessage());
-        throw new DatabaseException($e->getMessage());
-      }
-    }
   }
 
   /**
@@ -305,10 +305,9 @@ class Position extends AbstractMapper {
     if (!empty($afterId)) {
       $rules[] = 'p.id > ' . $this->db->quote((string) $afterId);
     }
+    $where = '';
     if (!empty($rules)) {
       $where = 'WHERE ' . implode(' AND ', $rules);
-    } else {
-      $where = '';
     }
     if (!empty($orderBy)) {
       $orderBy = "ORDER BY $orderBy";
@@ -332,7 +331,6 @@ class Position extends AbstractMapper {
       $result = $this->db->query($query);
       while ($row = $result->fetch()) {
         $positions[] = Entity\Position::fromDatabaseRow($row);
-
       }
     } catch (PDOException $e) {
       syslog(LOG_ERR, $e->getMessage());
@@ -340,6 +338,19 @@ class Position extends AbstractMapper {
     }
 
     return $positions;
+  }
+
+  /**
+   * @param $fileName
+   * @return void
+   * @throws NotFoundException
+   * @throws ServerException
+   */
+  protected function removeFromFilesystem($fileName): void {
+    $file = Entity\File::createFromUpload($fileName);
+    if ($file->delete() === false) {
+      throw new ServerException('Unable to delete image from filesystem');
+    }
   }
 
 

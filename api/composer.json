@@ -30,8 +30,8 @@
         "phpunit/phpunit": "^10.5",
         "vlucas/phpdotenv": "^5.6",
         "guzzlehttp/guzzle": "^7.9",
-        "kornrunner/dbunit": "^9",
-        "squizlabs/php_codesniffer": "^3.10"
+        "squizlabs/php_codesniffer": "^3.10",
+        "selective/test-traits": "^4.1"
     },
     "config": {
       "platform": {

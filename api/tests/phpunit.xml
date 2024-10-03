@@ -18,10 +18,14 @@
   <testsuites>
     <testsuite name="µlogger test suite">
       <directory>Controller</directory>
+      <directory>Mapper</directory>
     </testsuite>
   </testsuites>
   <logging/>
   <php>
     <server name="HTTP_HOST" value="http://127.0.0.1"/>
+    <var name="DB_DSN" value="mysql:unix_socket=/tmp/mysql.sock;dbname=ulogger_tests;charset=utf8"/>
+    <var name="DB_USER" value="ulogger_tests"/>
+    <var name="DB_PASSWD" value="Tests0nly"/>
   </php>
 </phpunit>

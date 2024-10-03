@@ -140,82 +140,6 @@ class Config extends AbstractMapper {
   }
 
   /**
-   * @param array $row Database row
-   * @return Entity\Config
-   */
-//  private function mapRowToObject(array $row): Entity\Config {
-//    $config = new Entity\Config();
-//    $row = array_map([ $this, "unserialize" ], $row);
-//
-//    if (!empty($row['map_api'])) {
-//      $config->mapApi = $row['map_api'];
-//    }
-//    if (isset($row['latitude']) && is_numeric($row['latitude'])) {
-//      $config->initLatitude = (float) $row['latitude'];
-//    }
-//    if (isset($row['longitude']) && is_numeric($row['longitude'])) {
-//      $config->initLongitude = (float) $row['longitude'];
-//    }
-//    if (isset($row['google_key'])) {
-//      $config->googleKey = $row['google_key'];
-//    }
-//    if (isset($row['require_auth']) && (is_numeric($row['require_auth']) || is_bool($row['require_auth']))) {
-//      $config->requireAuthentication = (bool) $row['require_auth'];
-//    }
-//    if (isset($row['public_tracks']) && (is_numeric($row['public_tracks']) || is_bool($row['public_tracks']))) {
-//      $config->publicTracks = (bool) $row['public_tracks'];
-//    }
-//    if (isset($row['pass_lenmin']) && is_numeric($row['pass_lenmin'])) {
-//      $config->passLenMin = (int) $row['pass_lenmin'];
-//    }
-//    if (isset($row['pass_strength']) && is_numeric($row['pass_strength'])) {
-//      $config->passStrength = (int) $row['pass_strength'];
-//    }
-//    if (isset($row['interval_seconds']) && is_numeric($row['interval_seconds'])) {
-//      $config->interval = (int) $row['interval_seconds'];
-//    }
-//    if (!empty($row['lang'])) {
-//      $config->lang = $row['lang'];
-//    }
-//    if (!empty($row['units'])) {
-//      $config->units = $row['units'];
-//    }
-//    if (isset($row['stroke_weight']) && is_numeric($row['stroke_weight'])) {
-//      $config->strokeWeight = (int) $row['stroke_weight'];
-//    }
-//    if (!empty($row['stroke_color'])) {
-//      $config->strokeColor = $row['stroke_color'];
-//    }
-//    if (isset($row['stroke_opacity']) && is_numeric($row['stroke_opacity'])) {
-//      $config->strokeOpacity = (float) $row['stroke_opacity'];
-//    }
-//    if (!empty($row['color_normal'])) {
-//      $config->colorNormal = $row['color_normal'];
-//    }
-//    if (!empty($row['color_start'])) {
-//      $config->colorStart = $row['color_start'];
-//    }
-//    if (!empty($row['color_stop'])) {
-//      $config->colorStop = $row['color_stop'];
-//    }
-//    if (!empty($row['color_extra'])) {
-//      $config->colorExtra = $row['color_extra'];
-//    }
-//    if (!empty($row['color_hilite'])) {
-//      $config->colorHilite = $row['color_hilite'];
-//    }
-//    if (isset($row['upload_maxsize']) && is_numeric($row['upload_maxsize'])) {
-//      $config->uploadMaxSize = (int) $row['upload_maxsize'];
-//      $config->setUploadLimit();
-//    }
-//    if (!$config->requireAuthentication) {
-//      // tracks must be public if we don't require authentication
-//      $config->publicTracks = true;
-//    }
-//    return $config;
-//  }
-
-  /**
    * Unserialize data from database
    * @param object|string $data Resource returned by pgsql, string otherwise
    * @return mixed
@@ -230,11 +154,10 @@ class Config extends AbstractMapper {
   /**
    * @throws ServerException
    */
-  public function mapRowToObject(array $row): Entity\Config {
+  private function mapRowToObject(array $row): Entity\Config {
     $row = array_map([ $this, 'unserialize' ], $row);
     return Entity\Config::fromDatabaseRow($row);
   }
-
 
 }
 
