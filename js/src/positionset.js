@@ -40,8 +40,22 @@ export default class uPositionSet extends uListItem {
   /**
    * @return {number}
    */
+  get positionsVisible() {
+    return this.positions.filter((position) => !position.hidden);
+  }
+
+  /**
+   * @return {number}
+   */
   get length() {
     return this.positions.length;
+  }
+
+  /**
+   * @return {number}
+   */
+  get lengthVisible() {
+    return this.positionsVisible.length;
   }
 
   /**
@@ -49,6 +63,13 @@ export default class uPositionSet extends uListItem {
    */
   get hasPositions() {
     return this.positions.length > 0;
+  }
+
+  /**
+   * @return {boolean}
+   */
+  get hasPositionsVisible() {
+    return this.lengthVisible > 0;
   }
 
   // eslint-disable-next-line no-unused-vars,class-methods-use-this

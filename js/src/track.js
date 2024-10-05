@@ -47,13 +47,29 @@ export default class uTrack extends uPositionSet {
     this.id = id;
     this.name = name;
     this.user = user;
-    this.plotData = [];
-    this.maxId = 0;
-    this.maxSpeed = 0;
-    this.maxAltitude = null;
-    this.minAltitude = null;
-    this.totalMeters = 0;
-    this.totalSeconds = 0;
+    this.idMin = null;
+    this.idMax = null;
+    this.speedMin = null;
+    this.speedMax = null;
+    this.altitudeMin = null;
+    this.altitudeMax = null;
+    this.metersTotal = null;
+    this.secondsTotal = null;
+    this.providers = [];
+    this.timestampMin = null;
+    this.timestampMax = null;
+    this.plotDataVisible = [];
+    this.idMinVisible = null;
+    this.idMaxVisible = null;
+    this.speedMinVisible = null;
+    this.speedMaxVisible = null;
+    this.altitudeMinVisible = null;
+    this.altitudeMaxVisible = null;
+    this.metersTotalVisible = null;
+    this.secondsTotalVisible = null;
+    this.providersVisible = [];
+    this.timestampMinVisible = null;
+    this.timestampMaxVisible = null;
     this.listItem(id, name);
   }
 
@@ -65,16 +81,36 @@ export default class uTrack extends uPositionSet {
   clear() {
     super.clear();
     this.clearTrackCounters();
+    this.clearTrackCountersVisible();
   }
 
   clearTrackCounters() {
-    this.maxId = 0;
-    this.maxSpeed = 0;
-    this.maxAltitude = null;
-    this.minAltitude = null;
-    this.plotData.length = 0;
-    this.totalMeters = 0;
-    this.totalSeconds = 0;
+    this.idMin = null;
+    this.idMax = null;
+    this.speedMin = null;
+    this.speedMax = null;
+    this.altitudeMin = null;
+    this.altitudeMax = null;
+    this.metersTotal = null;
+    this.secondsTotal = null;
+    this.providers = [];
+    this.timestampMin = null;
+    this.timestampMax = null;
+  }
+
+  clearTrackCountersVisible() {
+    this.idMinVisible = null;
+    this.idMaxVisible = null;
+    this.speedMinVisible = null;
+    this.speedMaxVisible = null;
+    this.altitudeMinVisible = null;
+    this.altitudeMaxVisible = null;
+    this.plotDataVisible.length = null;
+    this.metersTotalVisible = null;
+    this.secondsTotalVisible = null;
+    this.providersVisible = [];
+    this.timestampMinVisible = null;
+    this.timestampMaxVisible = null;
   }
 
   /**
@@ -88,22 +124,22 @@ export default class uTrack extends uPositionSet {
   /**
    * @return {boolean}
    */
-  get hasPlotData() {
-    return this.plotData.length > 0;
+  get hasPlotDataVisible() {
+    return this.plotDataVisible.length > 0;
   }
 
   /**
    * @return {boolean}
    */
-  get hasAltitudes() {
-    return this.maxAltitude !== null;
+  get hasAltitudesVisible() {
+    return this.altitudeMaxVisible !== null;
   }
 
   /**
    * @return {boolean}
    */
-  get hasSpeeds() {
-    return this.maxSpeed > 0;
+  get hasSpeedsVisible() {
+    return this.speedMaxVisible > 0;
   }
 
   /**
@@ -121,10 +157,21 @@ export default class uTrack extends uPositionSet {
     for (const pos of posArr) {
       const position = uPosition.fromJson(pos);
       this.calculatePosition(position);
+      if (!position.hidden) { // TODO FIX THIS, hidden is always false from init, needs to be checked against existing filters
+        this.calculatePositionVisible(position);
+      }
       positions.push(position);
     }
     // update at the end to avoid observers update invidual points
     this.positions = positions;
+  }
+
+  /**
+   * @param {number} id
+   * @return {boolean}
+   */
+  isFirstPosition(id) {
+    return this.length > 0 && id === 0;
   }
 
   /**
@@ -139,8 +186,16 @@ export default class uTrack extends uPositionSet {
    * @param {number} id
    * @return {boolean}
    */
-  isFirstPosition(id) {
-    return this.length > 0 && id === 0;
+  isFirstPositionVisible(id) {
+    return this.lengthVisible > 0 && id === 0;
+  }
+
+  /**
+   * @param {number} id
+   * @return {boolean}
+   */
+  isLastPositionVisible(id) {
+    return this.lengthVisible > 0 && id === this.lengthVisible - 1;
   }
 
   /**
@@ -152,8 +207,8 @@ export default class uTrack extends uPositionSet {
       userid: this.user.id,
       trackid: this.id
     };
-    if (this.maxId) {
-      params.afterid = this.maxId;
+    if (this.idMax) {
+      params.afterid = this.idMax;
     }
     return uPositionSet.fetch(params).then((_positions) => {
       this.fromJson(_positions, params.afterid > 0);
@@ -279,29 +334,99 @@ export default class uTrack extends uPositionSet {
     }
   }
 
+  recalculatePositionsVisible() {
+    this.clearTrackCountersVisible();
+    let previous = null;
+    for (const position of this.positionsVisible) {
+      position.meters = previous ? position.distanceTo(previous) : 0;
+      position.seconds = previous ? position.secondsTo(previous) : 0;
+      this.calculatePositionVisible(position);
+      previous = position;
+    }
+  }
+
   /**
    * Calculate position total counters and plot data
    * @param {uPosition} position
    */
   calculatePosition(position) {
-    this.totalMeters += position.meters;
-    this.totalSeconds += position.seconds;
-    position.totalMeters = this.totalMeters;
-    position.totalSeconds = this.totalSeconds;
+    if (this.idMin === null || position.id < this.idMin) {
+      this.idMin = position.id;
+    }
+    if (this.idMax === null || position.id > this.idMax) {
+      this.idMax = position.id;
+    }
+    if (this.timestampMin === null || position.timestamp < this.timestampMin) {
+      this.timestampMin = position.timestamp;
+    }
+    if (this.timestampMax === null || position.timestamp > this.timestampMax) {
+      this.timestampMax = position.timestamp;
+    }
+    this.metersTotal += position.meters;
+    this.secondsTotal += position.seconds;
+    position.metersTotal = this.metersTotal;
+    position.secondsTotal = this.secondsTotal;
     if (position.hasAltitude()) {
-      this.plotData.push({ x: position.totalMeters, y: position.altitude });
-      if (this.maxAltitude === null || position.altitude > this.maxAltitude) {
-        this.maxAltitude = position.altitude;
+      if (this.altitudeMin === null || position.altitude < this.altitudeMin) {
+        this.altitudeMin = position.altitude;
       }
-      if (this.minAltitude === null || position.altitude < this.minAltitude) {
-        this.minAltitude = position.altitude;
+      if (this.altitudeMax === null || position.altitude > this.altitudeMax) {
+        this.altitudeMax = position.altitude;
       }
     }
-    if (position.id > this.maxId) {
-      this.maxId = position.id;
+    if (position.hasSpeed()) {
+      if (this.speedMin === null || position.speed < this.speedMin) {
+        this.speedMin = position.speed;
+      }
+      if (this.speedMax === null || position.speed > this.speedMax) {
+        this.speedMax = position.speed;
+      }
     }
-    if (position.hasSpeed() && position.speed > this.maxSpeed) {
-      this.maxSpeed = position.speed;
+    if (!this.providers.includes(position.provider)) {
+      this.providers.push(position.provider);
+    }
+  }
+  
+  /**
+   * Calculate position total counters and plot data
+   * @param {uPosition} position
+   */
+  calculatePositionVisible(position) {
+    if (this.idMinVisible === null || position.id < this.idMinVisible) {
+      this.idMinVisible = position.id;
+    }
+    if (this.idMaxVisible === null || position.id > this.idMaxVisible) {
+      this.idMaxVisible = position.id;
+    }
+    if (this.timestampMinVisible === null || position.timestamp < this.timestampMinVisible) {
+      this.timestampMinVisible = position.timestamp;
+    }
+    if (this.timestampMaxVisible === null || position.timestamp > this.timestampMaxVisible) {
+      this.timestampMaxVisible = position.timestamp;
+    }
+    this.metersTotalVisible += position.meters;
+    this.secondsTotalVisible += position.seconds;
+    position.metersTotalVisible = this.metersTotalVisible;
+    position.secondsTotalVisible = this.secondsTotalVisible;
+    if (position.hasAltitude()) {
+      if (this.altitudeMinVisible === null || position.altitude < this.altitudeMinVisible) {
+        this.altitudeMinVisible = position.altitude;
+      }
+      if (this.altitudeMaxVisible === null || position.altitude > this.altitudeMaxVisible) {
+        this.altitudeMaxVisible = position.altitude;
+      }
+      this.plotDataVisible.push({ x: position.metersTotalVisible, y: position.altitude });
+    }
+    if (position.hasSpeed()) {
+      if (this.speedMinVisible === null || position.speed < this.speedMinVisible) {
+        this.speedMinVisible = position.speed;
+      }
+      if (this.speedMaxVisible === null || position.speed > this.speedMaxVisible) {
+        this.speedMaxVisible = position.speed;
+      }
+    }
+    if (!this.providersVisible.includes(position.provider)) {
+      this.providersVisible.push(position.provider);
     }
   }
 }

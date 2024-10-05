@@ -298,7 +298,7 @@ export default class OpenLayersApi {
     const maxValue = scale.maxValue;
     const minColor = scale.minColor;
     const maxColor = scale.maxColor;
-    if (track.length < 2 || maxValue < minValue) {
+    if (track.lengthVisible < 2 || maxValue < minValue) {
       this.setTrackDefaultStyle();
       return;
     }
@@ -328,12 +328,12 @@ export default class OpenLayersApi {
         }));
         return styles;
       }
-      let position = track.positions[0];
+      let position = track.positionsVisible[0];
       const value = position[property] !== null ? position[property] : 0;
       let colorStart = uUtils.getScaleColor(minColor, maxColor, (value - minValue) / (maxValue - minValue));
       let index = 1;
       geometry.forEachSegment((start, end) => {
-        position = track.positions[index];
+        position = track.positionsVisible[index];
         let colorStop;
         if (position[property] !== null) {
           colorStop = uUtils.getScaleColor(minColor, maxColor, (position[property] - minValue) / (maxValue - minValue));
@@ -528,7 +528,7 @@ export default class OpenLayersApi {
    * @return {Promise.<void>}
    */
   displayTrack(track, update) {
-    if (!track || !track.hasPositions) {
+    if (!track || !track.hasPositionsVisible) {
       return Promise.resolve();
     }
     this.map.un('moveend', this.saveState);
@@ -546,7 +546,7 @@ export default class OpenLayersApi {
     if (start > 0) {
       this.removePoint(--start);
     }
-    for (let i = start; i < track.length; i++) {
+    for (let i = start; i < track.lengthVisible; i++) {
       this.setMarker(i, track);
     }
     if (track instanceof uTrack) {
@@ -558,8 +558,8 @@ export default class OpenLayersApi {
         const lineFeature = new ol.Feature({ geometry: lineString });
         this.layerTrack.getSource().addFeature(lineFeature);
       }
-      for (let i = start; i < track.length; i++) {
-        const position = track.positions[i];
+      for (let i = start; i < track.lengthVisible; i++) {
+        const position = track.positionsVisible[i];
         lineString.appendCoordinate(ol.proj.fromLonLat([ position.longitude, position.latitude ]));
       }
     }
@@ -642,19 +642,19 @@ export default class OpenLayersApi {
    * @return {Style}
    */
   getMarkerStyle(id, track) {
-    const position = track.positions[id];
+    const position = track.positionsVisible[id];
     let iconStyle = this.markerStyles.normal;
     if (position.hasComment() || position.hasImage()) {
-      if (track.isLastPosition(id)) {
+      if (track.isLastPositionVisible(id)) {
         iconStyle = this.markerStyles.stopExtra;
-      } else if (track.isFirstPosition(id)) {
+      } else if (track.isFirstPositionVisible(id)) {
         iconStyle = this.markerStyles.startExtra;
       } else {
         iconStyle = this.markerStyles.extra;
       }
-    } else if (track.isLastPosition(id)) {
+    } else if (track.isLastPositionVisible(id)) {
       iconStyle = this.markerStyles.stop;
-    } else if (track.isFirstPosition(id)) {
+    } else if (track.isFirstPositionVisible(id)) {
       iconStyle = this.markerStyles.start;
     }
     return iconStyle;
@@ -667,7 +667,7 @@ export default class OpenLayersApi {
    */
   setMarker(id, track) {
     // marker
-    const position = track.positions[id];
+    const position = track.positionsVisible[id];
     const marker = new ol.Feature({
       geometry: new ol.geom.Point(ol.proj.fromLonLat([ position.longitude, position.latitude ]))
     });

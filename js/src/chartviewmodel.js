@@ -145,7 +145,7 @@ export default class ChartViewModel extends ViewModel {
    */
   onTrackUpdate(track, update = false) {
     this.render(track, update);
-    this.model.buttonVisible = !!track && track.hasPlotData;
+    this.model.buttonVisible = !!track && track.hasPlotDataVisible;
   }
 
   /**
@@ -177,8 +177,8 @@ export default class ChartViewModel extends ViewModel {
    */
   render(track, update = false) {
     let data = [];
-    if (track && track.hasPlotData && this.model.chartVisible) {
-      data = track.plotData;
+    if (track && track.hasPlotDataVisible && this.model.chartVisible) {
+      data = track.plotDataVisible;
     } else {
       this.model.chartVisible = false;
     }
