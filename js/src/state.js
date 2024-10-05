@@ -41,7 +41,7 @@ export default class uState {
       timestampMin: null,
       timestampMax: null,
       altitudeMin: null,
-      altitudeMax: null,
+      altitudeMax: null
     };
     this.activeJobs = 0;
     this.mapParams = null;

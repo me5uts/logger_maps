@@ -216,14 +216,14 @@ export default class uPosition {
    * @param {string|array|number} filter
    */
   filter(attr, operator, filter) {
-    let operators = {
-      "eq":   (x, y) => (y != null) ? x == y : false,
-      "leq":  (x, y) => (y != null) ? x <= y : false,
-      "geq":  (x, y) => (y != null) ? x >= y : false,
-      "lt":   (x, y) => (y != null) ? x <  y : false,
-      "gt":   (x, y) => (y != null) ? x >  y : false,
-      "in":   (x, y) => (y != null) ? y.includes(x) : false,
-      "like": (x, y) => (y != null) ? x.includes(y) : false
+    const operators = {
+      "eq": (x, y) => ((y != null) ? x == y : false),
+      "leq": (x, y) => ((y != null) ? x <= y : false),
+      "geq": (x, y) => ((y != null) ? x >= y : false),
+      "lt": (x, y) => ((y != null) ? x < y : false),
+      "gt": (x, y) => ((y != null) ? x > y : false),
+      "in": (x, y) => ((y != null) ? y.includes(x) : false),
+      "like": (x, y) => ((y != null) ? x.includes(y) : false)
     }
     let matches = false;
     if (
@@ -239,14 +239,6 @@ export default class uPosition {
       this.hiddenReasons.add(attr + operator);
     }
     this.hidden = this.hiddenReasons.size > 0;
-  }
-
-  /**
-   * Set this position to not hidden
-   */
-  unhide(attr) {
-    // this.attributesHidden[attr] = false;
-    // this.hidden = Object.values(this.attributesHidden).some(val => val);
   }
 
 }

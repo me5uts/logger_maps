@@ -100,7 +100,7 @@ export default class TrackViewModel extends ViewModel {
     uObserve.observe(this.state.filter, 'providers', (providers) => {
       this.onTrackFilter("provider", "in", providers);
     });
-    for (const attr of ["timestamp", "altitude"]) {
+    for (const attr of [ "timestamp", "altitude" ]) {
       uObserve.observe(this.state.filter, attr + "Min", (minValue) => {
         this.onTrackFilter(attr, "geq", minValue);
       });
@@ -263,7 +263,7 @@ export default class TrackViewModel extends ViewModel {
     this.state.jobStart();
     const track = this.state.currentTrack;
     this.state.currentTrack = null;
-    track.positions.forEach(position => position.filter(attr, operator, filter));
+    track.positions.forEach((position) => position.filter(attr, operator, filter));
     track.recalculatePositionsVisible();
     this.state.currentTrack = track;
     this.state.jobStop();
@@ -386,7 +386,7 @@ export default class TrackViewModel extends ViewModel {
     }
     if (this.state.showLatest) {
       const today = new Date();
-      const date = new Date(last.timestamp * 1000);
+      const date = new Date(track.timestampMax * 1000);
       const dateTime = uUtils.getTimeString(date);
       const dateString = (date.toDateString() !== today.toDateString()) ? `${dateTime.date}<br>` : '';
       const timeString = `${dateTime.time}<span style="font-weight:normal">${dateTime.zone}</span>`;
@@ -440,10 +440,10 @@ export default class TrackViewModel extends ViewModel {
         filters += `> <label for="filter-provider-${provider}">${provider}</label><br>`;
       }
       // datetime: timestampFilter
-      for (const attr of ["timestamp"]) {
+      for (const attr of [ "timestamp" ]) {
         const minValue = (track[attr + "Min"]) ? uUtils.getTimeString(new Date(track[attr + "Min"] * 1000)) : null;
         const maxValue = (track[attr + "Max"]) ? uUtils.getTimeString(new Date(track[attr + "Max"] * 1000)) : null;
-        for (const minmax of ["min", "max"]) {
+        for (const minmax of [ "min", "max" ]) {
           const filterValue = (this.model[attr + "Filter_" + minmax]) ? uUtils.getTimeString(new Date(this.model[attr + "Filter_" + minmax])) : null;
           filters += `
             <label for="filter-${attr}-${minmax}">${$._(attr)} (${$._(minmax)})</label><br>
@@ -455,10 +455,10 @@ export default class TrackViewModel extends ViewModel {
         }
       }
       // integer: altitudeFilter
-      for (const attr of ["altitude"]) {
+      for (const attr of [ "altitude" ]) {
         const minValue = (track[attr + "Min"]) ? track[attr + "Min"] : null;
         const maxValue = (track[attr + "Max"]) ? track[attr + "Max"] : null;
-        for (const minmax of ["min", "max"]) {
+        for (const minmax of [ "min", "max" ]) {
           const filterValue = this.model[attr + "Filter_" + minmax];
           filters += `
             <label for="filter-${attr}-${minmax}">${$._(attr)} (${$._(minmax)})</label><br>
@@ -487,16 +487,12 @@ export default class TrackViewModel extends ViewModel {
         }
         this.bind("providersFilter_" + provider);
         this.onChanged("providersFilter_" + provider, (toggle) => {
-          if (toggle) {
-            if (!this.state.filter.providers.includes(provider)) {
-              this.state.filter.providers.push(provider);
-            }
-          } else {
-            if (this.state.filter.providers.includes(provider)) {
-              const index = this.state.filter.providers.indexOf(provider);
-              if (index > -1) {
-                this.state.filter.providers.splice(index, 1);
-              }
+          if (toggle && !this.state.filter.providers.includes(provider)) {
+            this.state.filter.providers.push(provider);
+          } else if (this.state.filter.providers.includes(provider)) {
+            const index = this.state.filter.providers.indexOf(provider);
+            if (index > -1) {
+              this.state.filter.providers.splice(index, 1);
             }
           }
         });
@@ -505,8 +501,8 @@ export default class TrackViewModel extends ViewModel {
         }
       }
       // datetime: timestampFilter
-      for (const attr of ["timestamp"]) {
-        for (const minmax of ["min", "max"]) {
+      for (const attr of [ "timestamp" ]) {
+        for (const minmax of [ "min", "max" ]) {
           const minMax = minmax.charAt(0).toUpperCase() + minmax.slice(1);
           const attrNameState = attr + minMax;
           const attrNameModel = attr + "Filter_" + minmax;
@@ -526,8 +522,8 @@ export default class TrackViewModel extends ViewModel {
         }
       }
       // number (integer or float): altitudeFilter
-      for (const attr of ["altitude"]) {
-        for (const minmax of ["min", "max"]) {
+      for (const attr of [ "altitude" ]) {
+        for (const minmax of [ "min", "max" ]) {
           const minMax = minmax.charAt(0).toUpperCase() + minmax.slice(1);
           const attrNameState = attr + minMax;
           const attrNameModel = attr + "Filter_" + minmax;

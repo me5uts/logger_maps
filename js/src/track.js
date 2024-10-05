@@ -157,9 +157,7 @@ export default class uTrack extends uPositionSet {
     for (const pos of posArr) {
       const position = uPosition.fromJson(pos);
       this.calculatePosition(position);
-      if (!position.hidden) { // TODO FIX THIS, hidden is always false from init, needs to be checked against existing filters
-        this.calculatePositionVisible(position);
-      }
+      this.calculatePositionVisible(position);
       positions.push(position);
     }
     // update at the end to avoid observers update invidual points
@@ -386,7 +384,7 @@ export default class uTrack extends uPositionSet {
       this.providers.push(position.provider);
     }
   }
-  
+
   /**
    * Calculate position total counters and plot data
    * @param {uPosition} position
