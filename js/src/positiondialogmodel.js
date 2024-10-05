@@ -46,7 +46,7 @@ export default class PositionDialogModel extends ViewModel {
     });
     this.state = state;
     this.positionIndex = positionIndex;
-    this.position = this.state.currentTrack.positions[positionIndex];
+    this.position = this.state.currentTrack.positionsVisible[positionIndex];
     this.model.comment = this.position.hasComment() ? this.position.comment : '';
     this.model.image = this.position.image;
     this.model.onPositionDelete = () => this.onPositionDelete();
@@ -151,6 +151,7 @@ export default class PositionDialogModel extends ViewModel {
           this.state.currentTrack = null;
           track.positions.splice(this.positionIndex, 1);
           track.recalculatePositions();
+          track.recalculatePositionsVisible();
           this.state.currentTrack = track;
           this.dialog.destroy();
         }).catch((e) => { uAlert.error(`${$._('actionfailure')}\n${e.message}`, e); });

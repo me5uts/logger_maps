@@ -36,6 +36,13 @@ export default class uState {
     this.currentUser = null;
     this.showLatest = false;
     this.showAllUsers = false;
+    this.filter = {
+      providers: [],
+      timestampMin: null,
+      timestampMax: null,
+      altitudeMin: null,
+      altitudeMax: null
+    };
     this.activeJobs = 0;
     this.mapParams = null;
     this.history = null;

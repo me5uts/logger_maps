@@ -32,7 +32,7 @@ import uObserve from './observe.js';
  * @property {number} initLatitude
  * @property {number} initLongitude
  * @property {number} initLongitude
- * @property {number} interval;
+ * @property {number} interval
  * @property {string} lang
  * @property {string} mapApi
  * @property {uLayerCollection} olLayers

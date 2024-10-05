@@ -69,16 +69,16 @@ export default class MapViewModel extends ViewModel {
       markerSelect: null,
       // click handler
       onMenuToggle: null,
-      speedVisible: false,
-      altitudeVisible: false
+      trackColorSpeed: false,
+      trackColorAltitude: false
     });
     this.state = state;
     /** @type HTMLElement */
     this.mapElement = document.querySelector('#map-canvas');
     /** @type HTMLInputElement */
-    this.speedEl = this.getBoundElement('speedVisible');
+    this.speedEl = this.getBoundElement('trackColorSpeed');
     /** @type HTMLInputElement */
-    this.altitudeEl = this.getBoundElement('altitudeVisible');
+    this.altitudeEl = this.getBoundElement('trackColorAltitude');
     /** @type HTMLElement */
     this.styleEl = this.getBoundElement('trackColor');
     this.savedBounds = null;
@@ -158,9 +158,9 @@ export default class MapViewModel extends ViewModel {
       if (track) {
         uObserve.observe(track, 'positions', () => {
           this.displayTrack(track, false);
-          if (track instanceof uTrack && !this.api.isPositionVisible(track.length - 1)) {
+          if (track instanceof uTrack && !this.api.isPositionVisible(track.lengthVisible - 1)) {
             console.log('last track position not visible');
-            this.api.centerToPosition(track.length - 1);
+            this.api.centerToPosition(track.lengthVisible - 1);
           }
           this.toggleStyleOptions();
         });
@@ -184,15 +184,15 @@ export default class MapViewModel extends ViewModel {
       }
     });
     this.model.onMenuToggle = () => this.onMapResize();
-    this.onChanged('speedVisible', (visible) => {
-      if (visible) {
-        this.model.altitudeVisible = false;
+    this.onChanged('trackColorSpeed', (toggle) => {
+      if (toggle) {
+        this.model.trackColorAltitude = false;
       }
       this.setTrackStyle();
     });
-    this.onChanged('altitudeVisible', (visible) => {
-      if (visible) {
-        this.model.speedVisible = false;
+    this.onChanged('trackColorAltitude', (toggle) => {
+      if (toggle) {
+        this.model.trackColorSpeed = false;
       }
       this.setTrackStyle();
     });
@@ -222,8 +222,8 @@ export default class MapViewModel extends ViewModel {
 
   toggleStyleOptions() {
     const track = this.state.currentTrack;
-    this.speedEl.disabled = !track || !track.hasSpeeds || track.length <= 1;
-    this.altitudeEl.disabled = !track || !track.hasAltitudes || track.length <= 1;
+    this.speedEl.disabled = !track || !track.hasSpeedsVisible || track.lengthVisible <= 1;
+    this.altitudeEl.disabled = !track || !track.hasAltitudesVisible || track.lengthVisible <= 1;
   }
 
   toggleStyleMenu() {
@@ -239,9 +239,9 @@ export default class MapViewModel extends ViewModel {
     if (!this.api || !track) {
       return;
     }
-    if (this.model.speedVisible && track.hasSpeeds) {
+    if (this.model.trackColorSpeed && track.hasSpeedsVisible) {
       this.setSpeedStyle();
-    } else if (this.model.altitudeVisible && track.hasAltitudes) {
+    } else if (this.model.trackColorAltitude && track.hasAltitudesVisible) {
       this.setAltitudeStyle();
     } else {
       this.api.setTrackDefaultStyle();
@@ -251,8 +251,8 @@ export default class MapViewModel extends ViewModel {
   setSpeedStyle() {
     const track = this.state.currentTrack;
     const scale = {
-      minValue: 0,
-      maxValue: track.maxSpeed,
+      minValue: track.speedMinVisible,
+      maxValue: track.speedMaxVisible,
       minColor: [ 0, 255, 0 ],
       maxColor: [ 255, 0, 0 ]
     };
@@ -262,8 +262,8 @@ export default class MapViewModel extends ViewModel {
   setAltitudeStyle() {
     const track = this.state.currentTrack;
     const scale = {
-      minValue: track.minAltitude,
-      maxValue: track.maxAltitude,
+      minValue: track.altitudeMinVisible,
+      maxValue: track.altitudeMaxVisible,
       minColor: [ 0, 255, 0 ],
       maxColor: [ 255, 0, 0 ]
     };
@@ -276,8 +276,8 @@ export default class MapViewModel extends ViewModel {
    * @returns {HTMLDivElement}
    */
    getPopupElement(id) {
-    const pos = this.state.currentTrack.positions[id];
-    const count = this.state.currentTrack.length;
+    const pos = this.state.currentTrack.positionsVisible[id];
+    const count = this.state.currentTrack.lengthVisible;
     const user = this.state.currentTrack.user;
     const isEditable = auth.user && (auth.isAdmin || auth.user.id === user.id);
     let date = '–––';
@@ -302,9 +302,9 @@ export default class MapViewModel extends ViewModel {
       stats =
         `<div id="pright">
         <img class="icon" alt="${$._('track')}" src="images/stats_blue.svg" style="margin-left: 3em;"><br>
-        <img class="icon" alt="${$._('ttime')}" title="${$._('ttime')}" src="images/time_blue.svg"> ${$.getLocaleDuration(pos.totalSeconds)}<br>
-        <img class="icon" alt="${$._('aspeed')}" title="${$._('aspeed')}" src="images/speed_blue.svg"> ${$.getLocaleSpeed(pos.totalSpeed, true)}<br>
-        <img class="icon" alt="${$._('tdistance')}" title="${$._('tdistance')}" src="images/distance_blue.svg"> ${$.getLocaleDistanceMajor(pos.totalMeters, true)}<br>
+        <img class="icon" alt="${$._('ttime')}" title="${$._('ttime')}" src="images/time_blue.svg"> ${$.getLocaleDuration(pos.secondsTotalVisible)}<br>
+        <img class="icon" alt="${$._('aspeed')}" title="${$._('aspeed')}" src="images/speed_blue.svg"> ${$.getLocaleSpeed(pos.speedTotalVisible, true)}<br>
+        <img class="icon" alt="${$._('tdistance')}" title="${$._('tdistance')}" src="images/distance_blue.svg"> ${$.getLocaleDistanceMajor(pos.metersTotalVisible, true)}<br>
         </div>`;
     }
     const html =

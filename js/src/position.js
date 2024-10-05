@@ -38,8 +38,9 @@ import uUtils from './utils.js';
  * @property {number} timestamp
  * @property {number} meters Distance to previous position
  * @property {number} seconds Time difference to previous position
- * @property {number} totalMeters Distance to first position
- * @property {number} totalSeconds Time difference to first position
+ * @property {number} metersTotal Distance to first position
+ * @property {number} secondsTotal Time difference to first position
+ * @property {boolean} hidden
  */
 export default class uPosition {
 
@@ -66,8 +67,12 @@ export default class uPosition {
     position.timestamp = uUtils.getInteger(pos.timestamp);
     position.meters = uUtils.getInteger(pos.meters);
     position.seconds = uUtils.getInteger(pos.seconds);
-    position.totalMeters = 0;
-    position.totalSeconds = 0;
+    position.metersTotal = null;
+    position.secondsTotal = null;
+    position.metersTotalVisible = null;
+    position.secondsTotalVisible = null;
+    position.hiddenReasons = new Set();
+    position.hidden = false;
     return position;
   }
 
@@ -110,8 +115,16 @@ export default class uPosition {
    * Get total speed in m/s
    * @return {number}
    */
-  get totalSpeed() {
-    return this.totalSeconds ? this.totalMeters / this.totalSeconds : 0;
+  get speedTotal() {
+    return this.secondsTotal ? this.metersTotal / this.secondsTotal : 0;
+  }
+
+  /**
+   * Get total speed in m/s
+   * @return {number}
+   */
+  get speedTotalVisible() {
+    return this.secondsTotalVisible ? this.metersTotalVisible / this.secondsTotalVisible : 0;
   }
 
   /**
@@ -194,6 +207,38 @@ export default class uPosition {
    */
   secondsTo(target) {
     return this.timestamp - target.timestamp;
+  }
+
+  /**
+   * Set this position to hidden if it does not match the filter
+   * @param {string} attr
+   * @param {string} operator
+   * @param {string|array|number} filter
+   */
+  filter(attr, operator, filter) {
+    const operators = {
+      "eq": (x, y) => ((y != null) ? x == y : false),
+      "leq": (x, y) => ((y != null) ? x <= y : false),
+      "geq": (x, y) => ((y != null) ? x >= y : false),
+      "lt": (x, y) => ((y != null) ? x < y : false),
+      "gt": (x, y) => ((y != null) ? x > y : false),
+      "in": (x, y) => ((y != null) ? y.includes(x) : false),
+      "like": (x, y) => ((y != null) ? x.includes(y) : false)
+    }
+    let matches = false;
+    if (
+      Number.isFinite(this[attr]) ||
+      typeof this[attr] === 'string' ||
+      this[attr] instanceof String
+    ) {
+      matches = operators[operator](this[attr], filter)
+    }
+    if (matches) {
+      this.hiddenReasons.delete(attr + operator);
+    } else {
+      this.hiddenReasons.add(attr + operator);
+    }
+    this.hidden = this.hiddenReasons.size > 0;
   }
 
 }

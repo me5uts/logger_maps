@@ -49,6 +49,8 @@ export default class TrackViewModel extends ViewModel {
       inputFile: false,
       /** @type {string} */
       summary: false,
+      /** @type {string} */
+      filters: false,
       // click handlers
       /** @type {function} */
       onReload: null,
@@ -95,6 +97,17 @@ export default class TrackViewModel extends ViewModel {
       this.state.showLatest = showLatest;
       this.onReload(true);
     });
+    uObserve.observe(this.state.filter, 'providers', (providers) => {
+      this.onTrackFilter("provider", "in", providers);
+    });
+    for (const attr of [ "timestamp", "altitude" ]) {
+      uObserve.observe(this.state.filter, attr + "Min", (minValue) => {
+        this.onTrackFilter(attr, "geq", minValue);
+      });
+      uObserve.observe(this.state.filter, attr + "Max", (maxValue) => {
+        this.onTrackFilter(attr, "leq", maxValue);
+      });
+    }
     this.state.onChanged('currentUser', (user) => {
       if (user) {
         this.loadTrackList();
@@ -109,10 +122,16 @@ export default class TrackViewModel extends ViewModel {
       }
     });
     this.state.onChanged('currentTrack', (track) => {
-      this.renderSummary();
+      this.renderSummary(track);
       if (track) {
         uObserve.observe(track, 'positions', () => {
-          this.renderSummary();
+          this.renderSummary(track);
+        });
+      }
+      this.renderFilters(track);
+      if (track) {
+        uObserve.observe(track, 'positions', () => {
+          this.renderFilters(track);
         });
       }
     });
@@ -235,6 +254,22 @@ export default class TrackViewModel extends ViewModel {
   }
 
   /**
+   * Handle track filtering
+   * @param {string} attr
+   * @param {string} operator
+   * @param {string|array|number} filter
+   */
+  onTrackFilter(attr, operator, filter) {
+    this.state.jobStart();
+    const track = this.state.currentTrack;
+    this.state.currentTrack = null;
+    track.positions.forEach((position) => position.filter(attr, operator, filter));
+    track.recalculatePositionsVisible();
+    this.state.currentTrack = track;
+    this.state.jobStop();
+  }
+
+  /**
    * Handle user last position request
    */
   onUserLastPosition() {
@@ -344,17 +379,14 @@ export default class TrackViewModel extends ViewModel {
     }
   }
 
-  renderSummary() {
-    const track = this.state.currentTrack;
-    if (!track || !track.hasPositions) {
+  renderSummary(track) {
+    if (!track || !track.hasPositionsVisible) {
       this.model.summary = '';
       return;
     }
-    const last = track.positions[track.length - 1];
-
     if (this.state.showLatest) {
       const today = new Date();
-      const date = new Date(last.timestamp * 1000);
+      const date = new Date(track.timestampMax * 1000);
       const dateTime = uUtils.getTimeString(date);
       const dateString = (date.toDateString() !== today.toDateString()) ? `${dateTime.date}<br>` : '';
       const timeString = `${dateTime.time}<span style="font-weight:normal">${dateTime.zone}</span>`;
@@ -365,23 +397,150 @@ export default class TrackViewModel extends ViewModel {
     } else {
       let summary = `
         <div class="menu-title">${$._('summary')}</div>
-        <div><img class="icon" alt="${$._('tdistance')}" title="${$._('tdistance')}" src="images/distance.svg"> ${$.getLocaleDistanceMajor(last.totalMeters, true)}</div>
-        <div><img class="icon" alt="${$._('ttime')}" title="${$._('ttime')}" src="images/time.svg"> ${$.getLocaleDuration(last.totalSeconds)}</div>`;
-      if (last.totalSeconds > 0) {
+        <div><img class="icon" alt="${$._('tdistance')}" title="${$._('tdistance')}" src="images/distance.svg"> ${$.getLocaleDistanceMajor(track.metersTotalVisible, true)}</div>
+        <div><img class="icon" alt="${$._('ttime')}" title="${$._('ttime')}" src="images/time.svg"> ${$.getLocaleDuration(track.secondsTotalVisible)}</div>`;
+      if (track.secondsTotalVisible > 0) {
         summary += `
-          <div><img class="icon" alt="${$._('aspeed')}" title="${$._('aspeed')}" src="images/speed.svg"><b>&#10547;</b> ${$.getLocaleSpeed(last.totalMeters / last.totalSeconds, true)}</div>`;
+          <div><img class="icon" alt="${$._('aspeed')}" title="${$._('aspeed')}" src="images/speed.svg"><b>&#10547;</b> ${$.getLocaleSpeed(track.metersTotalVisible / track.secondsTotalVisible, true)}</div>`;
       }
-      if (track.hasSpeeds) {
-        summary += `<div><img class="icon" alt="${$._('speed')}" title="${$._('speed')}" src="images/speed.svg"><b>&#10138;</b> ${$.getLocaleSpeed(track.maxSpeed, true)}</div>`;
+      if (track.hasSpeedsVisible) {
+        summary += `<div><img class="icon" alt="${$._('speed')}" title="${$._('speed')}" src="images/speed.svg"><b>&#10138;</b> ${$.getLocaleSpeed(track.speedMaxVisible, true)}</div>`;
       }
-      if (track.hasAltitudes) {
-        let altitudes = `${$.getLocaleAltitude(track.maxAltitude, true)}`;
-        if (track.minAltitude !== track.maxAltitude) {
-          altitudes = `${$.getLocaleAltitude(track.minAltitude)}&ndash;${altitudes}`;
+      if (track.hasAltitudesVisible) {
+        let altitudes = `${$.getLocaleAltitude(track.altitudeMaxVisible, true)}`;
+        if (track.altitudeMinVisible !== track.altitudeMaxVisible) {
+          altitudes = `${$.getLocaleAltitude(track.altitudeMinVisible)}&ndash;${altitudes}`;
         }
         summary += `<div><img class="icon" alt="${$._('altitude')}" title="${$._('altitude')}" src="images/altitude.svg"> ${altitudes}</div>`;
       }
       this.model.summary = summary;
+    }
+  }
+
+  renderFilters(track) {
+    if (!track || !track.hasPositions) {
+      return;
+    }
+    if (this.state.showLatest) {
+      this.model.filters = "";
+    } else {
+      //
+      // CREATE FILTER HTML ELEMENTS
+      // they need to be rerendered on every change of current track
+      // because filter options and limits can change
+      //
+      let filters = `
+        <div class="menu-title">${$._('filters')}</div>`;
+      // providersFilter
+      filters = `
+        <label for="filter-provider">${$._('providers')}</label><br>`;
+      for (const provider of track.providers) {
+        filters += `<input id="filter-provider-${provider}" type="checkbox" data-bind="providersFilter_${provider}"`;
+        filters += (this.model["providersFilter_" + provider]) ? " checked" : "";
+        filters += `> <label for="filter-provider-${provider}">${provider}</label><br>`;
+      }
+      // datetime: timestampFilter
+      for (const attr of [ "timestamp" ]) {
+        const minValue = (track[attr + "Min"]) ? uUtils.getTimeString(new Date(track[attr + "Min"] * 1000)) : null;
+        const maxValue = (track[attr + "Max"]) ? uUtils.getTimeString(new Date(track[attr + "Max"] * 1000)) : null;
+        for (const minmax of [ "min", "max" ]) {
+          const filterValue = (this.model[attr + "Filter_" + minmax]) ? uUtils.getTimeString(new Date(this.model[attr + "Filter_" + minmax])) : null;
+          filters += `
+            <label for="filter-${attr}-${minmax}">${$._(attr)} (${$._(minmax)})</label><br>
+            <input id="filter-${attr}-${minmax}" type="datetime-local" step=1 data-bind="${attr}Filter_${minmax}"`;
+          filters += (minValue) ? ` min="${minValue.date}T${minValue.time}"` : "";
+          filters += (maxValue) ? ` max="${maxValue.date}T${maxValue.time}"` : "";
+          filters += (filterValue) ? ` value="${filterValue.date}T${filterValue.time}"` : "";
+          filters += `>`;
+        }
+      }
+      // integer: altitudeFilter
+      for (const attr of [ "altitude" ]) {
+        const minValue = (track[attr + "Min"]) ? track[attr + "Min"] : null;
+        const maxValue = (track[attr + "Max"]) ? track[attr + "Max"] : null;
+        for (const minmax of [ "min", "max" ]) {
+          const filterValue = this.model[attr + "Filter_" + minmax];
+          filters += `
+            <label for="filter-${attr}-${minmax}">${$._(attr)} (${$._(minmax)})</label><br>
+            <input id="filter-${attr}-${minmax}" type="number" step=1 data-bind="${attr}Filter_${minmax}" min="${minValue}" max="${maxValue}" value="${filterValue}">`;
+        }
+      }
+      this.model.filters = filters;
+      //
+      // BIND AND OBSERVE FILTER HTML ELEMENTS
+      // they need to be refreshed on every change of the current track
+      // because the html elements are refreshed above and
+      // because some of the html elements correlate to filter options
+      //
+      // always consists of the same steps
+      // 1. make sure there is an unobserved model property
+      // 2. bind the model property to new html element created
+      // 3. observe the model property
+      // 4. initialize the property after first creation
+      //
+      // providersFilter
+      for (const provider of track.providers) {
+        if (!this.model.hasOwnProperty("providersFilter_" + provider)) {
+          this.model["providersFilter_" + provider] = null;
+        } else {
+          uObserve.unobserveAll(this.model, "providersFilter_" + provider);
+        }
+        this.bind("providersFilter_" + provider);
+        this.onChanged("providersFilter_" + provider, (toggle) => {
+          if (toggle && !this.state.filter.providers.includes(provider)) {
+            this.state.filter.providers.push(provider);
+          } else if (this.state.filter.providers.includes(provider)) {
+            const index = this.state.filter.providers.indexOf(provider);
+            if (index > -1) {
+              this.state.filter.providers.splice(index, 1);
+            }
+          }
+        });
+        if (this.model["providersFilter_" + provider] === null) {
+          this.model["providersFilter_" + provider] = true;
+        }
+      }
+      // datetime: timestampFilter
+      for (const attr of [ "timestamp" ]) {
+        for (const minmax of [ "min", "max" ]) {
+          const minMax = minmax.charAt(0).toUpperCase() + minmax.slice(1);
+          const attrNameState = attr + minMax;
+          const attrNameModel = attr + "Filter_" + minmax;
+          if (!this.model.hasOwnProperty(attrNameModel)) {
+            this.model[attrNameModel] = null;
+          } else {
+            uObserve.unobserveAll(this.model, attrNameModel);
+          }
+          this.bind(attrNameModel);
+          this.onChanged(attrNameModel, (value) => {
+            this.state.filter[attrNameState] = (value) ? Math.floor(new Date(value).getTime() / 1000) : null;
+          });
+          if (this.model[attrNameModel] === null) {
+            const value = (track[attrNameState]) ? uUtils.getTimeString(new Date(track[attrNameState] * 1000)) : null;
+            this.model[attrNameModel] = (value) ? value.date + "T" + value.time : null;
+          }
+        }
+      }
+      // number (integer or float): altitudeFilter
+      for (const attr of [ "altitude" ]) {
+        for (const minmax of [ "min", "max" ]) {
+          const minMax = minmax.charAt(0).toUpperCase() + minmax.slice(1);
+          const attrNameState = attr + minMax;
+          const attrNameModel = attr + "Filter_" + minmax;
+          if (!this.model.hasOwnProperty(attrNameModel)) {
+            this.model[attrNameModel] = null;
+          } else {
+            uObserve.unobserveAll(this.model, attrNameModel);
+          }
+          this.bind(attrNameModel);
+          this.onChanged(attrNameModel, (value) => {
+            this.state.filter[attrNameState] = value;
+          });
+          if (this.model[attrNameModel] === null) {
+            this.model[attrNameModel] = track[attrNameState];
+          }
+        }
+      }
     }
   }
 

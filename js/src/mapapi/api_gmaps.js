@@ -135,7 +135,7 @@ export default class GoogleMapsApi {
    * @return {Promise.<void>}
    */
   displayTrack(track, update) {
-    if (!track || !track.hasPositions) {
+    if (!track || !track.hasPositionsVisible) {
       return Promise.resolve();
     }
     google.maps.event.clearListeners(this.map, 'idle');
@@ -173,11 +173,11 @@ export default class GoogleMapsApi {
     if (start > 0) {
       this.removePoint(--start);
     }
-    for (let i = start; i < track.length; i++) {
+    for (let i = start; i < track.lengthVisible; i++) {
       // set marker
       this.setMarker(i, track);
       // update polyline
-      const position = track.positions[i];
+      const position = track.positionsVisible[i];
       const coordinates = new google.maps.LatLng(position.latitude, position.longitude);
       if (track instanceof uTrack) {
         path.push(coordinates);
@@ -186,7 +186,7 @@ export default class GoogleMapsApi {
     }
     if (update) {
       this.map.fitBounds(latlngbounds);
-      if (track.length === 1) {
+      if (track.lengthVisible === 1) {
         // only one point, zoom out
         const zListener =
           google.maps.event.addListenerOnce(this.map, 'bounds_changed', function () {
@@ -245,7 +245,7 @@ export default class GoogleMapsApi {
    */
   setMarker(id, track) {
     // marker
-    const position = track.positions[id];
+    const position = track.positionsVisible[id];
     // noinspection JSCheckFunctionSignatures
     const marker = new google.maps.Marker({
       position: new google.maps.LatLng(position.latitude, position.longitude),
@@ -254,9 +254,9 @@ export default class GoogleMapsApi {
     });
     const isExtra = position.hasComment() || position.hasImage();
     let icon;
-    if (track.isLastPosition(id)) {
+    if (track.isLastPositionVisible(id)) {
       icon = GoogleMapsApi.getMarkerIcon(config.colorStop, true, isExtra);
-    } else if (track.isFirstPosition(id)) {
+    } else if (track.isFirstPositionVisible(id)) {
       icon = GoogleMapsApi.getMarkerIcon(config.colorStart, true, isExtra);
     } else {
       icon = GoogleMapsApi.getMarkerIcon(isExtra ? config.colorExtra : config.colorNormal, false, isExtra);
